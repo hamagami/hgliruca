@@ -47,14 +47,23 @@ function Time() {
                 cell5.innerHTML = item.updated_at;
 
                 switch (item.status) {
-                    case '在席':
+                    case '在席中':
                         cell3.style.backgroundColor = 'lightgreen';
                         break;
-                    case '離席':
+		     case '在席':
+                        cell3.style.backgroundColor = 'lightgreen';
+                        break;
+                     case '離席中':
                         cell3.style.backgroundColor = 'salmon';
                         break;
- 　　　　　　　　　 case '取込中':
+		     case '外出':
+                        cell3.style.backgroundColor = 'salmon';
+                        break;
+ 　　　　　　　　　   case '取込中':
                         cell3.style.backgroundColor = 'lightyellow';
+                        break;
+                    case '帰宅':
+                        cell3.style.backgroundColor = 'red';
                         break;
                     default:
                         cell3.style.backgroundColor = 'gray';
