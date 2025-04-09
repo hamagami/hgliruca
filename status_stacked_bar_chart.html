@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>在席・研修中ステータスの積み上げグラフ</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h2>在席・研修中のステータス（積み上げグラフ）</h2>
+    <div id="chart" style="width:90%;height:600px;"></div>
+
+    <script>
+        fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+            .then(response => response.json())
+            .then(data => {
+                const names = Object.keys(data);
+                const statusTypes = ["在席中", "研修中"];
+
+                const traces = statusTypes.map(status => {
+                    return {
+                        x: names,
+                        y: names.map(name => data[name][status] || 0),
+                        name: status,
+                        type: 'bar'
+                    };
+                });
+
+                const layout = {
+                    barmode: 'stack',
+                    title: 'ステータス件数（在席中・研修中）',
+                    xaxis: { title: '名前' },
+                    yaxis: { title: '件数' }
+                };
+
+                Plotly.newPlot('chart', traces, layout);
+            })
+            .catch(error => {
+                document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
+            });
+    </script>
+</body>
+</html>
