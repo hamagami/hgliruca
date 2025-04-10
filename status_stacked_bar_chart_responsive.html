@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>在席・研修中ステータスの積み上げグラフ</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    #chart {
+      width: 100%;
+      aspect-ratio: 1.8 / 1;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">在席・研修中のステータス（積み上げグラフ）</h2>
+各自の研究テーマに直接かかわる研究従事記録です。「在席中」は研究室でのとりくみ、「研修中」はそれ以外の取り組みです。
+
+  <div id="chart"></div>
+
+  <script>
+    fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+      .then(response => response.json())
+      .then(data => {
+        const names = Object.keys(data);
+        const statusTypes = ["在席中", "研修中"];
+
+        const traces = statusTypes.map(status => {
+          return {
+            x: names,
+            y: names.map(name => data[name][status] || 0),
+            name: status,
+            type: 'bar'
+          };
+        });
+
+        const allY = names.map(name =>
+          (data[name]["在席中"] || 0) + (data[name]["研修中"] || 0)
+        );
+        const maxY = Math.max(...allY);
+        const adjustedMax = Math.ceil(maxY / 0.8);
+
+        const layout = {
+          barmode: 'stack',
+          margin: { t: 20, b: 50, l: 40, r: 20 },
+          xaxis: { title: '名前', automargin: true },
+          yaxis: { title: 'チェックポイント', range: [0, adjustedMax] },
+          autosize: true
+        };
+
+        Plotly.newPlot('chart', traces, layout, {responsive: true});
+      })
+      .catch(error => {
+        document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
+      });
+  </script>
+</body>
+</html>
