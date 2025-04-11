@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="refresh" content="600">
+  
   <title>在席・研修中ステータスの積み上げグラフ</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
@@ -20,6 +21,12 @@
 <body>
   <h2 style="text-align:center;">在席・研修中のステータス（積み上げグラフ）</h2>
 各自の研究テーマに直接かかわる研究従事記録です。「在席中」は研究室でのとりくみ、「研修中」はそれ以外の取り組みです。
+<p id="datetime"></p>
+<script>
+  const now = new Date();
+  const formatted = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+  document.getElementById("datetime").innerText = "集計日時：" + formatted;
+</script>
 
   <div id="chart"></div>
 
