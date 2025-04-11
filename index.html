@@ -48,10 +48,11 @@ function Time() {
 
                 switch (item.status) {
                     case '在席中':
-                        cell3.style.backgroundColor = 'lightgreen';
+                        cell3.style.color = 'white'; 
+                        cell3.style.backgroundColor = 'blue';
                         break;
 		     case '在席':
-                        cell3.style.backgroundColor = 'lightgreen';
+                        cell3.style.backgroundColor = 'blue';
                         break;
                      case '離席中':
                         cell3.style.backgroundColor = 'salmon';
@@ -63,8 +64,13 @@ function Time() {
                         cell3.style.backgroundColor = 'lightyellow';
                         break;
                     case '帰宅':
-                        cell3.style.backgroundColor = 'red';
+                        cell3.style.color = 'white'; 
+                        cell3.style.backgroundColor = 'black';
                         break;
+                    case '研修中':
+                        cell3.style.backgroundColor = 'orange';
+                        break;
+
                     default:
                         cell3.style.backgroundColor = 'gray';
                 }
