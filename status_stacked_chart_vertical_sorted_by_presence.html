@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="600">
+  <title>在席・研修中ステータス（在席中が多い順・縦棒）</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    #chart {
+      width: 100%;
+      aspect-ratio: 1.8 / 1;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">在席・研修中のステータス（在席中が多い順・縦棒）</h2>
+  <p id="datetime" style="text-align:center;"></p>
+  <script>
+    const now = new Date();
+    const formatted = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+    document.getElementById("datetime").innerText = "集計日時：" + formatted;
+  </script>
+
+  <div id="chart"></div>
+
+  <script>
+    fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+      .then(response => response.json())
+      .then(data => {
+        // 名前を在席中の多い順にソート
+        const sortedNames = Object.keys(data).sort((a, b) => {
+          return (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0);
+        });
+
+        const statusTypes = ["在席中", "研修中"];
+
+        const traces = statusTypes.map(status => {
+          return {
+            x: sortedNames,
+            y: sortedNames.map(name => data[name][status] || 0),
+            name: status,
+            type: 'bar'
+          };
+        });
+
+        const allY = sortedNames.map(name =>
+          (data[name]["在席中"] || 0) + (data[name]["研修中"] || 0)
+        );
+        const maxY = Math.max(...allY);
+        const adjustedMax = Math.ceil(maxY / 0.8);
+
+        const layout = {
+          barmode: 'stack',
+          margin: { t: 20, b: 100, l: 40, r: 20 },
+          xaxis: { title: '名前', automargin: true },
+          yaxis: { title: 'チェックポイント数', range: [0, adjustedMax] },
+          autosize: true
+        };
+
+        Plotly.newPlot('chart', traces, layout, {responsive: true});
+      })
+      .catch(error => {
+        document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
+      });
+  </script>
+</body>
+</html>
