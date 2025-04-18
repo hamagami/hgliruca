@@ -38,56 +38,99 @@ function Time() {
             xhr.send();
         }
 
-        function displayData(data) {
-            Time()
-            var table = document.getElementById('dataTable');
-            data.forEach(function(item) {
-                var row = table.insertRow();
-                var cell1 = row.insertCell(0);
-                var cell2 = row.insertCell(1);
-                var cell3 = row.insertCell(2);
-                var cell4 = row.insertCell(3);
-                var cell5 = row.insertCell(4);
-                cell1.innerHTML = item.name;
-                cell2.innerHTML = item.id;
-                cell3.innerHTML = item.status;
-                cell4.innerHTML = item.message;
-                cell5.innerHTML = item.updated_at;
 
-                switch (item.status) {
-                    case '在席中':
-                        cell3.style.color = 'white'; 
-                        cell3.style.backgroundColor = 'blue';
-                        break;
-		     case '在席':
-                        cell3.style.backgroundColor = 'blue';
-                        break;
-                     case '離席中':
-                        cell3.style.backgroundColor = 'salmon';
-                        break;
-		     case '離席':
-                        cell3.style.backgroundColor = 'salmon';
-                        break;
- 　　　　　　　　　   case '取込中':
-                        cell3.style.backgroundColor = 'lightyellow';
-                        break;
-                    case '帰宅':
-                        cell3.style.color = 'white'; 
-                        cell3.style.backgroundColor = 'black';
-                        break;
-                    case '研修中':
-                        cell3.style.backgroundColor = 'orange';
-                        break;
+function displayData(data) {
+    Time();
+    var table = document.getElementById('dataTable');
+    table.innerHTML = `
+        <tr>
+            <th>Name</th>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Message</th>
+            <th>Elapsed</th>
+        </tr>
+    `; // 前回の行をクリア
 
-                    default:
-                        cell3.style.backgroundColor = 'gray';
-                }
-             
-         });
+    var now = new Date();
+
+    data.forEach(function(item) {
+        var row = table.insertRow();
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        var cell5 = row.insertCell(4);
+
+        cell1.innerHTML = item.name;
+        cell2.innerHTML = item.id;
+
+        var updatedTime = new Date(item.updated_at);
+        var diffMs = now - updatedTime;
+        var seconds = Math.floor(diffMs / 1000);
+        var minutes = Math.floor(seconds / 60);
+        var hours = Math.floor(minutes / 60);
+        var days = Math.floor(hours / 24);
+
+        let elapsed = '';
+        if (days > 0) {
+            elapsed = `${days}日前`;
+        } else if (hours > 0) {
+            elapsed = `${hours}時間前`;
+        } else if (minutes > 0) {
+            elapsed = `${minutes}分前`;
+        } else {
+            elapsed = `${seconds}秒前`;
         }
+        cell5.innerHTML = elapsed;
+
+        // ステータス判定（8時間以上なら "不明" にする）
+        let status = item.status;
+        if (diffMs > 8 * 3600 * 1000) {
+            status = "不明";
+        }
+        cell3.innerHTML = status;
+
+        cell4.innerHTML = item.message;
+
+        // 色づけ
+        switch (status) {
+            case '在席中':
+            case '在席':
+                cell3.style.backgroundColor = 'blue';
+                cell3.style.color = 'white';
+                break;
+            case '離席中':
+            case '離席':
+                cell3.style.backgroundColor = 'salmon';
+                break;
+            case '取込中':
+                cell3.style.backgroundColor = 'lightyellow';
+                break;
+            case '研修中':
+                cell3.style.backgroundColor = 'orange';
+                break;
+            case '帰宅':
+                cell3.style.backgroundColor = 'black';
+                cell3.style.color = 'white';
+                break;
+            case '不明':
+                cell3.style.backgroundColor = 'gray';
+                break;
+            default:
+                cell3.style.backgroundColor = 'lightgray';
+        }
+    });
+}
+
+
+
+
+
     </script>
 </head>
 <body onload="fetchData()">
+<h1>取り組みモニター</h1>
 <p>update per 5min <span id="real-time"></span></p>
     <table id="dataTable" border="1">
         <tr>
@@ -149,3 +192,10 @@ function Time() {
 
                 }
 -->
+
+
+
+
+
+
+
