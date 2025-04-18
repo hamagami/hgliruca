@@ -64,11 +64,12 @@
 
         const layout = {
           barmode: 'stack',
-          margin: { t: 20, b: 100, l: 40, r: 20 },
+          margin: { t: 20, b: 150, l: 40, r: 20 },
           xaxis: { title: '名前', automargin: true },
           yaxis: { title: 'チェックポイント数', range: [0, adjustedMax] },
           autosize: true
         };
+
 
         Plotly.newPlot('chart', traces, layout, {responsive: true});
       })
