@@ -4,22 +4,30 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="refresh" content="600">
-  <title>在席・研修中ステータス（在席中が多い順・縦棒）</title>
+  <title>在席・研修中ステータス</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-    }
-    #chart {
-      width: 100%;
-      aspect-ratio: 1.8 / 1;
-    }
-  </style>
+
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #chart {
+    width: 100%;
+    height: calc(100vh - 100px); /* 見出しや日時を差し引いた高さ */
+  }
+</style>
+
+
 </head>
 <body>
-  <h2 style="text-align:center;">在席・研修中のステータス（在席中が多い順・縦棒）</h2>
+  <h2 style="text-align:center;">在席・研修中のステータス</h2>
   <p id="datetime" style="text-align:center;"></p>
+  8時間以上更新されない在籍中、研修中は変更忘れとしてカウントされません。継続する場合は、8時間に１度同じステイタスで更新してください。
   <script>
     const now = new Date();
     const formatted = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
