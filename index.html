@@ -7,9 +7,10 @@
       <style>
     iframe {
       width: 50%;
-      height: 100vh; /* 必要に応じて高さ調整、vh = ビューポートの高さ */
+      height: 90vh; /* 必要に応じて高さ調整、vh = ビューポートの高さ */
       border: none;
       overflow: hidden;
+      margin-bottom: 50px; /* ← これを追加 */
     }
   </style>
     <script type="text/javascript">
@@ -132,6 +133,9 @@ function displayData(data) {
 <body onload="fetchData()">
 <h1>取り組みモニター</h1>
 <p>update per 5min <span id="real-time"></span></p>
+    <iframe src="https://hamagami.github.io/hgliruca/status_stacked_chart_vertical_sorted_by_presence.html"></iframe>
+
+
     <table id="dataTable" border="1">
         <tr>
             <th>Name</th>
@@ -141,7 +145,7 @@ function displayData(data) {
             <th>Update</th>
         </tr>
     </table>
-    <iframe src="https://hamagami.github.io/hgliruca/status_stacked_chart_vertical_sorted_by_presence.html"></iframe>
+
 </body>
 </html>
 
