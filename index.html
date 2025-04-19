@@ -5,13 +5,20 @@
     <meta http-equiv="refresh" content="300;url=index.html">
     <title>viewer</title>
       <style>
-    iframe {
-      width: 50%;
-      height: 90vh; /* 必要に応じて高さ調整、vh = ビューポートの高さ */
-      border: none;
-      overflow: hidden;
-      margin-bottom: 50px; /* ← これを追加 */
-    }
+iframe {
+  width: 100%;                 /* モバイルでも全幅で見やすく */
+  aspect-ratio: 2 / 1;         /* 横2 : 縦1 の比率をキープ（調整可能） */
+  max-width: 700px;            /* PCで幅が広がりすぎないよう制限（任意） */
+  border: none;
+  overflow: hidden;
+  margin: 0 auto 50px;         /* 上0, 左右中央, 下50px */
+  display: block;
+}
+table {
+  margin: 0 auto;            /* 中央に配置 */
+  border-collapse: collapse; /* 罫線をスッキリ */
+  text-align: center;        /* セル内も中央寄せ（お好みで） */
+}
   </style>
     <script type="text/javascript">
 
@@ -149,53 +156,6 @@ function displayData(data) {
 </body>
 </html>
 
-<!--
-      <style>
-        .status-zaiseki { background-color: lightgreen; }
-        .status-riseki { background-color: blue; }
-        .status-torikomi { background-color: yellow; }
-        .status-gaisyutu { background-color: salmon; }
-        .status-kyuuka { background-color: gray; }
-    </style>
--->
-
-<!--
-                switch (item.status) {
-                    case '在席':
-                        cell3.style.backgroundColor = 'lightgreen';
-                        break;
-                    case '離席':
-                        cell3.style.backgroundColor = 'salmon';
-                        break;
- 　　　　　　　　　 case '取込中':
-                        cell3.style.backgroundColor = 'lightyellow';
-                        break;
-                    default:
-                        cell3.style.backgroundColor = 'gray';
-                }
--->
-
-
-<!--
-                switch(item.status) {
-                    case '在席':
-                        cell3.className = 'status-zaiseki';
-                        break;
-                    case '離席':
-                        cell3.className = 'status-riseki';
-                        break;
-                    case '取込中':
-                        cell3.className = 'status-torikomi';
-                        break;
-　　　　　　　　　　case '休暇':
-                        cell3.className = 'status-kyuuka';
-                        break;
-		　　case '外出':
-                        cell3.className = 'status-gaisyutu';
-                        break;
-
-                }
--->
 
 
 
