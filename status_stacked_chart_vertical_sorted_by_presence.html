@@ -27,7 +27,7 @@
 <body>
   <h2 style="text-align:center;">在席・研修中のステータス</h2>
   <p id="datetime" style="text-align:center;"></p>
-  8時間以上更新されない在籍中、研修中は変更忘れとしてカウントされません。継続する場合は、8時間に１度同じステイタスで更新してください。
+  8時間以上更新されない在席中、研修中は変更忘れとして遡ってカウントされません。継続する場合は、8時間に１度同じステイタスで更新してください。
   <script>
     const now = new Date();
     const formatted = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
@@ -36,46 +36,95 @@
 
   <div id="chart"></div>
 
-  <script>
-    fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
-      .then(response => response.json())
-      .then(data => {
-        // 名前を在席中の多い順にソート
-        const sortedNames = Object.keys(data).sort((a, b) => {
-          return (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0);
-        });
-
-        const statusTypes = ["在席中", "研修中"];
-
-        const traces = statusTypes.map(status => {
-          return {
-            x: sortedNames,
-            y: sortedNames.map(name => data[name][status] || 0),
-            name: status,
-            type: 'bar'
-          };
-        });
-
-        const allY = sortedNames.map(name =>
-          (data[name]["在席中"] || 0) + (data[name]["研修中"] || 0)
-        );
-        const maxY = Math.max(...allY);
-        const adjustedMax = Math.ceil(maxY / 0.8);
-
-        const layout = {
-          barmode: 'stack',
-          margin: { t: 20, b: 150, l: 40, r: 20 },
-          xaxis: { title: '名前', automargin: true },
-          yaxis: { title: 'チェックポイント数', range: [0, adjustedMax] },
-          autosize: true
-        };
-
-
-        Plotly.newPlot('chart', traces, layout, {responsive: true});
-      })
-      .catch(error => {
-        document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
+<script>
+  fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+    .then(response => response.json())
+    .then(data => {
+      const sortedNames = Object.keys(data).sort((a, b) => {
+        return (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0);
       });
-  </script>
+
+      const statusTypes = ["在席中", "研修中"];
+
+      // 初期状態（すべて y=0）
+      const tracesInitial = statusTypes.map(status => ({
+        x: sortedNames,
+        y: sortedNames.map(() => 0),
+        name: status,
+        type: 'bar'
+      }));
+
+      // 第1段階：「在席中」だけ表示、研修中はゼロ
+      const tracesStep1 = [
+        {
+          y: sortedNames.map(name => data[name]["在席中"] || 0)
+        },
+        {
+          y: sortedNames.map(() => 0)
+        }
+      ];
+
+      // 第2段階：「研修中」も追加
+      const tracesStep2 = [
+        {
+          y: sortedNames.map(name => data[name]["在席中"] || 0)
+        },
+        {
+          y: sortedNames.map(name => data[name]["研修中"] || 0)
+        }
+      ];
+
+      const allY = sortedNames.map(name =>
+        (data[name]["在席中"] || 0) + (data[name]["研修中"] || 0)
+      );
+      const maxY = Math.max(...allY);
+      const adjustedMax = Math.ceil(maxY / 0.8);
+
+      const layout = {
+        barmode: 'stack',
+        margin: { t: 20, b: 150, l: 40, r: 20 },
+        xaxis: { title: '名前', automargin: true },
+        yaxis: { title: 'チェックポイント数', range: [0, adjustedMax] },
+        autosize: true
+      };
+
+      Plotly.newPlot('chart', tracesInitial, layout, { responsive: true}).then(() => {
+        // 第1段階：在席中をアニメーション
+        Plotly.animate('chart', {
+          data: tracesStep1
+        }, {
+          transition: {
+            duration: 800,
+            easing: 'cubic-in-out'
+          },
+          frame: {
+            duration: 800,
+            redraw: true
+          }
+        });
+
+        // 第2段階：研修中を追加（タイミング遅延）
+        setTimeout(() => {
+          Plotly.animate('chart', {
+            data: tracesStep2
+          }, {
+            transition: {
+              duration: 800,
+              easing: 'cubic-in-out'
+            },
+            frame: {
+              duration: 800,
+              redraw: true
+            }
+          });
+        }, 1000); // 1秒後に2段階目スタート
+      });
+    })
+    .catch(error => {
+      document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
+    });
+</script>
+ 
+
 </body>
 </html>
