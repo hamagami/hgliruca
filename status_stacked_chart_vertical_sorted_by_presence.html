@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -7,27 +6,27 @@
   <title>在席・研修中ステータス</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
 
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  #chart {
-    width: 100%;
-    height: calc(100vh - 100px); /* 見出しや日時を差し引いた高さ */
-  }
-</style>
-
-
+    #chart {
+      width: 100%;
+      height: calc(100vh - 100px);
+    }
+  </style>
 </head>
 <body>
   <h2 style="text-align:center;">在席・研修中のステータス</h2>
   <p id="datetime" style="text-align:center;"></p>
-  8時間以上更新されない在席中、研修中は変更忘れとして遡ってカウントされません。継続する場合は、8時間に１度同じステイタスで更新してください。
+  <p style="text-align:center;">
+    8時間以上更新されない在席中、研修中は変更忘れとして遡ってカウントされません。継続する場合は、8時間に１度同じステイタスで更新してください。
+  </p>
+
   <script>
     const now = new Date();
     const formatted = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
@@ -36,95 +35,92 @@
 
   <div id="chart"></div>
 
-<script>
-  fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
-    .then(response => response.json())
-    .then(data => {
-      const sortedNames = Object.keys(data).sort((a, b) => {
-        return (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0);
-      });
-
-      const statusTypes = ["在席中", "研修中"];
-
-      // 初期状態（すべて y=0）
-      const tracesInitial = statusTypes.map(status => ({
-        x: sortedNames,
-        y: sortedNames.map(() => 0),
-        name: status,
-        type: 'bar'
-      }));
-
-      // 第1段階：「在席中」だけ表示、研修中はゼロ
-      const tracesStep1 = [
-        {
-          y: sortedNames.map(name => data[name]["在席中"] || 0)
-        },
-        {
-          y: sortedNames.map(() => 0)
-        }
-      ];
-
-      // 第2段階：「研修中」も追加
-      const tracesStep2 = [
-        {
-          y: sortedNames.map(name => data[name]["在席中"] || 0)
-        },
-        {
-          y: sortedNames.map(name => data[name]["研修中"] || 0)
-        }
-      ];
-
-      const allY = sortedNames.map(name =>
-        (data[name]["在席中"] || 0) + (data[name]["研修中"] || 0)
-      );
-      const maxY = Math.max(...allY);
-      const adjustedMax = Math.ceil(maxY / 0.8);
-
-      const layout = {
-        barmode: 'stack',
-        margin: { t: 20, b: 150, l: 40, r: 20 },
-        xaxis: { title: '名前', automargin: true },
-        yaxis: { title: 'チェックポイント数', range: [0, adjustedMax] },
-        autosize: true
-      };
-
-      Plotly.newPlot('chart', tracesInitial, layout, { responsive: true}).then(() => {
-        // 第1段階：在席中をアニメーション
-        Plotly.animate('chart', {
-          data: tracesStep1
-        }, {
-          transition: {
-            duration: 800,
-            easing: 'cubic-in-out'
-          },
-          frame: {
-            duration: 800,
-            redraw: true
-          }
+  <script>
+    fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+      .then(response => response.json())
+      .then(data => {
+        // (P) または (S) を含む名前を除外
+        const filteredNames = Object.keys(data).filter(name => {
+          return !/\((P|S)\)/.test(name);
         });
 
-        // 第2段階：研修中を追加（タイミング遅延）
-        setTimeout(() => {
-          Plotly.animate('chart', {
-            data: tracesStep2
-          }, {
-            transition: {
-              duration: 800,
-              easing: 'cubic-in-out'
-            },
-            frame: {
-              duration: 800,
-              redraw: true
-            }
-          });
-        }, 1000); // 1秒後に2段階目スタート
-      });
-    })
-    .catch(error => {
-      document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
-    });
-</script>
- 
+        // 在席中の多い順にソート
+        const sortedNames = filteredNames.sort((a, b) => {
+          return (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0);
+        });
 
+        const zaisekiY = sortedNames.map(name => data[name]["在席中"] || 0);
+        const kenshuY = sortedNames.map(name => data[name]["研修中"] || 0);
+
+        const statusTypes = ["在席中", "研修中"];
+
+        // 初期状態（すべて y=0）
+        const tracesInitial = statusTypes.map((status, i) => ({
+          x: sortedNames,
+          y: sortedNames.map(() => 0),
+          name: status,
+          type: 'bar'
+        }));
+
+        // 第1段階：在席中だけ表示、研修中はゼロ
+        const tracesStep1 = [
+          {
+            y: zaisekiY
+          },
+          {
+            y: sortedNames.map(() => 0)
+          }
+        ];
+
+        // 第2段階：研修中を追加
+        const tracesStep2 = [
+          {
+            y: zaisekiY
+          },
+          {
+            y: kenshuY
+          }
+        ];
+
+        // 最大値の調整
+        const allY = sortedNames.map(name =>
+          (data[name]["在席中"] || 0) + (data[name]["研修中"] || 0)
+        );
+        const maxY = Math.max(...allY);
+        const adjustedMax = Math.ceil(maxY / 0.8);
+
+        const layout = {
+          barmode: 'stack',
+          margin: { t: 20, b: 150, l: 40, r: 20 },
+          xaxis: { title: '名前', automargin: true },
+          yaxis: { title: 'チェックポイント数', range: [0, adjustedMax] },
+          autosize: true
+        };
+
+        // 初期描画 → 在席中表示 → 研修中追加
+        Plotly.newPlot('chart', tracesInitial, layout, { responsive: true }).then(() => {
+          // 第1段階：在席中だけ表示
+          Plotly.animate('chart', {
+            data: tracesStep1
+          }, {
+            transition: { duration: 800, easing: 'cubic-in-out' },
+            frame: { duration: 800, redraw: true }
+          });
+
+          // 第2段階：研修中を追加
+          setTimeout(() => {
+            Plotly.animate('chart', {
+              data: tracesStep2
+            }, {
+              transition: { duration: 800, easing: 'cubic-in-out' },
+              frame: { duration: 800, redraw: true }
+            });
+          }, 1000);
+        });
+      })
+      .catch(error => {
+        document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
+      });
+  </script>
 </body>
 </html>
