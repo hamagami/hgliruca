@@ -39,6 +39,16 @@
       padding: 8px 12px;
       border: 1px solid #aaa;
     }
+
+    /* ✅ 滑らかなフェード点滅 */
+    .blinking {
+      animation: blinkFade 3s ease-in-out infinite;
+    }
+
+    @keyframes blinkFade {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
   </style>
 
   <script type="text/javascript">
@@ -114,10 +124,11 @@
         if (diffMs > 8 * 3600 * 1000) {
           status = "不明";
         }
+
         cell3.innerHTML = status;
         cell4.innerHTML = item.message;
 
-        // 色付け
+        // 色とアニメーションの適用
         switch (status) {
           case '在席中':
           case '在席':
@@ -140,6 +151,7 @@
             break;
           case '不明':
             cell3.style.backgroundColor = 'gray';
+            cell3.classList.add('blinking'); // ← ここで点滅！
             break;
           default:
             cell3.style.backgroundColor = 'lightgray';
@@ -153,15 +165,13 @@
   <h1 style="text-align:center;">取り組みモニター</h1>
   <p style="text-align:center;">update per 5min <span id="real-time"></span></p>
 
-  <!-- 棒グラフ -->
   <iframe src="https://hamagami.github.io/hgliruca/status_stacked_chart_vertical_sorted_by_presence.html"></iframe>
 
-  <!-- 表とその説明（幅をiframeと揃える） -->
   <div class="table-box">
     <div class="table-description">
       同じステイタスが8時間以上続く場合は iruca のステイタスに関わらず「不明」の表示になります。<br>
       iruca のステイタスを更新すると新たなステイタスが表示されます。<br>
-      8時間を超えてじステイタスが継続する場合は、同じステイタスで更新してください。
+      8時間を超えてステイタスが継続する場合は、同じステイタスで更新してください。
     </div>
 
     <table id="dataTable" border="1">
