@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="600">
+  <title>在席・研修中 散布図</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #chart {
+      width: 100%;
+      height: calc(100vh - 100px);
+      padding-bottom: 40px;  /* ✅ ラベル分の余白を確保 */
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">在席・研修中のステータス（散布図）</h2>
+  <p id="datetime" style="text-align:center;"></p>
+  <p style="text-align:left; padding: 0 10px;">
+    各点はメンバーの「研修中」「在席中」のチェックポイント数を表します。<br>
+    名前は各点の外に表示されます。x軸のラベルが見切れないように調整されています。
+  </p>
+
+  <script>
+    const now = new Date();
+    const formatted = now.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+    document.getElementById("datetime").innerText = "集計日時：" + formatted;
+  </script>
+
+  <div id="chart"></div>
+
+  <script>
+    fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+      .then(response => response.json())
+      .then(data => {
+        const filteredNames = Object.keys(data).filter(name => !/\((P|S)\)/.test(name));
+        const x研修 = filteredNames.map(name => data[name]["研修中"] || 0);
+        const y在席 = filteredNames.map(name => data[name]["在席中"] || 0);
+        const labels = filteredNames;
+
+        const trace = {
+          x: x研修,
+          y: y在席,
+          type: 'scatter',
+          mode: 'markers+text',
+          text: labels,
+          textposition: 'top center',
+          textfont: {
+            size: 11,
+            color: 'black'
+          },
+          marker: {
+            size: 10,
+            color: 'royalblue'
+          },
+          cliponaxis: false
+        };
+
+        const maxX = Math.max(...x研修);
+        const maxY = Math.max(...y在席);
+
+        const layout = {
+          title: '研修中（X軸） × 在席中（Y軸）',
+          xaxis: {
+            title: '研修中のチェックポイント数',
+            range: [0, maxX + 1]
+          },
+          yaxis: {
+            title: '在席中のチェックポイント数',
+            range: [0, maxY + 1]
+          },
+          margin: { t: 60, b: 130, l: 80, r: 40 },  // ✅ 下マージン大きめに
+          autosize: true
+        };
+
+        Plotly.newPlot('chart', [trace], layout, { responsive: true });
+      })
+      .catch(error => {
+        document.getElementById("chart").innerText = "データの読み込みに失敗しました: " + error;
+      });
+  </script>
+</body>
+</html>
