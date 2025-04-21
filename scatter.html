@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="refresh" content="600">
-  <title>在席・研修中 散布図（透過グラデーション）</title>
+  <title>在席・研修中 散布図（透過グラデーション＋同心円）</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     html, body {
@@ -24,7 +24,8 @@
   <p id="datetime" style="text-align:center;"></p>
   <p style="text-align:left; padding: 0 10px;">
     各点は「研修中（X軸）」「在席中（Y軸）」の数を表します。<br>
-    在席中が多いほど青、研修中が多いほど橙になり、原点に近いほど透過されます。
+    在席中が多いほど青、研修中が多いほど橙になり、原点に近いほど透過されます。<br>
+    背景の同心円は原点からの距離を10単位ごとに示します。
   </p>
 
   <script>
@@ -47,6 +48,7 @@
         const maxX = Math.max(...x研修);
         const maxY = Math.max(...y在席);
         const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
+        const maxRadius = Math.ceil(maxDistance / 10) * 10;
 
         const colors = x研修.map((x, i) => {
           const y = y在席[i];
@@ -85,18 +87,37 @@
           cliponaxis: false
         };
 
+        const shapes = [];
+        for (let r = 10; r <= maxRadius; r += 10) {
+          shapes.push({
+            type: "circle",
+            xref: "x",
+            yref: "y",
+            x0: -r,
+            y0: -r,
+            x1: r,
+            y1: r,
+            line: {
+              color: "rgba(0, 128, 255, 0.2)", // ← 薄いブルー
+              width: 1,
+              dash: "dot"
+            }
+          });
+        }
+
         const layout = {
           title: '研修中（X軸） × 在席中（Y軸）',
           xaxis: {
             title: '研修中のチェックポイント数',
-            range: [0, maxX + 1]
+            range: [0, maxX + 5]
           },
           yaxis: {
             title: '在席中のチェックポイント数',
-            range: [0, maxY + 1]
+            range: [0, maxY + 5]
           },
           margin: { t: 60, b: 130, l: 80, r: 40 },
-          autosize: true
+          autosize: true,
+          shapes: shapes
         };
 
         Plotly.newPlot('chart', [trace], layout, { responsive: true });
