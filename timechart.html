@@ -6,8 +6,9 @@
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: "Segoe UI", sans-serif;
       margin: 20px;
+      background-color: #f8f9fa;
     }
     #user-select {
       margin-bottom: 20px;
@@ -15,7 +16,9 @@
       font-size: 16px;
     }
     .chart-box {
-      margin-bottom: 50px;
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
     }
   </style>
 </head>
@@ -37,7 +40,6 @@
     let userData = {};
     let summaryData = {};
 
-    // JSONファイルの読み込み
     Promise.all([
       fetch("https://dl.dropbox.com/scl/fi/girmoxy2s2dux8nofm9ag/user_status_history.json?rlkey=x83sx287jj93uuukunm2bph0f&dl=1").then(res => res.json()),
       fetch("https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1").then(res => res.json())
@@ -48,7 +50,6 @@
       plotSummaryChart();
     });
 
-    // プルダウンにユーザー追加
     function populateUserSelect() {
       const users = Object.keys(userData).sort();
       users.forEach(name => {
@@ -60,21 +61,32 @@
       userSelect.addEventListener("change", () => {
         plotUserChart(userSelect.value);
       });
-      plotUserChart(users[0]); // 初期表示
+      plotUserChart(users[0]);
     }
 
-    // ユーザーのステータス履歴を棒グラフで描画
+    // 10日前〜現在+1時間の範囲を返す
+    function getTimeRange() {
+      const now = new Date();
+      const start = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
+      const end = new Date(now.getTime() + 1 * 60 * 60 * 1000);
+      return [start.toISOString(), end.toISOString()];
+    }
+
     function plotUserChart(user) {
       const data = userData[user];
-
       const timestampsZai = [];
       const timestampsKen = [];
 
+      const [rangeStart, rangeEnd] = getTimeRange();
+
       data.forEach(entry => {
-        if (entry.status === "在席中") {
-          timestampsZai.push(entry.timestamp);
-        } else if (entry.status === "研修中") {
-          timestampsKen.push(entry.timestamp);
+        const t = entry.timestamp;
+        if (t >= rangeStart && t <= rangeEnd) {
+          if (entry.status === "在席中") {
+            timestampsZai.push(t);
+          } else if (entry.status === "研修中") {
+            timestampsKen.push(t);
+          }
         }
       });
 
@@ -97,9 +109,13 @@
       const layout = {
         title: `${user} のステータス履歴`,
         barmode: "stack",
+        autosize: true,
+        useResizeHandler: true,
+        plot_bgcolor: "#ffffff",
         xaxis: {
           title: "時刻",
           type: "date",
+          range: [rangeStart, rangeEnd],
           tickformat: "%m/%d %H:%M"
         },
         yaxis: {
@@ -110,14 +126,15 @@
         }
       };
 
-      Plotly.newPlot(userChart, [traceKen, traceZai], layout);
+      Plotly.newPlot(userChart, [traceKen, traceZai], layout, { responsive: true });
     }
 
-    // 各時刻の人数合計を折れ線グラフに
     function plotSummaryChart() {
       const timestamps = Object.keys(summaryData).sort();
       const zai = timestamps.map(t => summaryData[t]["在席中"]);
       const ken = timestamps.map(t => summaryData[t]["研修中"]);
+
+      const [rangeStart, rangeEnd] = getTimeRange();
 
       const trace1 = {
         x: timestamps,
@@ -137,9 +154,13 @@
 
       const layout = {
         title: "在席中・研修中人数の推移",
+        autosize: true,
+        useResizeHandler: true,
+        plot_bgcolor: "#ffffff",
         xaxis: {
           title: "時刻",
           type: "date",
+          range: [rangeStart, rangeEnd],
           tickformat: "%m/%d %H:%M"
         },
         yaxis: {
@@ -148,7 +169,7 @@
         }
       };
 
-      Plotly.newPlot(summaryChart, [trace1, trace2], layout);
+      Plotly.newPlot(summaryChart, [trace1, trace2], layout, { responsive: true });
     }
   </script>
 </body>
