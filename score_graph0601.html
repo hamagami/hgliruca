@@ -133,5 +133,14 @@ fetch("https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_
     Plotly.newPlot("chart", [presenceBar, trainingBar, scoreLabels], layout);
   });
 </script>
+<script>
+  function resizeParent() {
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: "resize", height: height }, "*");
+  }
+
+  window.addEventListener("load", resizeParent);
+  window.addEventListener("resize", resizeParent);
+</script>
 </body>
 </html>
