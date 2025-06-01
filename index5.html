@@ -227,8 +227,8 @@
         .then(res => res.json())
         .then(data => {
           const ts = Object.keys(data).sort();
-          const zai = ts.map(t => data[t]["在席中"]);
-          const ken = ts.map(t => data[t]["研修中"]);
+          const zai = ts.map(t => data[t]["在席中"] ?? 0);
+          const ken = ts.map(t => data[t]["研修中"] ?? 0);
 
           const shapes = [];
           const dateSet = new Set(ts.map(t => t.split("T")[0]));
