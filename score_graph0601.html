@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Score Bar Chart</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div id="chart" style="width:100%;height:600px;"></div>
+<script>
+fetch("https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_debug.json?rlkey=p6jhidej843o2wm5wb1mf9nj1&dl=1")
+  .then(response => response.json())
+  .then(data => {
+    const excluded = ["HMG", "TKH", "HGW"];
+    const records = Object.entries(data)
+      .filter(([name]) => !excluded.some(prefix => name.startsWith(prefix)))
+      .map(([name, values]) => ({
+        name,
+        zaiseki: values["在席中"],
+        kenshu: values["研修中"],
+        score: values["score"]
+      }));
+
+    records.sort((a, b) => b.score - a.score);
+
+    const names = records.map(r => r.name);
+    const score = records.map(r => r.score);
+    const zaiseki_score = records.map(r => (r.zaiseki / 80));
+    const kenshu_score = records.map(r => (Math.min(r.kenshu, 40) / 80));
+    const total_score = records.map(r => r.score);
+
+    const trainingBar = {
+      x: names,
+      y: kenshu_score,
+      type: "bar",
+      name: "研修中",
+      marker: {
+        color: records.map(r => "lightgreen"),
+        line: {
+          color: records.map(r => r.kenshu === 40 ? "red" : "rgba(0,0,0,0)"),
+          width: records.map(r => r.kenshu === 40 ? 2 : 0)
+        }
+      }
+    };
+
+    const presenceBar = {
+      x: names,
+      y: zaiseki_score,
+      type: "bar",
+      name: "在席中",
+      marker: { color: "steelblue" }
+    };
+
+    const scoreLabels = {
+      x: names,
+      y: total_score.map(s => s + 0.01),
+      text: total_score.map(s => s.toFixed(3)),
+      mode: "text",
+      type: "scatter",
+      textposition: "top center",
+      showlegend: false
+    };
+
+    const scoreOneIndex = records.findIndex(r => r.score < 1.0);
+    const scoreOneX = scoreOneIndex > 0 ? scoreOneIndex - 0.5 : -1;
+
+    const layout = {
+      barmode: "stack",
+      title: "直近1カ月の取り組み充足率（縦軸: score）",
+      xaxis: {
+        title: "名前（score降順）"
+      },
+      yaxis: {
+        title: "score"
+      },
+      legend: {
+        title: { text: "ステータス" }
+      },
+      height: 600,
+      margin: { l: 40, r: 40, t: 60, b: 40 },
+      shapes: [
+        {
+          type: "line",
+          x0: scoreOneX,
+          x1: scoreOneX,
+          y0: 0,
+          y1: 1.2,
+          xref: "x",
+          yref: "paper",
+          line: {
+            color: "red",
+            dash: "dash"
+          }
+        },
+        {
+          type: "line",
+          x0: -0.5,
+          x1: names.length - 0.5,
+          y0: 1.0,
+          y1: 1.0,
+          xref: "x",
+          yref: "y",
+          line: {
+            color: "black",
+            dash: "dot"
+          }
+        }
+      ],
+      annotations: [
+        {
+          x: scoreOneX,
+          y: 1.1,
+          xref: "x",
+          yref: "paper",
+          text: "score=1.0",
+          showarrow: false,
+          font: { color: "red" }
+        },
+        {
+          x: names.length - 1,
+          y: 1.0,
+          xref: "x",
+          yref: "y",
+          text: "score=1.0",
+          showarrow: false,
+          font: { color: "black" },
+          xanchor: "right"
+        }
+      ]
+    };
+
+    Plotly.newPlot("chart", [presenceBar, trainingBar, scoreLabels], layout);
+  });
+</script>
+</body>
+</html>
