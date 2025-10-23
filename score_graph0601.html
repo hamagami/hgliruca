@@ -36,7 +36,7 @@ fetch("https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_
       type: "bar",
       name: "研修中",
       marker: {
-        color: records.map(r => "lightgreen"),
+        color: records.map(r => "orange"),
         line: {
           color: records.map(r => r.kenshu === 40 ? "red" : "rgba(0,0,0,0)"),
           width: records.map(r => r.kenshu === 40 ? 2 : 0)
