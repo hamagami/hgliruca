@@ -6,104 +6,67 @@
   <title>濱上研 取り組みモニタ</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      padding: 10px;
-      gap: 20px;
-    }
-    .top-section {
-      display: flex;
-      flex-direction: row;
-      gap: 20px;
-    }
-    .left-column {
-      width: 66.6%;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .right-column {
-      width: 33.3%;
-      display: flex;
-      flex-direction: column;
-    }
-    .chart-box {
-      width: 100%;
-      height: 600px;
-    }
-    .table-box {
-      width: 100%;
-      text-align: left;
-    }
-    .table-description {
-      background-color: #f0f0f0;
-      padding: 6px 10px;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      text-align: center;
-    }
-    th, td {
-      padding: 6px 10px;
-      border: 1px solid #aaa;
-    }
-    .blinking {
-      animation: blinkFade 3s ease-in-out infinite;
-    }
-    @keyframes blinkFade {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
+    html, body { margin:0; padding:0; font-family:sans-serif; }
+    .container { display:flex; flex-direction:column; padding:10px; gap:20px; }
+    .top-section { display:flex; flex-direction:row; gap:20px; }
+    .left-column { width:66.6%; display:flex; flex-direction:column; gap:10px; }
+    .right-column { width:33.3%; display:flex; flex-direction:column; }
+    .chart-box { width:100%; height:600px; }
+    .table-box { width:100%; text-align:left; }
+    .table-description { background:#f0f0f0; padding:6px 10px; font-size:14px; margin-bottom:8px; }
+    table { border-collapse:collapse; width:100%; text-align:center; }
+    th, td { padding:6px 10px; border:1px solid #aaa; }
+    .blinking { animation: blinkFade 3s ease-in-out infinite; }
+    @keyframes blinkFade { 0%,100%{opacity:1;} 50%{opacity:0;} }
 
-    /* (追加) うろうろ絵文字のスタイル */
+    /* うろうろ絵文字（最前面レイヤ） */
     .ghosts-layer {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;   /* クリックを邪魔しない */
-      z-index: 9999;          /* いちばん上に */
-      overflow: hidden;
+      position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
     }
     .float-emoji {
       position: absolute;
       font-size: clamp(20px, 2.2vw, 40px);
       will-change: transform;
-      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
-      opacity: 0.9;
-      user-select: none;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.2));
+      opacity: .9; user-select: none;
+      transition: opacity .25s linear; /* ワープ時のフェード */
     }
     @media (prefers-reduced-motion: reduce) {
-      .float-emoji {
-        transition: transform 8s linear;
-      }
+      .float-emoji { transition: transform 8s linear, opacity .25s linear; }
     }
-  </style>
 
-  <style>
-    #barChartContainer iframe {
-      height: 800px !important;
+    /* ときどき現れる巨大💀 */
+    .boss-emoji {
+      position: absolute;
+      font-size: clamp(64px, 9vw, 160px);
+      will-change: transform, opacity, filter;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+      opacity: 0;                 /* 最初は透明（JSでフェード） */
+      pointer-events: none;
+      z-index: 10000;             /* 浮遊絵文字より一段上 */
+      transition: opacity .4s linear;
     }
+    @media (prefers-reduced-motion: reduce) {
+      .boss-emoji { transition: opacity .6s linear; }
+    }
+
+    #barChartContainer iframe { height: 800px !important; }
   </style>
 </head>
-<body onload="fetchAll()">
-  <h1 style="text-align:center;">&#127875; 濱上研 取り組みモニター&#x1f47b;</h1>
+<body onload="initPage()">
+  <h1 id="title" style="text-align:center;">モニター</h1>
   <p style="text-align:center;">update per 5min <span id="real-time"></span></p>
 
   <div class="container">
     <div class="top-section">
       <div class="left-column">
-        <div id="barChartContainer" class="chart-box"><iframe src="https://hamagami.github.io/hgliruca/score_graph0601a.html" width="100%" height="100%" frameborder="0"></iframe></div>
-        <!-- scatter-chart removed -->
+        <!-- スコアの外部/内部ページを入れるなら src を差し替えてください -->
+        <div id="barChartContainer" class="chart-box">
+          <iframe src="https://hamagami.github.io/hgliruca/score_graph0601a.html" width="100%" height="100%" frameborder="0"></iframe>
+        </div>
         <div id="summary-chart" class="chart-box"></div>
       </div>
+
       <div class="right-column">
         <div class="table-box">
           <div class="table-description">
@@ -113,11 +76,7 @@
           </div>
           <table id="dataTable">
             <tr>
-              <th>Name</th>
-              <th>ID</th>
-              <th>Status</th>
-              <th>Message</th>
-              <th>Update</th>
+              <th>Name</th><th>ID</th><th>Status</th><th>Message</th><th>Update</th>
             </tr>
           </table>
         </div>
@@ -125,37 +84,35 @@
     </div>
   </div>
 
-  <!-- (追加) うろうろ絵文字のレイヤー -->
+  <!-- うろうろ絵文字・巨大💀の描画レイヤ -->
   <div id="ghosts-layer" class="ghosts-layer" aria-hidden="true"></div>
 
   <script>
-    function fetchAll() {
+    /* ===== 初期化 ===== */
+    function initPage() {
+      // タイトルに 🎃👻 を fromCodePoint で注入（文字化け回避）
+      const h1 = document.getElementById('title');
+      const left = String.fromCodePoint(0x1F383);  // 🎃
+      const right = String.fromCodePoint(0x1F47B); // 👻
+      h1.textContent = `${left} 濱上研 取り組みモニター${right}`;
+
       fetchTable();
-      fetchBarChart();
-      /* fetchScatterChart(); */
       fetchTimeSeriesChart();
+
       const now = new Date();
       document.getElementById("real-time").innerText = now.toLocaleTimeString("ja-JP");
 
-      // (追加) 絵文字エフェクト起動
-      startFloatingEmojis();
+      startFloatingEmojis();   // トリッキー移動
     }
 
+    /* ===== 右側テーブル ===== */
     function fetchTable() {
       fetch("https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members")
         .then(res => res.json())
         .then(data => {
           const now = new Date();
           const table = document.getElementById('dataTable');
-          table.innerHTML = `
-            <tr>
-              <th>Name</th>
-              <th>ID</th>
-              <th>Status</th>
-              <th>Message</th>
-              <th>Update</th>
-            </tr>
-          `;
+          table.innerHTML = '<tr><th>Name</th><th>ID</th><th>Status</th><th>Message</th><th>Update</th></tr>';
           data.forEach(item => {
             const row = table.insertRow();
             const updatedTime = new Date(item.updated_at);
@@ -173,22 +130,13 @@
               cell.classList.add("blinking");
               cell.style.backgroundColor = "gray";
             } else {
-              const colors = {
-                "在席中": "blue",
-                "在席": "blue",
-                "離席中": "salmon",
-                "離席": "salmon",
-                "研修中": "orange",
-                "帰宅": "black",
-                "取込中": "lightyellow"
-              };
+              const colors = { "在席中":"blue","在席":"blue","離席中":"salmon","離席":"salmon","研修中":"orange","帰宅":"black","取込中":"lightyellow" };
               cell.style.backgroundColor = colors[status] || "lightgray";
-              if (["在席中", "帰宅"].includes(status)) cell.style.color = "white";
+              if (["在席中","帰宅"].includes(status)) cell.style.color = "white";
             }
           });
         });
     }
-
     function formatElapsed(ms) {
       const s = Math.floor(ms / 1000);
       const m = Math.floor(s / 60);
@@ -197,59 +145,7 @@
       return d > 0 ? `${d}日前` : h > 0 ? `${h}時間前` : m > 0 ? `${m}分前` : `${s}秒前`;
     }
 
-    function fetchBarChart() {
-      fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
-        .then(res => res.json())
-        .then(data => {
-          const names = Object.keys(data).filter(name => !/\((P|S)\)/.test(name));
-          const sorted = names.sort((a, b) => (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0));
-          const zai = sorted.map(name => data[name]["在席中"] || 0);
-          const ken = sorted.map(name => data[name]["研修中"] || 0);
-          const maxY = Math.max(...zai.map((v, i) => v + ken[i]));
-          Plotly.newPlot("bar-chart", [
-            { x: sorted, y: zai, type: "bar", name: "在席中" },
-            { x: sorted, y: ken, type: "bar", name: "研修中" }
-          ], {
-            barmode: "stack",
-            xaxis: { title: "名前", tickangle: -45 },
-            yaxis: { title: "人数", range: [0, Math.ceil(maxY / 0.8)] },
-            margin: { t: 30, b: 100 }
-          });
-        });
-    }
-
-    function fetchScatterChart() {
-      fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
-        .then(res => res.json())
-        .then(data => {
-          const names = Object.keys(data).filter(name => !/\((P|S)\)/.test(name));
-          const x = names.map(name => data[name]["研修中"] || 0);
-          const y = names.map(name => data[name]["在席中"] || 0);
-          const maxX = Math.max(...x), maxY = Math.max(...y);
-          const maxDist = Math.sqrt(maxX ** 2 + maxY ** 2);
-          const colors = x.map((xv, i) => {
-            const yv = y[i];
-            const r = Math.round(255 * (xv / maxX));
-            const g = Math.round(128 * (xv / maxX));
-            const b = Math.round(255 * (yv / maxY));
-            const alpha = Math.sqrt(xv ** 2 + yv ** 2) / maxDist;
-            return `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
-          });
-          Plotly.newPlot("scatter-chart", [{
-            x, y,
-            text: names,
-            type: "scatter",
-            mode: "markers+text",
-            textposition: "top center",
-            marker: { size: 18, color: colors, line: { color: "black", width: 1 } }
-          }], {
-            xaxis: { title: "研修中" },
-            yaxis: { title: "在席中" },
-            margin: { t: 30, b: 60, l: 50, r: 30 }
-          });
-        });
-    }
-
+    /* ===== 左下：時系列グラフ ===== */
     function fetchTimeSeriesChart() {
       fetch("https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1")
         .then(res => res.json())
@@ -260,47 +156,27 @@
 
           const shapes = [];
           const dateSet = new Set(ts.map(t => t.split("T")[0]));
-
           for (const date of dateSet) {
             const weekday = new Date(`${date}T00:00`).getDay();
 
-            // 平日夜間
+            // 平日夜間を薄グレー
             if (weekday >= 1 && weekday <= 5) {
-              for (let h = 0; h < 24; h++) {
-                if (h >= 18 || h < 6) {
-                  const h1 = h.toString().padStart(2, "0");
-                  const h2 = ((h + 1) % 24).toString().padStart(2, "0");
-                  shapes.push({
-                    type: "rect",
-                    xref: "x",
-                    yref: "paper",
-                    x0: `${date}T${h1}:00`,
-                    x1: `${date}T${h2}:00`,
-                    y0: 0,
-                    y1: 1,
-                    fillcolor: "rgba(200,200,200,0.2)",
-                    line: { width: 0 }
-                  });
-                }
+              for (let h=0; h<24; h++) if (h>=18 || h<6) {
+                const h1 = String(h).padStart(2,"0");
+                const h2 = String((h+1)%24).padStart(2,"0");
+                shapes.push({ type:"rect", xref:"x", yref:"paper",
+                  x0:`${date}T${h1}:00`, x1:`${date}T${h2}:00`, y0:0, y1:1,
+                  fillcolor:"rgba(200,200,200,0.2)", line:{width:0} });
               }
             }
-
-            // 休日（ハッチ風）
+            // 土日は薄青の縞
             if (weekday === 0 || weekday === 6) {
-              for (let h = 0; h < 24; h++) {
-                const h1 = h.toString().padStart(2, "0");
-                const h2 = ((h + 1) % 24).toString().padStart(2, "0");
-                shapes.push({
-                  type: "rect",
-                  xref: "x",
-                  yref: "paper",
-                  x0: `${date}T${h1}:00`,
-                  x1: `${date}T${h2}:00`,
-                  y0: 0,
-                  y1: 1,
-                  fillcolor: h % 2 === 0 ? "rgba(150,150,255,0.1)" : "rgba(150,150,255,0.25)",
-                  line: { width: 0 }
-                });
+              for (let h=0; h<24; h++) {
+                const h1 = String(h).padStart(2,"0");
+                const h2 = String((h+1)%24).padStart(2,"0");
+                shapes.push({ type:"rect", xref:"x", yref:"paper",
+                  x0:`${date}T${h1}:00`, x1:`${date}T${h2}:00`, y0:0, y1:1,
+                  fillcolor: h%2===0 ? "rgba(150,150,255,0.10)" : "rgba(150,150,255,0.25)", line:{width:0} });
               }
             }
           }
@@ -312,120 +188,295 @@
             xaxis: { title: "時間", type: "date", tickformat: "%m/%d %H:%M" },
             yaxis: { title: "人数" },
             margin: { t: 30, b: 80, l: 60, r: 30 },
-            shapes: shapes
+            shapes
           });
         });
     }
 
     /* ===============================
-       (追加) 🎃👻 うろうろエフェクト本体
+       🎃👻 トリッキー浮遊＋巨大💀
        =============================== */
     function startFloatingEmojis() {
       const layer = document.getElementById('ghosts-layer');
       if (!layer) return;
 
-      const EMOJIS = ["\u{1F383}", "\u{1F47B}"]; // 🎃, 👻
-      const COUNT  = 14;  // 数を増減してください
+      const EMOJIS = [0x1F383, 0x1F47B]; // 🎃, 👻
+      const COUNT  = 14;                  // 個体数（速度帯は元のままに見える設定）
       const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const sprites = [];
       const rect = () => ({ w: layer.clientWidth, h: layer.clientHeight });
 
-      for (let i = 0; i < COUNT; i++) {
-        const span = document.createElement('span');
-        span.className = 'float-emoji';
-        span.textContent = EMOJIS[Math.random() < 0.5 ? 0 : 1];
-        layer.appendChild(span);
+      // マウス回避
+      const mouse = { x: null, y: null };
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+      // util
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      const rand = (a, b) => a + Math.random() * (b - a);
+      const sign = () => (Math.random() < 0.5 ? -1 : 1);
+
+      function pickMode(s) {
+        const now = performance.now();
+        if (prefersReduced) {
+          s.mode = "curve";
+          s.modeUntil = now + rand(3000, 6500);
+          s.curve = { f1: rand(0.6, 1.8), f2: rand(0.6, 1.8), gain: rand(6, 11), seed: Math.random() * 1000, dir: sign() };
+          return;
+        }
+        const r = Math.random();
+        if (r < 0.35) { // カーブ
+          s.mode = "curve"; s.modeUntil = now + rand(3200, 7200);
+          s.curve = { f1: rand(0.6, 1.8), f2: rand(0.6, 1.8), gain: rand(7, 12), seed: Math.random() * 1000, dir: sign() };
+        } else if (r < 0.65) { // ジグザグ
+          s.mode = "zigzag"; s.modeUntil = now + rand(2600, 5600);
+          s.zig = { interval: rand(160, 320), lastFlip: performance.now(), dir: sign(), strength: rand(9, 14) };
+        } else if (r < 0.9) { // 周回
+          s.mode = "orbit"; s.modeUntil = now + rand(3600, 7800);
+          const { w, h } = rect(); const rBase = Math.min(w, h) * rand(0.06, 0.14);
+          s.orbit = { cx: rand(0, w), cy: rand(0, h), r: rBase, theta: Math.random()*Math.PI*2, omega: sign()*rand(0.35, 0.95) };
+        } else { // ホバー
+          s.mode = "hover"; s.modeUntil = now + rand(900, 1800);
+          s.hover = { t: 0, amp: rand(5, 10) };
+        }
+      }
+
+      function makeSprite() {
+        const el = document.createElement('span');
+        el.className = 'float-emoji';
+        el.textContent = String.fromCodePoint(EMOJIS[Math.random() < 0.5 ? 0 : 1]);
+        layer.appendChild(el);
 
         const { w, h } = rect();
-        const x = Math.random() * (w - 40);
-        const y = Math.random() * (h - 40);
-
-        // 速度（px/s）: 遅すぎず速すぎず
-        const speed = prefersReduced ? 10 + Math.random() * 10 : 20 + Math.random() * 40;
+        const depth = prefersReduced ? 1.0 : rand(0.7, 1.4);  // 疑似Z（サイズ/最高速）
+        const baseSpeed = prefersReduced ? 20 : rand(20, 60); // 速度帯
         const dir = Math.random() * Math.PI * 2;
-        const vx = Math.cos(dir) * speed;
-        const vy = Math.sin(dir) * speed;
 
-        // ちょっとだけ揺らぎ
-        const wander = () => (Math.random() - 0.5) * (prefersReduced ? 2 : 8);
+        const s = {
+          el,
+          x: Math.random() * (w - 40),
+          y: Math.random() * (h - 40),
+          vx: Math.cos(dir) * baseSpeed,
+          vy: Math.sin(dir) * baseSpeed,
+          ax: 0, ay: 0, rot: rand(-5, 5),
+          baseSpeed, depth, alpha: 1,
+          mode: "curve", modeUntil: 0,
+          curve: null, zig: null, orbit: null, hover: null
+        };
+        pickMode(s);
+        return s;
+      }
 
-        sprites.push({
-          el: span,
-          x, y,
-          vx, vy,
-          ax: 0, ay: 0,
-          rot: (Math.random() * 10) - 5,
-          wander
-        });
+      for (let i = 0; i < COUNT; i++) sprites.push(makeSprite());
+
+      // 近接回避（軽い群れ分離）
+      function separationForce(i, s, neighbors, radius = 48) {
+        let fx = 0, fy = 0;
+        for (let j = 0; j < neighbors.length; j++) {
+          if (i === j) continue;
+          const o = neighbors[j];
+          const dx = s.x - o.x, dy = s.y - o.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 > 0 && d2 < radius*radius) {
+            const d = Math.sqrt(d2);
+            const w = (radius - d) / radius; // 0..1
+            fx += (dx / d) * w * 40;
+            fy += (dy / d) * w * 40;
+          }
+        }
+        return { fx, fy };
       }
 
       let last = performance.now();
       function tick(now) {
-        const dt = Math.min(0.05, (now - last) / 1000); // 秒
+        const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
-
         const { w, h } = rect();
-        for (const s of sprites) {
-          // ふらつき加速度
-          if (!prefersReduced) {
-            s.ax = s.wander();
-            s.ay = s.wander();
+
+        for (let i = 0; i < sprites.length; i++) {
+          const s = sprites[i];
+
+          // モード切替
+          if (now > s.modeUntil) pickMode(s);
+
+          // 目標速度帯に寄せる
+          const vmag = Math.hypot(s.vx, s.vy) || 1;
+          const target = s.baseSpeed * (prefersReduced ? 0.85 : 1.0);
+          const forwardBoost = Math.max(-target, Math.min((target - vmag) * 4, target));
+
+          // 方向ベクトルと法線
+          const ux = s.vx / vmag, uy = s.vy / vmag;
+          const nx = -uy, ny = ux;
+
+          let ax = ux * forwardBoost, ay = uy * forwardBoost;
+
+          if (s.mode === "curve" && s.curve) {
+            const t = (now + s.curve.seed) / 1000;
+            const turn = s.curve.dir * (Math.sin(t*s.curve.f1) + 0.7*Math.cos(t*s.curve.f2)) * s.curve.gain;
+            ax += nx * turn; ay += ny * turn;
+          } else if (s.mode === "zigzag" && s.zig) {
+            if (now - s.zig.lastFlip > s.zig.interval) {
+              s.zig.lastFlip = now; s.zig.dir *= -1; s.rot += (Math.random()<0.5?-1:1) * (8 + Math.random()*10);
+            }
+            ax += nx * s.zig.dir * s.zig.strength * (prefersReduced ? 0.6 : 1.0);
+            ay += ny * s.zig.dir * s.zig.strength * (prefersReduced ? 0.6 : 1.0);
+          } else if (s.mode === "orbit" && s.orbit) {
+            s.orbit.theta += s.orbit.omega * dt;
+            const px = s.orbit.cx + s.orbit.r * Math.cos(s.orbit.theta);
+            const py = s.orbit.cy + s.orbit.r * Math.sin(s.orbit.theta);
+            const tx = -s.orbit.r * s.orbit.omega * Math.sin(s.orbit.theta);
+            const ty =  s.orbit.r * s.orbit.omega * Math.cos(s.orbit.theta);
+            ax += (tx - s.vx) * 0.8 + (px - s.x) * 1.2;
+            ay += (ty - s.vy) * 0.8 + (py - s.y) * 1.2;
+          } else if (s.mode === "hover" && s.hover) {
+            s.hover.t += dt;
+            ax += Math.sin(s.hover.t * 3.0) * s.hover.amp;
+            ay += Math.cos(s.hover.t * 2.6) * s.hover.amp;
+            ax += -s.vx * 0.9; ay += -s.vy * 0.9;
           }
 
-          // 速度・位置更新
-          s.vx += s.ax * dt;
-          s.vy += s.ay * dt;
+          // 軽い群れ分離
+          const sep = separationForce(i, s, sprites, 48);
+          ax += sep.fx; ay += sep.fy;
 
-          const maxV = prefersReduced ? 25 : 80;
-          const clamp = (v) => Math.max(-maxV, Math.min(maxV, v));
-          s.vx = clamp(s.vx);
-          s.vy = clamp(s.vy);
+          // マウス回避
+          if (mouse.x !== null) {
+            const dx = s.x - mouse.x, dy = s.y - mouse.y;
+            const d = Math.hypot(dx, dy);
+            if (d < 120 && d > 0) {
+              const f = (120 - d) / 120;
+              ax += (dx / d) * f * 120;
+              ay += (dy / d) * f * 120;
+            }
+          }
 
-          s.x += s.vx * dt;
-          s.y += s.vy * dt;
+          // ソフトな壁
+          const margin = 36;
+          if (s.x < margin) ax += (margin - s.x) * 3;
+          if (s.y < margin) ay += (margin - s.y) * 3;
+          if (s.x > w - margin) ax -= (s.x - (w - margin)) * 3;
+          if (s.y > h - margin) ay -= (s.y - (h - margin)) * 3;
 
-          // 壁でバウンド
-          const margin = 40;
-          if (s.x < 0) { s.x = 0; s.vx *= -1; }
-          if (s.y < 0) { s.y = 0; s.vy *= -1; }
-          if (s.x > w - margin) { s.x = w - margin; s.vx *= -1; }
-          if (s.y > h - margin) { s.y = h - margin; s.vy *= -1; }
+          // ときどき画面端からワープイン
+          if (!prefersReduced && Math.random() < 0.04 * dt) {
+            const side = Math.floor(Math.random() * 4);
+            if (side === 0) { s.x = 2;     s.y = Math.random()*h; s.vx =  Math.abs(s.vx); }
+            if (side === 1) { s.x = w - 2; s.y = Math.random()*h; s.vx = -Math.abs(s.vx); }
+            if (side === 2) { s.y = 2;     s.x = Math.random()*w; s.vy =  Math.abs(s.vy); }
+            if (side === 3) { s.y = h - 2; s.x = Math.random()*w; s.vy = -Math.abs(s.vy); }
+            s.alpha = 0; // フェードイン
+          }
 
-          // ちょい回転
-          s.rot += (prefersReduced ? 0.05 : 0.15);
+          // 速度更新＆クランプ
+          s.vx += ax * dt; s.vy += ay * dt;
+          const vmax = (prefersReduced ? 25 : 80) * s.depth;
+          const spd = Math.hypot(s.vx, s.vy) || 1;
+          const k = Math.max(0, Math.min(vmax / spd, 1));
+          if (k < 1) { s.vx *= k; s.vy *= k; }
 
-          s.el.style.transform = `translate(${s.x}px, ${s.y}px) rotate(${s.rot}deg)`;
+          // 位置更新
+          s.x += s.vx * dt; s.y += s.vy * dt;
+
+          // ハード壁（バウンド）
+          if (s.x < 0) { s.x = 0; s.vx *= -1; s.rot += 8 + Math.random()*8; }
+          if (s.y < 0) { s.y = 0; s.vy *= -1; s.rot += 8 + Math.random()*8; }
+          if (s.x > w - margin) { s.x = w - margin; s.vx *= -1; s.rot += 8 + Math.random()*8; }
+          if (s.y > h - margin) { s.y = h - margin; s.vy *= -1; s.rot += 8 + Math.random()*8; }
+
+          // 見た目（回転・スケール・フェード）
+          const heading = Math.atan2(s.vy, s.vx);
+          s.rot += (prefersReduced ? 0.04 : 0.12) * (Math.random() < 0.5 ? -1 : 1);
+          s.alpha = Math.max(0, Math.min((s.alpha ?? 1) + dt * 2.5, 1));
+          const scale = s.depth;
+          s.el.style.opacity = (0.7 + 0.3 * s.alpha).toFixed(3);
+          s.el.style.transform = `translate(${s.x}px, ${s.y}px) rotate(${(s.rot + heading*20).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
         }
+
         requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
 
-      // リサイズで位置が極端にズレないよう軽く再配置
+      /* ==== ここから「巨大💀」のランダム出現 ==== */
+      const skullCP = 0x1F480; // 💀
+      function scheduleBoss() {
+        const min = prefersReduced ? 25000 : 12000;   // 最短間隔
+        const max = prefersReduced ? 40000 : 24000;   // 最長間隔
+        const delay = Math.floor(min + Math.random() * (max - min));
+        setTimeout(() => { spawnBigSkull(); scheduleBoss(); }, delay);
+      }
+      function spawnBigSkull() {
+        const { w: W, h: H } = rect();
+        const edge = Math.floor(Math.random() * 4); // 0左 1右 2上 3下
+        const margin = 40;
+        let x0, y0, x1, y1;
+        if (edge === 0)      { x0 = -margin;  y0 = Math.random()*H; x1 = W+margin; y1 = Math.random()*H; } // 左→右
+        else if (edge === 1) { x0 = W+margin; y0 = Math.random()*H; x1 = -margin;  y1 = Math.random()*H; } // 右→左
+        else if (edge === 2) { x0 = Math.random()*W; y0 = -margin;  x1 = Math.random()*W; y1 = H+margin; } // 上→下
+        else                  { x0 = Math.random()*W; y0 = H+margin; x1 = Math.random()*W; y1 = -margin; } // 下→上
+
+        const el = document.createElement('span');
+        el.className = 'boss-emoji';
+        el.textContent = String.fromCodePoint(skullCP);
+        layer.appendChild(el);
+
+        const dur = 3000 + Math.random()*2500;       // 3.0〜5.5秒
+        const wobbleAmp = 18 + Math.random()*24;     // 揺れ
+        const rotAmp = 8 + Math.random()*10;         // 回転振れ
+        const scaleBase = 1.0 + Math.random()*0.4;   // スケール基準
+        const t0 = performance.now();
+
+        el.style.opacity = '0';
+        let x = x0, y = y0, rot = 0, scale = scaleBase;
+
+        function frame(t) {
+          const dt = t - t0;
+          const p = Math.min(1, dt / dur); // 0→1
+          const wx = Math.sin(t / 180) * wobbleAmp;
+          const wy = Math.cos(t / 200) * wobbleAmp;
+          x = x0 + (x1 - x0) * p + wx;
+          y = y0 + (y1 - y0) * p + wy;
+          rot = Math.sin(t / 160) * rotAmp;
+
+          // 中盤やや拡大→終盤戻す感じ
+          const easeIn  = p < .5 ? (p*2)**2/4 : 0.25;
+          const easeOut = p > .5 ? ((1-(p-.5)*2)**2)/4 : 0.25;
+          scale = scaleBase + easeIn - easeOut;
+
+          // フェード（前半IN / 後半OUT）
+          const alpha = p < .3 ? (p/.3) : (p > .7 ? (1-(p-.7)/.3) : 1);
+          el.style.opacity = alpha.toFixed(3);
+          el.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${scale})`;
+
+          if (p < 1) requestAnimationFrame(frame);
+          else el.remove();
+        }
+        el.style.transform = `translate(${x}px, ${y}px) rotate(0deg) scale(${scale})`;
+        requestAnimationFrame(frame);
+      }
+      scheduleBoss();
+      /* ==== ここまで巨大💀 ==== */
+
+      // リサイズ補正
       let resizeTimer = null;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
           const { w, h } = rect();
           sprites.forEach(s => {
-            s.x = Math.min(Math.max(0, s.x), w - 40);
-            s.y = Math.min(Math.max(0, s.y), h - 40);
+            s.x = Math.max(0, Math.min(s.x, w - 40));
+            s.y = Math.max(0, Math.min(s.y, h - 40));
           });
         }, 150);
       });
     }
-  </script>
 
-  <script>
+    // iframe 高さを親に通知（同ドメインであれば有効）
     window.addEventListener("message", function (event) {
       if (event.data.type === "resize" && typeof event.data.height === "number") {
         const iframe = document.querySelector("iframe");
-        if (iframe) {
-          iframe.style.height = event.data.height + "px";
-        }
+        if (iframe) iframe.style.height = event.data.height + "px";
       }
     });
   </script>
-
 </body>
 </html>
