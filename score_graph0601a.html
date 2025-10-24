@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Score Bar Chart</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div id="chart" style="width:100%;height:600px;"></div>
+<script>
+fetch("https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_debug.json?rlkey=p6jhidej843o2wm5wb1mf9nj1&dl=1")
+  .then(response => response.json())
+  .then(data => {
+    const excluded = ["HMG", "TKH", "HGW"];
+    const records = Object.entries(data)
+      .filter(([name]) => !excluded.some(prefix => name.startsWith(prefix)))
+      .map(([name, values]) => ({
+        name,
+        zaiseki: values["在席中"],
+        kenshu: values["研修中"],
+        score: values["score"]
+      }));
+
+    records.sort((a, b) => b.score - a.score);
+
+    const names = records.map(r => r.name);
+    const zaiseki_score = records.map(r => (r.zaiseki / 80));
+    const kenshu_score  = records.map(r => (Math.min(r.kenshu, 40) / 80));
+    const total_score   = records.map(r => r.score);
+
+    // ====== 元のバー・数値ラベル ======
+    const trainingBar = {
+      x: names, y: kenshu_score, type: "bar", name: "研修中",
+      marker: {
+        color: records.map(r => "orange"),
+        line: {
+          color: records.map(r => r.kenshu === 40 ? "red" : "rgba(0,0,0,0)"),
+          width: records.map(r => r.kenshu === 40 ? 2 : 0)
+        }
+      }
+    };
+    const presenceBar = {
+      x: names, y: zaiseki_score, type: "bar", name: "在席中",
+      marker: { color: "steelblue" }
+    };
+    const scoreLabels = {
+      x: names,
+      y: total_score.map(s => s + 0.01),
+      text: total_score.map(s => s.toFixed(3)),
+      mode: "text", type: "scatter",
+      textposition: "top center", showlegend: false
+    };
+
+    // ====== 追加：🍭（>1.0）と 💀（<0.5）をバーの上に ======
+    const yOffset = 0.05; // バー頂上からのオフセット
+    const yTop = total_score.map(s => s + yOffset);
+
+    const candyTrace = {
+      x: names,
+      y: yTop,
+      text: total_score.map(s => s > 1.0 ? "\u{1F36D}" : null), // 🍭
+      mode: "text", type: "scatter",
+      textposition: "top center",
+      textfont: { size: 20 },
+      hoverinfo: "skip",
+      showlegend: false
+    };
+
+    const skullTrace = {
+      x: names,
+      y: yTop,
+      text: total_score.map(s => s < 0.6 ? "\u{1F480}" : null), // 💀
+      mode: "text", type: "scatter",
+      textposition: "top center",
+      textfont: { size: 20 },
+      hoverinfo: "skip",
+      showlegend: false
+    };
+
+    // ====== 1.0の縦線など（元のまま） ======
+    const scoreOneIndex = records.findIndex(r => r.score < 1.0);
+    const scoreOneX = scoreOneIndex > 0 ? scoreOneIndex - 0.5 : -1;
+
+    const maxScore = Math.max(...total_score, 1.2);
+    const layout = {
+      barmode: "stack",
+      title: "直近1カ月の取り組み充足率（縦軸: score）赤枠は研修時間上限超過",
+      xaxis: { title: "名前（score降順）" },
+      yaxis: {
+        title: "score",
+        range: [0, Math.max(1.3, maxScore + 0.2)] // 絵文字分の余白を確保
+      },
+      legend: { title: { text: "ステータス" } },
+      height: 600,
+      margin: { l: 40, r: 40, t: 60, b: 40 },
+      shapes: [
+        {
+          type: "line", x0: scoreOneX, x1: scoreOneX, y0: 0, y1: 1.2,
+          xref: "x", yref: "paper", line: { color: "red", dash: "dash" }
+        },
+        {
+          type: "line", x0: -0.5, x1: names.length - 0.5, y0: 1.0, y1: 1.0,
+          xref: "x", yref: "y", line: { color: "black", dash: "dot" }
+        }
+      ],
+      annotations: [
+        { x: scoreOneX, y: 1.1, xref: "x", yref: "paper", text: "score=1.0", showarrow: false, font: { color: "red" } },
+        { x: names.length - 1, y: 1.0, xref: "x", yref: "y", text: "score=1.0", showarrow: false, font: { color: "black" }, xanchor: "right" }
+      ]
+    };
+
+    Plotly.newPlot("chart",
+      [presenceBar, trainingBar, scoreLabels, candyTrace, skullTrace],
+      layout
+    );
+  });
+</script>
+<script>
+  // 親ページへ高さ通知（iframe用）
+  function resizeParent() {
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: "resize", height: height }, "*");
+  }
+  window.addEventListener("load", resizeParent);
+  window.addEventListener("resize", resizeParent);
+</script>
+</body>
+</html>
