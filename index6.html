@@ -2,9 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="300;url=index6.html" />
+  <meta http-equiv="refresh" content="60;url=index6a.html" />
   <title>濱上研 取り組みモニタ</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     html, body { margin:0; padding:0; font-family:sans-serif; }
     .container { display:flex; flex-direction:column; padding:10px; gap:20px; }
@@ -19,51 +20,48 @@
     .blinking { animation: blinkFade 3s ease-in-out infinite; }
     @keyframes blinkFade { 0%,100%{opacity:1;} 50%{opacity:0;} }
 
-    /* うろうろ絵文字（最前面レイヤ） */
-    .ghosts-layer {
-      position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
-    }
+    /* 浮遊絵文字（最前面レイヤ） */
+    .ghosts-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
     .float-emoji {
       position: absolute;
       font-size: clamp(20px, 2.2vw, 40px);
       will-change: transform;
       filter: drop-shadow(0 2px 2px rgba(0,0,0,.2));
       opacity: .9; user-select: none;
-      transition: opacity .25s linear; /* ワープ時のフェード */
+      transition: opacity .25s linear;
     }
     @media (prefers-reduced-motion: reduce) {
       .float-emoji { transition: transform 8s linear, opacity .25s linear; }
     }
 
-    /* ときどき現れる巨大💀 */
+    /* ときどき現れる巨大ボス（💀/🧛 共通スタイル） */
     .boss-emoji {
       position: absolute;
       font-size: clamp(64px, 9vw, 160px);
       will-change: transform, opacity, filter;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
-      opacity: 0;                 /* 最初は透明（JSでフェード） */
+      opacity: 0;
       pointer-events: none;
-      z-index: 10000;             /* 浮遊絵文字より一段上 */
+      z-index: 10000;             /* 浮遊より上 */
       transition: opacity .4s linear;
     }
-    @media (prefers-reduced-motion: reduce) {
-      .boss-emoji { transition: opacity .6s linear; }
-    }
+    @media (prefers-reduced-motion: reduce) { .boss-emoji { transition: opacity .6s linear; } }
 
     #barChartContainer iframe { height: 800px !important; }
   </style>
 </head>
 <body onload="initPage()">
   <h1 id="title" style="text-align:center;">モニター</h1>
-  <p style="text-align:center;">update per 5min <span id="real-time"></span></p>
+  <p style="text-align:center;">update per 1min <span id="real-time"></span></p>
 
   <div class="container">
     <div class="top-section">
       <div class="left-column">
-        <!-- スコアの外部/内部ページを入れるなら src を差し替えてください -->
+        <!-- スコアチャート（必要に応じて差し替え） -->
         <div id="barChartContainer" class="chart-box">
           <iframe src="https://hamagami.github.io/hgliruca/score_graph0601a.html" width="100%" height="100%" frameborder="0"></iframe>
         </div>
+        <!-- 時系列（在席中/研修中の人数推移） -->
         <div id="summary-chart" class="chart-box"></div>
       </div>
 
@@ -75,22 +73,20 @@
             8時間を超えてステイタスが継続する場合は、同じステイタスで更新してください。
           </div>
           <table id="dataTable">
-            <tr>
-              <th>Name</th><th>ID</th><th>Status</th><th>Message</th><th>Update</th>
-            </tr>
+            <tr><th>Name</th><th>ID</th><th>Status</th><th>Message</th><th>Update</th></tr>
           </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- うろうろ絵文字・巨大💀の描画レイヤ -->
+  <!-- 浮遊レイヤ -->
   <div id="ghosts-layer" class="ghosts-layer" aria-hidden="true"></div>
 
   <script>
-    /* ===== 初期化 ===== */
+    /* ================= 初期化 ================= */
     function initPage() {
-      // タイトルに 🎃👻 を fromCodePoint で注入（文字化け回避）
+      // タイトルに 🎃👻 を注入（文字化け回避のため fromCodePoint）
       const h1 = document.getElementById('title');
       const left = String.fromCodePoint(0x1F383);  // 🎃
       const right = String.fromCodePoint(0x1F47B); // 👻
@@ -102,10 +98,10 @@
       const now = new Date();
       document.getElementById("real-time").innerText = now.toLocaleTimeString("ja-JP");
 
-      startFloatingEmojis();   // トリッキー移動
+      startFloatingEmojis();   // トリッキー浮遊（🎃👻）
     }
 
-    /* ===== 右側テーブル ===== */
+    /* ============== 右側テーブル ============== */
     function fetchTable() {
       fetch("https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members")
         .then(res => res.json())
@@ -145,8 +141,9 @@
       return d > 0 ? `${d}日前` : h > 0 ? `${h}時間前` : m > 0 ? `${m}分前` : `${s}秒前`;
     }
 
-    /* ===== 左下：時系列グラフ ===== */
+    /* ============ 左下：時系列グラフ ============ */
     function fetchTimeSeriesChart() {
+      // ★ ご指定のDropboxスタイルのfetch例（必要に応じリンク差替）
       fetch("https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1")
         .then(res => res.json())
         .then(data => {
@@ -158,8 +155,6 @@
           const dateSet = new Set(ts.map(t => t.split("T")[0]));
           for (const date of dateSet) {
             const weekday = new Date(`${date}T00:00`).getDay();
-
-            // 平日夜間を薄グレー
             if (weekday >= 1 && weekday <= 5) {
               for (let h=0; h<24; h++) if (h>=18 || h<6) {
                 const h1 = String(h).padStart(2,"0");
@@ -169,7 +164,6 @@
                   fillcolor:"rgba(200,200,200,0.2)", line:{width:0} });
               }
             }
-            // 土日は薄青の縞
             if (weekday === 0 || weekday === 6) {
               for (let h=0; h<24; h++) {
                 const h1 = String(h).padStart(2,"0");
@@ -193,15 +187,13 @@
         });
     }
 
-    /* ===============================
-       🎃👻 トリッキー浮遊＋巨大💀
-       =============================== */
+    /* ===== 🎃👻 トリッキー浮遊＋巨大💀/🧛（5分同期） ===== */
     function startFloatingEmojis() {
       const layer = document.getElementById('ghosts-layer');
       if (!layer) return;
 
       const EMOJIS = [0x1F383, 0x1F47B]; // 🎃, 👻
-      const COUNT  = 14;                  // 個体数（速度帯は元のままに見える設定）
+      const COUNT  = 14;
       const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const sprites = [];
@@ -212,30 +204,28 @@
       window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
       // util
-      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
       const rand = (a, b) => a + Math.random() * (b - a);
       const sign = () => (Math.random() < 0.5 ? -1 : 1);
 
       function pickMode(s) {
         const now = performance.now();
         if (prefersReduced) {
-          s.mode = "curve";
-          s.modeUntil = now + rand(3000, 6500);
-          s.curve = { f1: rand(0.6, 1.8), f2: rand(0.6, 1.8), gain: rand(6, 11), seed: Math.random() * 1000, dir: sign() };
+          s.mode = "curve"; s.modeUntil = now + rand(3000, 6500);
+          s.curve = { f1: rand(0.6, 1.8), f2: rand(0.6, 1.8), gain: rand(6, 11), seed: Math.random()*1000, dir: sign() };
           return;
         }
         const r = Math.random();
-        if (r < 0.35) { // カーブ
+        if (r < 0.35) {
           s.mode = "curve"; s.modeUntil = now + rand(3200, 7200);
-          s.curve = { f1: rand(0.6, 1.8), f2: rand(0.6, 1.8), gain: rand(7, 12), seed: Math.random() * 1000, dir: sign() };
-        } else if (r < 0.65) { // ジグザグ
+          s.curve = { f1: rand(0.6, 1.8), f2: rand(0.6, 1.8), gain: rand(7, 12), seed: Math.random()*1000, dir: sign() };
+        } else if (r < 0.65) {
           s.mode = "zigzag"; s.modeUntil = now + rand(2600, 5600);
           s.zig = { interval: rand(160, 320), lastFlip: performance.now(), dir: sign(), strength: rand(9, 14) };
-        } else if (r < 0.9) { // 周回
+        } else if (r < 0.9) {
           s.mode = "orbit"; s.modeUntil = now + rand(3600, 7800);
           const { w, h } = rect(); const rBase = Math.min(w, h) * rand(0.06, 0.14);
           s.orbit = { cx: rand(0, w), cy: rand(0, h), r: rBase, theta: Math.random()*Math.PI*2, omega: sign()*rand(0.35, 0.95) };
-        } else { // ホバー
+        } else {
           s.mode = "hover"; s.modeUntil = now + rand(900, 1800);
           s.hover = { t: 0, amp: rand(5, 10) };
         }
@@ -248,216 +238,235 @@
         layer.appendChild(el);
 
         const { w, h } = rect();
-        const depth = prefersReduced ? 1.0 : rand(0.7, 1.4);  // 疑似Z（サイズ/最高速）
-        const baseSpeed = prefersReduced ? 20 : rand(20, 60); // 速度帯
+        const depth = prefersReduced ? 1.0 : rand(0.7, 1.4);
+        const baseSpeed = prefersReduced ? 20 : rand(20, 60);
         const dir = Math.random() * Math.PI * 2;
 
         const s = {
-          el,
-          x: Math.random() * (w - 40),
-          y: Math.random() * (h - 40),
-          vx: Math.cos(dir) * baseSpeed,
-          vy: Math.sin(dir) * baseSpeed,
-          ax: 0, ay: 0, rot: rand(-5, 5),
-          baseSpeed, depth, alpha: 1,
-          mode: "curve", modeUntil: 0,
-          curve: null, zig: null, orbit: null, hover: null
+          el, x: Math.random()*(w-40), y: Math.random()*(h-40),
+          vx: Math.cos(dir)*baseSpeed, vy: Math.sin(dir)*baseSpeed,
+          ax:0, ay:0, rot: rand(-5, 5), baseSpeed, depth, alpha:1,
+          mode:"curve", modeUntil:0, curve:null, zig:null, orbit:null, hover:null
         };
         pickMode(s);
         return s;
       }
 
-      for (let i = 0; i < COUNT; i++) sprites.push(makeSprite());
+      for (let i=0;i<COUNT;i++) sprites.push(makeSprite());
 
-      // 近接回避（軽い群れ分離）
-      function separationForce(i, s, neighbors, radius = 48) {
-        let fx = 0, fy = 0;
-        for (let j = 0; j < neighbors.length; j++) {
-          if (i === j) continue;
-          const o = neighbors[j];
-          const dx = s.x - o.x, dy = s.y - o.y;
-          const d2 = dx*dx + dy*dy;
-          if (d2 > 0 && d2 < radius*radius) {
-            const d = Math.sqrt(d2);
-            const w = (radius - d) / radius; // 0..1
-            fx += (dx / d) * w * 40;
-            fy += (dy / d) * w * 40;
+      function separationForce(i, s, arr, radius=48) {
+        let fx=0, fy=0;
+        for (let j=0;j<arr.length;j++){
+          if (i===j) continue;
+          const o = arr[j], dx=s.x-o.x, dy=s.y-o.y, d2=dx*dx+dy*dy;
+          if (d2>0 && d2<radius*radius) {
+            const d=Math.sqrt(d2), w=(radius-d)/radius;
+            fx += (dx/d)*w*40; fy += (dy/d)*w*40;
           }
         }
-        return { fx, fy };
+        return {fx, fy};
       }
 
       let last = performance.now();
-      function tick(now) {
-        const dt = Math.min(0.05, (now - last) / 1000);
-        last = now;
+      function tick(now){
+        const dt = Math.min(0.05, (now-last)/1000); last=now;
         const { w, h } = rect();
 
-        for (let i = 0; i < sprites.length; i++) {
+        for (let i=0;i<sprites.length;i++){
           const s = sprites[i];
-
-          // モード切替
           if (now > s.modeUntil) pickMode(s);
 
-          // 目標速度帯に寄せる
           const vmag = Math.hypot(s.vx, s.vy) || 1;
           const target = s.baseSpeed * (prefersReduced ? 0.85 : 1.0);
-          const forwardBoost = Math.max(-target, Math.min((target - vmag) * 4, target));
+          const fwd = Math.max(-target, Math.min((target - vmag) * 4, target));
+          const ux = s.vx/vmag, uy=s.vy/vmag, nx=-uy, ny=ux;
 
-          // 方向ベクトルと法線
-          const ux = s.vx / vmag, uy = s.vy / vmag;
-          const nx = -uy, ny = ux;
+          let ax = ux*fwd, ay=uy*fwd;
 
-          let ax = ux * forwardBoost, ay = uy * forwardBoost;
-
-          if (s.mode === "curve" && s.curve) {
-            const t = (now + s.curve.seed) / 1000;
-            const turn = s.curve.dir * (Math.sin(t*s.curve.f1) + 0.7*Math.cos(t*s.curve.f2)) * s.curve.gain;
-            ax += nx * turn; ay += ny * turn;
-          } else if (s.mode === "zigzag" && s.zig) {
+          if (s.mode==="curve" && s.curve){
+            const t=(now+s.curve.seed)/1000;
+            const turn = s.curve.dir*(Math.sin(t*s.curve.f1)+0.7*Math.cos(t*s.curve.f2))*s.curve.gain;
+            ax += nx*turn; ay += ny*turn;
+          } else if (s.mode==="zigzag" && s.zig){
             if (now - s.zig.lastFlip > s.zig.interval) {
-              s.zig.lastFlip = now; s.zig.dir *= -1; s.rot += (Math.random()<0.5?-1:1) * (8 + Math.random()*10);
+              s.zig.lastFlip = now; s.zig.dir*=-1; s.rot += (Math.random()<0.5?-1:1)*(8+Math.random()*10);
             }
-            ax += nx * s.zig.dir * s.zig.strength * (prefersReduced ? 0.6 : 1.0);
-            ay += ny * s.zig.dir * s.zig.strength * (prefersReduced ? 0.6 : 1.0);
-          } else if (s.mode === "orbit" && s.orbit) {
-            s.orbit.theta += s.orbit.omega * dt;
-            const px = s.orbit.cx + s.orbit.r * Math.cos(s.orbit.theta);
-            const py = s.orbit.cy + s.orbit.r * Math.sin(s.orbit.theta);
-            const tx = -s.orbit.r * s.orbit.omega * Math.sin(s.orbit.theta);
-            const ty =  s.orbit.r * s.orbit.omega * Math.cos(s.orbit.theta);
-            ax += (tx - s.vx) * 0.8 + (px - s.x) * 1.2;
-            ay += (ty - s.vy) * 0.8 + (py - s.y) * 1.2;
-          } else if (s.mode === "hover" && s.hover) {
+            ax += nx*s.zig.dir*s.zig.strength*(prefersReduced?0.6:1.0);
+            ay += ny*s.zig.dir*s.zig.strength*(prefersReduced?0.6:1.0);
+          } else if (s.mode==="orbit" && s.orbit){
+            s.orbit.theta += s.orbit.omega*dt;
+            const px = s.orbit.cx + s.orbit.r*Math.cos(s.orbit.theta);
+            const py = s.orbit.cy + s.orbit.r*Math.sin(s.orbit.theta);
+            const tx = -s.orbit.r*s.orbit.omega*Math.sin(s.orbit.theta);
+            const ty =  s.orbit.r*s.orbit.omega*Math.cos(s.orbit.theta);
+            ax += (tx - s.vx)*0.8 + (px - s.x)*1.2;
+            ay += (ty - s.vy)*0.8 + (py - s.y)*1.2;
+          } else if (s.mode==="hover" && s.hover){
             s.hover.t += dt;
-            ax += Math.sin(s.hover.t * 3.0) * s.hover.amp;
-            ay += Math.cos(s.hover.t * 2.6) * s.hover.amp;
-            ax += -s.vx * 0.9; ay += -s.vy * 0.9;
+            ax += Math.sin(s.hover.t*3.0)*s.hover.amp;
+            ay += Math.cos(s.hover.t*2.6)*s.hover.amp;
+            ax += -s.vx*0.9; ay += -s.vy*0.9;
           }
 
-          // 軽い群れ分離
           const sep = separationForce(i, s, sprites, 48);
           ax += sep.fx; ay += sep.fy;
 
-          // マウス回避
           if (mouse.x !== null) {
-            const dx = s.x - mouse.x, dy = s.y - mouse.y;
-            const d = Math.hypot(dx, dy);
-            if (d < 120 && d > 0) {
-              const f = (120 - d) / 120;
-              ax += (dx / d) * f * 120;
-              ay += (dy / d) * f * 120;
-            }
+            const dx=s.x-mouse.x, dy=s.y-mouse.y, d=Math.hypot(dx,dy);
+            if (d<120 && d>0){ const f=(120-d)/120; ax += (dx/d)*f*120; ay += (dy/d)*f*120; }
           }
 
-          // ソフトな壁
-          const margin = 36;
+          const margin=36;
           if (s.x < margin) ax += (margin - s.x) * 3;
           if (s.y < margin) ay += (margin - s.y) * 3;
           if (s.x > w - margin) ax -= (s.x - (w - margin)) * 3;
           if (s.y > h - margin) ay -= (s.y - (h - margin)) * 3;
 
-          // ときどき画面端からワープイン
-          if (!prefersReduced && Math.random() < 0.04 * dt) {
-            const side = Math.floor(Math.random() * 4);
-            if (side === 0) { s.x = 2;     s.y = Math.random()*h; s.vx =  Math.abs(s.vx); }
-            if (side === 1) { s.x = w - 2; s.y = Math.random()*h; s.vx = -Math.abs(s.vx); }
-            if (side === 2) { s.y = 2;     s.x = Math.random()*w; s.vy =  Math.abs(s.vy); }
-            if (side === 3) { s.y = h - 2; s.x = Math.random()*w; s.vy = -Math.abs(s.vy); }
-            s.alpha = 0; // フェードイン
+          if (!prefersReduced && Math.random() < 0.04*dt) {
+            const side = Math.floor(Math.random()*4);
+            if (side===0){ s.x=2;      s.y=Math.random()*h; s.vx= Math.abs(s.vx); }
+            if (side===1){ s.x=w-2;    s.y=Math.random()*h; s.vx=-Math.abs(s.vx); }
+            if (side===2){ s.y=2;      s.x=Math.random()*w; s.vy= Math.abs(s.vy); }
+            if (side===3){ s.y=h-2;    s.x=Math.random()*w; s.vy=-Math.abs(s.vy); }
+            s.alpha=0;
           }
 
-          // 速度更新＆クランプ
-          s.vx += ax * dt; s.vy += ay * dt;
+          s.vx += ax*dt; s.vy += ay*dt;
           const vmax = (prefersReduced ? 25 : 80) * s.depth;
           const spd = Math.hypot(s.vx, s.vy) || 1;
-          const k = Math.max(0, Math.min(vmax / spd, 1));
+          const k = Math.max(0, Math.min(vmax/spd, 1));
           if (k < 1) { s.vx *= k; s.vy *= k; }
 
-          // 位置更新
-          s.x += s.vx * dt; s.y += s.vy * dt;
+          s.x += s.vx*dt; s.y += s.vy*dt;
 
-          // ハード壁（バウンド）
-          if (s.x < 0) { s.x = 0; s.vx *= -1; s.rot += 8 + Math.random()*8; }
-          if (s.y < 0) { s.y = 0; s.vy *= -1; s.rot += 8 + Math.random()*8; }
-          if (s.x > w - margin) { s.x = w - margin; s.vx *= -1; s.rot += 8 + Math.random()*8; }
-          if (s.y > h - margin) { s.y = h - margin; s.vy *= -1; s.rot += 8 + Math.random()*8; }
+          if (s.x<0){ s.x=0; s.vx*=-1; s.rot += 8 + Math.random()*8; }
+          if (s.y<0){ s.y=0; s.vy*=-1; s.rot += 8 + Math.random()*8; }
+          if (s.x>w-margin){ s.x=w-margin; s.vx*=-1; s.rot += 8 + Math.random()*8; }
+          if (s.y>h-margin){ s.y=h-margin; s.vy*=-1; s.rot += 8 + Math.random()*8; }
 
-          // 見た目（回転・スケール・フェード）
           const heading = Math.atan2(s.vy, s.vx);
-          s.rot += (prefersReduced ? 0.04 : 0.12) * (Math.random() < 0.5 ? -1 : 1);
-          s.alpha = Math.max(0, Math.min((s.alpha ?? 1) + dt * 2.5, 1));
+          s.rot += (prefersReduced ? 0.04 : 0.12) * (Math.random()<0.5?-1:1);
           const scale = s.depth;
-          s.el.style.opacity = (0.7 + 0.3 * s.alpha).toFixed(3);
+          s.el.style.opacity = (0.7 + 0.3 * (s.alpha ?? 1)).toFixed(3);
           s.el.style.transform = `translate(${s.x}px, ${s.y}px) rotate(${(s.rot + heading*20).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
         }
-
         requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
 
-      /* ==== ここから「巨大💀」のランダム出現 ==== */
+      /* ==== ランダム巨大💀（既存） ==== */
       const skullCP = 0x1F480; // 💀
-      function scheduleBoss() {
-        const min = prefersReduced ? 25000 : 12000;   // 最短間隔
-        const max = prefersReduced ? 40000 : 24000;   // 最長間隔
-        const delay = Math.floor(min + Math.random() * (max - min));
-        setTimeout(() => { spawnBigSkull(); scheduleBoss(); }, delay);
+      function scheduleBossSkull() {
+        const min = prefersReduced ? 25000 : 12000;
+        const max = prefersReduced ? 40000 : 24000;
+        const delay = Math.floor(min + Math.random()*(max-min));
+        setTimeout(() => { spawnBigSkull(); scheduleBossSkull(); }, delay);
       }
       function spawnBigSkull() {
-        const { w: W, h: H } = rect();
-        const edge = Math.floor(Math.random() * 4); // 0左 1右 2上 3下
+        const { w:W, h:H } = rect();
+        const edge = Math.floor(Math.random()*4);
         const margin = 40;
-        let x0, y0, x1, y1;
-        if (edge === 0)      { x0 = -margin;  y0 = Math.random()*H; x1 = W+margin; y1 = Math.random()*H; } // 左→右
-        else if (edge === 1) { x0 = W+margin; y0 = Math.random()*H; x1 = -margin;  y1 = Math.random()*H; } // 右→左
-        else if (edge === 2) { x0 = Math.random()*W; y0 = -margin;  x1 = Math.random()*W; y1 = H+margin; } // 上→下
-        else                  { x0 = Math.random()*W; y0 = H+margin; x1 = Math.random()*W; y1 = -margin; } // 下→上
+        let x0,y0,x1,y1;
+        if (edge===0){ x0=-margin; y0=Math.random()*H; x1=W+margin; y1=Math.random()*H; }
+        else if(edge===1){ x0=W+margin; y0=Math.random()*H; x1=-margin; y1=Math.random()*H; }
+        else if(edge===2){ x0=Math.random()*W; y0=-margin; x1=Math.random()*W; y1=H+margin; }
+        else { x0=Math.random()*W; y0=H+margin; x1=Math.random()*W; y1=-margin; }
 
         const el = document.createElement('span');
-        el.className = 'boss-emoji';
+        el.className='boss-emoji';
         el.textContent = String.fromCodePoint(skullCP);
         layer.appendChild(el);
 
-        const dur = 3000 + Math.random()*2500;       // 3.0〜5.5秒
-        const wobbleAmp = 18 + Math.random()*24;     // 揺れ
-        const rotAmp = 8 + Math.random()*10;         // 回転振れ
-        const scaleBase = 1.0 + Math.random()*0.4;   // スケール基準
+        const dur = 3000 + Math.random()*2500;
+        const wobbleAmp = 18 + Math.random()*24;
+        const rotAmp = 8 + Math.random()*10;
+        const baseScale = 1.0 + Math.random()*0.4;
         const t0 = performance.now();
-
         el.style.opacity = '0';
-        let x = x0, y = y0, rot = 0, scale = scaleBase;
+        let x=x0, y=y0, scale=baseScale;
 
-        function frame(t) {
-          const dt = t - t0;
-          const p = Math.min(1, dt / dur); // 0→1
-          const wx = Math.sin(t / 180) * wobbleAmp;
-          const wy = Math.cos(t / 200) * wobbleAmp;
-          x = x0 + (x1 - x0) * p + wx;
-          y = y0 + (y1 - y0) * p + wy;
-          rot = Math.sin(t / 160) * rotAmp;
-
-          // 中盤やや拡大→終盤戻す感じ
-          const easeIn  = p < .5 ? (p*2)**2/4 : 0.25;
-          const easeOut = p > .5 ? ((1-(p-.5)*2)**2)/4 : 0.25;
-          scale = scaleBase + easeIn - easeOut;
-
-          // フェード（前半IN / 後半OUT）
-          const alpha = p < .3 ? (p/.3) : (p > .7 ? (1-(p-.7)/.3) : 1);
+        function frame(t){
+          const p = Math.min(1, (t-t0)/dur);
+          const wx = Math.sin(t/180)*wobbleAmp;
+          const wy = Math.cos(t/200)*wobbleAmp;
+          x = x0 + (x1-x0)*p + wx;
+          y = y0 + (y1-y0)*p + wy;
+          const rot = Math.sin(t/160)*rotAmp;
+          const easeIn = p<.5 ? (p*2)**2/4 : 0.25;
+          const easeOut = p>.5 ? ((1-(p-.5)*2)**2)/4 : 0.25;
+          scale = baseScale + easeIn - easeOut;
+          const alpha = p<.3 ? (p/.3) : (p>.7 ? (1-(p-.7)/.3) : 1);
           el.style.opacity = alpha.toFixed(3);
           el.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${scale})`;
-
-          if (p < 1) requestAnimationFrame(frame);
-          else el.remove();
+          if (p<1) requestAnimationFrame(frame); else el.remove();
         }
         el.style.transform = `translate(${x}px, ${y}px) rotate(0deg) scale(${scale})`;
         requestAnimationFrame(frame);
       }
-      scheduleBoss();
-      /* ==== ここまで巨大💀 ==== */
+      scheduleBossSkull();
 
-      // リサイズ補正
-      let resizeTimer = null;
+      /* ==== ★ 5分ごと巨大🧛（壁時計同期） ==== */
+      (function addFiveMinuteVampire(){
+        const vampCP = 0x1F9DB; // 🧛
+        function spawnBigVamp() {
+          const W = layer.clientWidth, H = layer.clientHeight;
+          // 画面中心付近に“ドーン”
+          const el = document.createElement('span');
+          el.className = 'boss-emoji';
+          el.textContent = String.fromCodePoint(vampCP);
+          layer.appendChild(el);
+
+          const dur = prefersReduced ? 2500 : 4200;
+          const wobbleAmp = prefersReduced ? 6 : 16;
+          const rotAmp = prefersReduced ? 2 : 6;
+          const baseScale = prefersReduced ? 1.0 : 1.25;
+
+          const cx = W * (0.45 + Math.random()*0.10);
+          const cy = H * (0.45 + Math.random()*0.10);
+          el.style.opacity='0';
+          el.style.transform = `translate(${cx}px, ${cy}px) rotate(0deg) scale(${baseScale})`;
+
+          const t0 = performance.now();
+          function frame(t){
+            const p = Math.min(1, (t-t0)/dur);
+            const easeIn  = p < .3 ? (p/.3) : 1;
+            const easeOut = p > .7 ? (1 - (p-.7)/.3) : 1;
+            const alpha = Math.min(1, easeIn) * Math.min(1, easeOut);
+
+            const wx = Math.sin(t/220)*wobbleAmp;
+            const wy = Math.cos(t/260)*wobbleAmp;
+            const rot= Math.sin(t/200)*rotAmp;
+            const scale = baseScale + (p<.5 ? p*0.4 : (1-p)*0.2);
+
+            el.style.opacity = alpha.toFixed(3);
+            el.style.transform = `translate(${cx+wx}px, ${cy+wy}px) rotate(${rot}deg) scale(${scale})`;
+
+            if (p<1) requestAnimationFrame(frame); else el.remove();
+          }
+          requestAnimationFrame(frame);
+        }
+
+        // 壁時計 5分周期に同期（分%5===0 で即出現、次の境界から setInterval）
+        function scheduleWallClockEvery5min() {
+          const now = new Date();
+          const cycle = 5 * 60 * 1000; // 5分
+          const msToNext = cycle - (now.getTime() % cycle);
+
+          // ちょうど5分境界帯なら即出現（秒の窓を少し設ける）
+          if (now.getMinutes() % 5 === 0 && now.getSeconds() < 10) {
+            spawnBigVamp();
+          }
+
+          setTimeout(() => {
+            spawnBigVamp();
+            setInterval(spawnBigVamp, cycle);
+          }, msToNext);
+        }
+        scheduleWallClockEvery5min();
+      })();
+
+      // 画面リサイズで位置補正
+      let resizeTimer=null;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
@@ -470,7 +479,7 @@
       });
     }
 
-    // iframe 高さを親に通知（同ドメインであれば有効）
+    // iframe 高さ連携（同ドメイン時）
     window.addEventListener("message", function (event) {
       if (event.data.type === "resize" && typeof event.data.height === "number") {
         const iframe = document.querySelector("iframe");
