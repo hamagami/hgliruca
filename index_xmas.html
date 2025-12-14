@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="300;url=index_xmas.html" />
+  <title>濱上研 取り組みモニタ (Xmas Ver.2)</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      /* 背景色：少し濃い目の冬空グラデーションにして雪を見やすく */
+      background: linear-gradient(to bottom, #dcedf6, #ffffff);
+      overflow-x: hidden;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 20px;
+      position: relative;
+      z-index: 10; /* コンテンツの基本レイヤー */
+    }
+    .top-section {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+    }
+    .left-column {
+      width: 66.6%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .right-column {
+      width: 33.3%;
+      display: flex;
+      flex-direction: column;
+    }
+    .chart-box {
+      width: 100%;
+      height: 600px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .table-box {
+      width: 100%;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .table-description {
+      background-color: #f0f0f0;
+      padding: 6px 10px;
+      font-size: 14px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      text-align: center;
+    }
+    th, td {
+      padding: 6px 10px;
+      border: 1px solid #aaa;
+    }
+    th {
+      background-color: #c0392b;
+      color: white;
+    }
+    .blinking {
+      animation: blinkFade 3s ease-in-out infinite;
+    }
+    @keyframes blinkFade {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
+    #barChartContainer iframe {
+      height: 800px !important;
+      border-radius: 8px;
+    }
+
+    /* --- クリスマス演出用スタイル --- */
+    
+    /* 1. 雪のエフェクト (Canvas) - 最前面手前に配置して目立たせる */
+    #snowCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50; /* コンテンツよりさらに手前 */
+    }
+
+    /* 2. サンタクロース (動的に生成するため共通クラスのみ) */
+    .santa-wrapper {
+      position: fixed;
+      left: -300px; /* 画面外スタート */
+      z-index: 20;
+      opacity: 0.9;
+      pointer-events: none;
+      animation-name: flySanta;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    
+    @keyframes flySanta {
+      0% { transform: translateX(0) translateY(0) rotate(5deg); }
+      25% { transform: translateX(35vw) translateY(30px) rotate(0deg); }
+      50% { transform: translateX(60vw) translateY(-20px) rotate(-5deg); }
+      100% { transform: translateX(120vw) translateY(0) rotate(0deg); }
+    }
+
+    /* 3. クリスマスツリー - 最前面レイヤーに移動 */
+    .christmas-tree {
+      position: fixed;
+      bottom: -30px;
+      right: -30px;
+      width: 500px; /* 少し大きく */
+      height: 500px;
+      z-index: 30; /* コンテンツ(10)より手前、雪(50)より奥 */
+      opacity: 0.5; /* 文字が読める程度の半透明 */
+      pointer-events: none; /* 下にあるテーブルのクリックを邪魔しない */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,10 20,90 80,90' fill='%232ecc71' /%3E%3Cpolygon points='50,20 25,80 75,80' fill='%2327ae60' /%3E%3Cpolygon points='50,30 30,70 70,70' fill='%232ecc71' /%3E%3Crect x='45' y='90' width='10' height='10' fill='%23795548' /%3E%3Ccircle cx='30' cy='60' r='3' fill='%23e74c3c' class='ornament'/%3E%3Ccircle cx='70' cy='80' r='3' fill='%23f1c40f' class='ornament'/%3E%3Ccircle cx='50' cy='40' r='3' fill='%233498db' class='ornament'/%3E%3Ccircle cx='40' cy='75' r='3' fill='%239b59b6' class='ornament'/%3E%3Cpath d='M50 5 L52 12 L59 12 L53 16 L55 23 L50 19 L45 23 L47 16 L41 12 L48 12 Z' fill='%23f1c40f' /%3E%3Cstyle%3E .ornament { animation: blink 2s infinite alternate; } @keyframes blink { from { opacity: 0.5; } to { opacity: 1; stroke: white; stroke-width: 1px; } } %3C/style%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
+    }
+
+  </style>
+</head>
+<body onload="fetchAll()">
+  
+  <canvas id="snowCanvas"></canvas>
+  
+  <div id="santa-layer"></div>
+
+  <div class="christmas-tree"></div>
+
+  <h1 style="text-align:center; color: #c0392b; text-shadow: 2px 2px 4px #fff; position: relative; z-index: 15;">&#127876; 濱上研 取り組みモニター (Christmas Ver.) &#127877;</h1>
+  <p style="text-align:center; position: relative; z-index: 15;">update per 5min <span id="real-time"></span></p>
+
+  <div class="container">
+    <div class="top-section">
+      <div class="left-column">
+        <div id="barChartContainer" class="chart-box"><iframe src="https://hamagami.github.io/hgliruca/score_graph0601.html" width="100%" height="100%" frameborder="0"></iframe></div>
+        <div id="summary-chart" class="chart-box"></div>
+      </div>
+      <div class="right-column">
+        <div class="table-box">
+          <div class="table-description">
+            同じステイタスが8時間以上続く場合は iruca のステイタスに関わらず「不明」の表示になります。<br>
+            iruca のステイタスを更新すると新たなステイタスが表示されます。<br>
+            8時間を超えてステイタスが継続する場合は、同じステイタスで更新してください。
+          </div>
+          <table id="dataTable">
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              <th>Status</th>
+              <th>Message</th>
+              <th>Update</th>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 既存のロジック ---
+    function fetchAll() {
+      fetchTable();
+      fetchBarChart();
+      fetchTimeSeriesChart();
+      initSantas(); // サンタ起動
+      const now = new Date();
+      document.getElementById("real-time").innerText = now.toLocaleTimeString("ja-JP");
+    }
+
+    function fetchTable() {
+      fetch("https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members")
+        .then(res => res.json())
+        .then(data => {
+          const now = new Date();
+          const table = document.getElementById('dataTable');
+          table.innerHTML = `
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              <th>Status</th>
+              <th>Message</th>
+              <th>Update</th>
+            </tr>
+          `;
+          data.forEach(item => {
+            const row = table.insertRow();
+            const updatedTime = new Date(item.updated_at);
+            const diffMs = now - updatedTime;
+            const status = diffMs > 8 * 3600 * 1000 ? "不明" : item.status;
+            row.innerHTML = `
+              <td>${item.name}</td>
+              <td>${item.id}</td>
+              <td>${status}</td>
+              <td>${item.message}</td>
+              <td>${formatElapsed(diffMs)}</td>
+            `;
+            const cell = row.cells[2];
+            if (status === "不明") {
+              cell.classList.add("blinking");
+              cell.style.backgroundColor = "gray";
+            } else {
+              const colors = {
+                "在席中": "blue",
+                "在席": "blue",
+                "離席中": "salmon",
+                "離席": "salmon",
+                "研修中": "orange",
+                "帰宅": "black",
+                "取込中": "lightyellow"
+              };
+              cell.style.backgroundColor = colors[status] || "lightgray";
+              if (["在席中", "帰宅"].includes(status)) cell.style.color = "white";
+            }
+          });
+        });
+    }
+
+    function formatElapsed(ms) {
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      const h = Math.floor(m / 60);
+      const d = Math.floor(h / 24);
+      return d > 0 ? `${d}日前` : h > 0 ? `${h}時間前` : m > 0 ? `${m}分前` : `${s}秒前`;
+    }
+
+    function fetchBarChart() {
+      fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+        .then(res => res.json())
+        .then(data => {
+          const names = Object.keys(data).filter(name => !/\((P|S)\)/.test(name));
+          const sorted = names.sort((a, b) => (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0));
+          const zai = sorted.map(name => data[name]["在席中"] || 0);
+          const ken = sorted.map(name => data[name]["研修中"] || 0);
+          const maxY = Math.max(...zai.map((v, i) => v + ken[i]));
+          Plotly.newPlot("bar-chart", [
+            { x: sorted, y: zai, type: "bar", name: "在席中", marker: {color: 'rgb(55, 128, 191)'} },
+            { x: sorted, y: ken, type: "bar", name: "研修中", marker: {color: 'rgb(255, 153, 51)'} }
+          ], {
+            barmode: "stack",
+            xaxis: { title: "名前", tickangle: -45 },
+            yaxis: { title: "人数", range: [0, Math.ceil(maxY / 0.8)] },
+            margin: { t: 30, b: 100 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)'
+          });
+        });
+    }
+
+    function fetchTimeSeriesChart() {
+      fetch("https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1")
+        .then(res => res.json())
+        .then(data => {
+          const ts = Object.keys(data).sort();
+          const zai = ts.map(t => data[t]["在席中"] ?? 0);
+          const ken = ts.map(t => data[t]["研修中"] ?? 0);
+          const shapes = [];
+          const dateSet = new Set(ts.map(t => t.split("T")[0]));
+
+          for (const date of dateSet) {
+            const weekday = new Date(`${date}T00:00`).getDay();
+            if (weekday >= 1 && weekday <= 5) {
+              for (let h = 0; h < 24; h++) {
+                if (h >= 18 || h < 6) {
+                  const h1 = h.toString().padStart(2, "0");
+                  const h2 = ((h + 1) % 24).toString().padStart(2, "0");
+                  shapes.push({
+                    type: "rect", xref: "x", yref: "paper",
+                    x0: `${date}T${h1}:00`, x1: `${date}T${h2}:00`, y0: 0, y1: 1,
+                    fillcolor: "rgba(200,200,200,0.2)", line: { width: 0 }
+                  });
+                }
+              }
+            }
+            if (weekday === 0 || weekday === 6) {
+              for (let h = 0; h < 24; h++) {
+                const h1 = h.toString().padStart(2, "0");
+                const h2 = ((h + 1) % 24).toString().padStart(2, "0");
+                shapes.push({
+                  type: "rect", xref: "x", yref: "paper",
+                  x0: `${date}T${h1}:00`, x1: `${date}T${h2}:00`, y0: 0, y1: 1,
+                  fillcolor: h % 2 === 0 ? "rgba(150,150,255,0.1)" : "rgba(150,150,255,0.25)",
+                  line: { width: 0 }
+                });
+              }
+            }
+          }
+
+          Plotly.newPlot("summary-chart", [
+            { x: ts, y: zai, mode: "lines+markers", name: "在席中", line: { color: "blue" } },
+            { x: ts, y: ken, mode: "lines+markers", name: "研修中", line: { color: "orange" } }
+          ], {
+            xaxis: { title: "時間", type: "date", tickformat: "%m/%d %H:%M" },
+            yaxis: { title: "人数" },
+            margin: { t: 30, b: 80, l: 60, r: 30 },
+            shapes: shapes,
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(255,255,255,0.5)'
+          });
+        });
+    }
+
+    // --- 複数サンタ生成ロジック ---
+    function initSantas() {
+      const container = document.getElementById('santa-layer');
+      const santaSVG = `
+        <svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#c0392b">
+            <path d="M40,60 C40,60 100,60 110,50 L110,70 L30,70 Q20,70 15,60 Z" />
+            <path d="M10,75 L120,75 M20,75 L30,65 M100,75 L100,65" stroke="#5d4037" stroke-width="3" />
+            <circle cx="70" cy="45" r="10" fill="#ffccbc" />
+            <path d="M60,45 Q70,30 80,45 L80,60 L60,60 Z" fill="#c0392b" />
+            <path d="M60,40 Q70,25 80,40 Z" fill="#c0392b" />
+            <circle cx="80" cy="40" r="3" fill="white" />
+          </g>
+          <g transform="translate(130, 50)" fill="#795548">
+            <rect x="0" y="10" width="30" height="15" rx="5" />
+            <rect x="25" y="0" width="10" height="15" rx="2" />
+            <path d="M28,0 L35,-10 M32,0 L25,-10" stroke="#795548" stroke-width="2" />
+            <rect x="5" y="25" width="4" height="10" />
+            <rect x="20" y="25" width="4" height="10" />
+          </g>
+          <text x="0" y="95" fill="#c0392b" font-family="serif" font-weight="bold" font-size="12">Merry Xmas!</text>
+        </svg>
+      `;
+
+      // 3人のサンタをランダムなパラメータで生成
+      const santaCount = 3;
+      let html = "";
+      for (let i = 0; i < santaCount; i++) {
+        // ランダム設定: 時間(15-30秒), 遅延(0-15秒), 高さ(5%-40%)
+        const duration = 15 + Math.random() * 15;
+        const delay = Math.random() * 15;
+        const top = 5 + Math.random() * 35; 
+        
+        html += `<div class="santa-wrapper" style="animation-duration: ${duration}s; animation-delay: ${delay}s; top: ${top}%;">
+                   ${santaSVG}
+                 </div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    // --- 雪のアニメーション強化版 ---
+    (function() {
+      const canvas = document.getElementById("snowCanvas");
+      const ctx = canvas.getContext("2d");
+      let width, height;
+      const particles = [];
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      class Snowflake {
+        constructor() {
+          this.init();
+        }
+        init() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * -height;
+          this.vy = 1 + Math.random() * 3; // 落下速度
+          this.vx = (Math.random() - 0.5) * 1.5;
+          // サイズを大きく: 2px〜6px
+          this.r = 2 + Math.random() * 4;
+          // 色: 青白く、透明度高めに
+          this.color = `rgba(220, 240, 255, ${0.6 + Math.random() * 0.4})`;
+        }
+        update() {
+          this.y += this.vy;
+          this.x += this.vx;
+          if (this.y > height) {
+            this.init();
+          }
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+        }
+      }
+
+      // 数を200に増量
+      for (let i = 0; i < 200; i++) {
+        particles.push(new Snowflake());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+
+    window.addEventListener("message", function (event) {
+      if (event.data.type === "resize" && typeof event.data.height === "number") {
+        const iframe = document.querySelector("iframe");
+        if (iframe) {
+          iframe.style.height = event.data.height + "px";
+        }
+      }
+    });
+  </script>
+</body>
+</html>
