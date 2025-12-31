@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="300" />
+  <title>濱上研 取り組みモニタ (午年・論文祈願・実写版)</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background-color: #fffbf5;
+      overflow-x: hidden;
+      height: 100%;
+    }
+
+    /* --- 前面レイヤー --- */
+    .overlay-front {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    /* --- 門松 --- */
+    .kadomatsu-wrapper {
+      bottom: 0px;
+      width: 140px;
+      height: auto;
+      opacity: 0.6;
+    }
+    .k-left { left: 0px; }
+    .k-right { right: 0px; transform: scaleX(-1); }
+
+    /* --- 凧（たこ） --- */
+    .tako-wrapper {
+      position: fixed;
+      bottom: -300px;
+      width: 100px;
+      opacity: 0.85; /* 文字が読みやすいよう少し濃く */
+      animation: riseDrift linear infinite;
+    }
+    .tako-svg {
+      width: 100%;
+      height: auto;
+      animation: swayRotate 3s ease-in-out infinite alternate;
+      filter: drop-shadow(4px 4px 4px rgba(0,0,0,0.2));
+    }
+
+    /* 凧の配置・タイミング・サイズ調整 */
+    .tako1 { left: 5%;  width: 110px; animation-duration: 35s; animation-delay: 0s; }  /* 賀正 */
+    .tako2 { left: 85%; width: 100px; animation-duration: 40s; animation-delay: 15s; } /* 新春 */
+    .tako3 { left: 20%; width: 90px;  animation-duration: 38s; animation-delay: 5s; }  /* 飛躍 */
+    .tako4 { left: 40%; width: 95px;  animation-duration: 32s; animation-delay: 12s; z-index: 9998; } /* 卒論 */
+    .tako5 { left: 60%; width: 95px;  animation-duration: 36s; animation-delay: 8s; }  /* 修論 */
+    .tako6 { left: 75%; width: 90px;  animation-duration: 45s; animation-delay: 20s; } /* 博論 */
+    .tako7 { left: 10%; width: 85px;  animation-duration: 42s; animation-delay: 25s; } /* 論文 */
+
+    /* 揺れの周期をバラバラに */
+    .tako2 .tako-svg { animation-duration: 4s; }
+    .tako3 .tako-svg { animation-duration: 5s; }
+    .tako4 .tako-svg { animation-duration: 2.5s; }
+    .tako6 .tako-svg { animation-duration: 3.5s; }
+
+
+    /* --- 疾走する馬 (ビットマップGIF画像) --- */
+    .horse-container {
+      position: fixed;
+      bottom: 50px;
+      right: -400px; /* 画面右外スタート */
+      width: 300px;  /* 少し大きめに */
+      height: auto;
+      z-index: 10000;
+      pointer-events: none;
+      
+      /* 画面を右から左へ横切るアニメーション (30秒周期) */
+      animation: runAcrossScreen 30s linear infinite;
+    }
+
+    .horse-img {
+      width: 100%;
+      height: auto;
+      /* 1. 背景透過処理: 
+            GIFの白背景を「乗算(multiply)」で透過させ、背景色(#fffbf5)と馴染ませます。
+            これにより、白い四角い枠が見えなくなります。
+         2. 左右反転: 
+            元の画像は左→右に走っていますが、画面上では右→左(←)に進むため、
+            scaleX(-1) で反転させて進行方向を合わせます。
+      */
+      mix-blend-mode: multiply;
+      transform: scaleX(-1);
+      opacity: 0.85; /* 少し馴染ませる */
+    }
+
+
+    /* --- Keyframes --- */
+    @keyframes riseDrift {
+      0% { bottom: -300px; transform: translateX(0px); }
+      25% { transform: translateX(30px); }
+      50% { transform: translateX(-20px); }
+      75% { transform: translateX(20px); }
+      100% { bottom: 120vh; transform: translateX(0px); }
+    }
+    @keyframes swayRotate {
+      0% { transform: rotate(-6deg); }
+      100% { transform: rotate(6deg); }
+    }
+
+    /* 馬の移動（右から左へ） */
+    @keyframes runAcrossScreen {
+      0% { right: -400px; }
+      5% { right: -400px; } /* 少し待機 */
+      20% { right: 100vw; } /* 左へ素早く抜け切る */
+      100% { right: 100vw; } /* 次の周回まで待機 */
+    }
+
+
+    /* --- メインコンテンツ --- */
+    h1, p, .container { position: relative; z-index: 1; }
+    .container { display: flex; flex-direction: column; padding: 10px; gap: 20px; }
+    .top-section { display: flex; flex-direction: row; gap: 20px; }
+    .left-column { width: 66.6%; display: flex; flex-direction: column; gap: 10px; }
+    .right-column { width: 33.3%; display: flex; flex-direction: column; }
+    .chart-box {
+      width: 100%; height: 600px;
+      border: 3px solid #b71c1c;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+    }
+    .table-box { width: 100%; text-align: left; }
+    .table-description {
+      background-color: rgba(255, 255, 255, 0.9);
+      border: 1px solid #dcdcdc;
+      padding: 6px 10px; font-size: 14px; margin-bottom: 8px;
+    }
+    table { border-collapse: collapse; width: 100%; text-align: center; background-color: rgba(255, 255, 255, 0.9); }
+    th { padding: 6px 10px; border: 1px solid #aaa; background-color: #b71c1c; color: white; }
+    td { padding: 6px 10px; border: 1px solid #aaa; }
+    .blinking { animation: blinkFade 3s ease-in-out infinite; }
+    @keyframes blinkFade { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    h1 {
+      color: #b71c1c; text-align: center; margin-top: 20px;
+      font-size: 2.5rem; text-shadow: 2px 2px 0px #f1c40f;
+    }
+    p.header-info { text-align: center; margin-bottom: 30px; font-size: 1.1rem; }
+  </style>
+</head>
+<body onload="fetchAll()">
+
+  <div class="kadomatsu-wrapper overlay-front k-left">
+    <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10,90 L90,90 L85,115 L15,115 Z" fill="#8D6E63" stroke="#5D4037" stroke-width="2"/>
+      <rect x="15" y="95" width="70" height="5" fill="#D7CCC8"/>
+      <rect x="20" y="40" width="18" height="60" fill="#388E3C" stroke="#1B5E20"/>
+      <rect x="62" y="40" width="18" height="60" fill="#388E3C" stroke="#1B5E20"/>
+      <rect x="40" y="20" width="20" height="80" fill="#4CAF50" stroke="#1B5E20"/>
+      <path d="M20,40 L38,50 L38,40 Z" fill="#C8E6C9"/>
+      <path d="M62,40 L80,50 L80,40 Z" fill="#C8E6C9"/>
+      <path d="M40,20 L60,35 L60,20 Z" fill="#C8E6C9"/>
+      <path d="M10,90 Q50,60 90,90" fill="none" stroke="#2E7D32" stroke-width="3"/>
+      <circle cx="20" cy="80" r="8" fill="#2E7D32" />
+      <circle cx="80" cy="80" r="8" fill="#2E7D32" />
+      <circle cx="45" cy="85" r="3" fill="#D32F2F" />
+      <circle cx="55" cy="82" r="3" fill="#D32F2F" />
+      <circle cx="50" cy="88" r="3" fill="#D32F2F" />
+    </svg>
+  </div>
+  <div class="kadomatsu-wrapper overlay-front k-right">
+    <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10,90 L90,90 L85,115 L15,115 Z" fill="#8D6E63" stroke="#5D4037" stroke-width="2"/>
+      <rect x="15" y="95" width="70" height="5" fill="#D7CCC8"/>
+      <rect x="20" y="40" width="18" height="60" fill="#388E3C" stroke="#1B5E20"/>
+      <rect x="62" y="40" width="18" height="60" fill="#388E3C" stroke="#1B5E20"/>
+      <rect x="40" y="20" width="20" height="80" fill="#4CAF50" stroke="#1B5E20"/>
+      <path d="M20,40 L38,50 L38,40 Z" fill="#C8E6C9"/>
+      <path d="M62,40 L80,50 L80,40 Z" fill="#C8E6C9"/>
+      <path d="M40,20 L60,35 L60,20 Z" fill="#C8E6C9"/>
+      <path d="M10,90 Q50,60 90,90" fill="none" stroke="#2E7D32" stroke-width="3"/>
+      <circle cx="20" cy="80" r="8" fill="#2E7D32" />
+      <circle cx="80" cy="80" r="8" fill="#2E7D32" />
+      <circle cx="45" cy="85" r="3" fill="#D32F2F" />
+      <circle cx="55" cy="82" r="3" fill="#D32F2F" />
+      <circle cx="50" cy="88" r="3" fill="#D32F2F" />
+    </svg>
+  </div>
+
+  <div class="tako-wrapper overlay-front tako1">
+    <svg class="tako-svg" viewBox="0 0 100 150">
+      <rect x="10" y="10" width="80" height="100" fill="#FAFAFA" stroke="#D32F2F" stroke-width="2"/>
+      <line x1="10" y1="10" x2="90" y2="110" stroke="#D32F2F" stroke-width="1"/>
+      <line x1="90" y1="10" x2="10" y2="110" stroke="#D32F2F" stroke-width="1"/>
+      <text x="50" y="70" font-family="serif" font-weight="bold" font-size="30" fill="#D32F2F" text-anchor="middle" dominant-baseline="middle">賀正</text>
+      <path d="M50,110 Q50,140 80,145" fill="none" stroke="#333" stroke-width="2"/>
+    </svg>
+  </div>
+  <div class="tako-wrapper overlay-front tako2">
+    <svg class="tako-svg" viewBox="0 0 100 150">
+      <rect x="10" y="10" width="80" height="100" fill="#FFF3E0" stroke="#E65100" stroke-width="2"/>
+      <line x1="10" y1="10" x2="90" y2="110" stroke="#E65100" stroke-width="1"/>
+      <line x1="90" y1="10" x2="10" y2="110" stroke="#E65100" stroke-width="1"/>
+      <text x="50" y="70" font-family="serif" font-weight="bold" font-size="30" fill="#E65100" text-anchor="middle" dominant-baseline="middle">新春</text>
+      <path d="M50,110 Q60,140 40,145" fill="none" stroke="#333" stroke-width="2"/>
+    </svg>
+  </div>
+  <div class="tako-wrapper overlay-front tako3">
+    <svg class="tako-svg" viewBox="0 0 100 150">
+      <rect x="10" y="10" width="80" height="100" fill="#E8F5E9" stroke="#2E7D32" stroke-width="2"/>
+      <text x="50" y="60" font-family="serif" font-weight="bold" font-size="28" fill="#2E7D32" text-anchor="middle" dominant-baseline="middle" writing-mode="tb">飛躍</text>
+      <path d="M10,110 Q20,140 10,150" fill="none" stroke="#333" stroke-width="1"/>
+      <path d="90,110 Q80,140 90,150" fill="none" stroke="#333" stroke-width="1"/>
+    </svg>
+  </div>
+  <div class="tako-wrapper overlay-front tako4">
+    <svg class="tako-svg" viewBox="0 0 100 150">
+      <path d="M20,10 L80,10 L90,40 L80,100 L50,110 L20,100 L10,40 Z" fill="#E3F2FD" stroke="#1565C0" stroke-width="2"/>
+      <text x="50" y="55" font-family="serif" font-weight="bold" font-size="28" fill="#1565C0" text-anchor="middle" dominant-baseline="middle">卒論</text>
+      <path d="M20,100 L10,140" fill="none" stroke="#333" stroke-width="1"/>
+      <path d="80,100 L90,140" fill="none" stroke="#333" stroke-width="1"/>
+    </svg>
+  </div>
+  <div class="tako-wrapper overlay-front tako5">
+    <svg class="tako-svg" viewBox="0 0 100 150">
+      <rect x="10" y="10" width="80" height="100" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="2"/>
+      <line x1="10" y1="10" x2="90" y2="110" stroke="#7B1FA2" stroke-width="1"/>
+      <line x1="90" y1="10" x2="10" y2="110" stroke="#7B1FA2" stroke-width="1"/>
+      <text x="50" y="70" font-family="serif" font-weight="bold" font-size="30" fill="#7B1FA2" text-anchor="middle" dominant-baseline="middle">修論</text>
+      <path d="M50,110 Q40,140 60,145" fill="none" stroke="#333" stroke-width="2"/>
+    </svg>
+  </div>
+  <div class="tako-wrapper overlay-front tako6">
+    <svg class="tako-svg" viewBox="0 0 100 150">
+      <rect x="10" y="10" width="80" height="100" fill="#FFEBEE" stroke="#B71C1C" stroke-width="2"/>
+      <text x="50" y="60" font-family="serif" font-weight="bold" font-size="30" fill="#B71C1C" text-anchor="middle" dominant-baseline="middle">博論</text>
+      <path d="M20,110 L10,140" fill="none" stroke="#333" stroke-width="1"/>
+      <path d="80,110 L90,140" fill="none" stroke="#333" stroke-width="1"/>
+    </svg>
+  </div>
+  <div class="tako-wrapper overlay-front tako7">
+    <svg class="tako-svg" viewBox="0 0 100 150">
+      <rect x="10" y="10" width="80" height="100" fill="#FFFDE7" stroke="#FBC02D" stroke-width="2"/>
+      <text x="50" y="60" font-family="serif" font-weight="bold" font-size="30" fill="#F57F17" text-anchor="middle" dominant-baseline="middle">論文</text>
+      <path d="M50,110 Q70,130 50,150" fill="none" stroke="#333" stroke-width="2"/>
+    </svg>
+  </div>
+
+
+  <div class="horse-container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Muybridge_race_horse_animated.gif" alt="Running Horse" class="horse-img">
+  </div>
+
+
+  <h1>🎍 濱上研 取り組みモニター 🐎</h1>
+  <p class="header-info">
+    <span style="font-weight:bold; color:#d35400; font-size: 1.2em;">🎍 謹賀新年 🎍</span><br>
+    update per 5min <span id="real-time"></span>
+  </p>
+
+  <div class="container">
+    <div class="top-section">
+      <div class="left-column">
+        <div id="barChartContainer" class="chart-box"><iframe src="https://hamagami.github.io/hgliruca/score_graph0601.html" width="100%" height="100%" frameborder="0"></iframe></div>
+        <div id="summary-chart" class="chart-box"></div>
+      </div>
+      <div class="right-column">
+        <div class="table-box">
+          <div class="table-description">
+            同じステイタスが8時間以上続く場合は iruca のステイタスに関わらず「不明」の表示になります。<br>
+            iruca のステイタスを更新すると新たなステイタスが表示されます。<br>
+            8時間を超えてステイタスが継続する場合は、同じステイタスで更新してください。
+          </div>
+          <table id="dataTable">
+            <tr><th>Name</th><th>ID</th><th>Status</th><th>Message</th><th>Update</th></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function fetchAll() {
+      fetchTable();
+      fetchBarChart();
+      fetchTimeSeriesChart();
+      const now = new Date();
+      document.getElementById("real-time").innerText = now.toLocaleTimeString("ja-JP");
+    }
+
+    function fetchTable() {
+      fetch("https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members")
+        .then(res => res.json())
+        .then(data => {
+          const now = new Date();
+          const table = document.getElementById('dataTable');
+          table.innerHTML = `<tr><th>Name</th><th>ID</th><th>Status</th><th>Message</th><th>Update</th></tr>`;
+          data.forEach(item => {
+            const row = table.insertRow();
+            const updatedTime = new Date(item.updated_at);
+            const diffMs = now - updatedTime;
+            const status = diffMs > 8 * 3600 * 1000 ? "不明" : item.status;
+            row.innerHTML = `<td>${item.name}</td><td>${item.id}</td><td>${status}</td><td>${item.message}</td><td>${formatElapsed(diffMs)}</td>`;
+            const cell = row.cells[2];
+            if (status === "不明") {
+              cell.classList.add("blinking");
+              cell.style.backgroundColor = "gray";
+            } else {
+              const colors = { "在席中": "blue", "在席": "blue", "離席中": "salmon", "離席": "salmon", "研修中": "orange", "帰宅": "black", "取込中": "lightyellow" };
+              cell.style.backgroundColor = colors[status] || "lightgray";
+              if (["在席中", "帰宅"].includes(status)) cell.style.color = "white";
+            }
+          });
+        });
+    }
+
+    function formatElapsed(ms) {
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      const h = Math.floor(m / 60);
+      const d = Math.floor(h / 24);
+      return d > 0 ? `${d}日前` : h > 0 ? `${h}時間前` : m > 0 ? `${m}分前` : `${s}秒前`;
+    }
+
+    function fetchBarChart() {
+      fetch("https://dl.dropbox.com/scl/fi/42ka2afjpquql6lc499nu/status_summary_by_status.json?rlkey=woz5mjw8ubedulwk4lb19ytg5&dl=1")
+        .then(res => res.json())
+        .then(data => {
+          const names = Object.keys(data).filter(name => !/\((P|S)\)/.test(name));
+          const sorted = names.sort((a, b) => (data[b]["在席中"] || 0) - (data[a]["在席中"] || 0));
+          const zai = sorted.map(name => data[name]["在席中"] || 0);
+          const ken = sorted.map(name => data[name]["研修中"] || 0);
+          const maxY = Math.max(...zai.map((v, i) => v + ken[i]));
+          Plotly.newPlot("bar-chart", [
+            { x: sorted, y: zai, type: "bar", name: "在席中", marker: { color: '#b71c1c' } }, 
+            { x: sorted, y: ken, type: "bar", name: "研修中", marker: { color: '#f1c40f' } }
+          ], {
+            barmode: "stack", xaxis: { title: "名前", tickangle: -45 }, yaxis: { title: "人数", range: [0, Math.ceil(maxY / 0.8)] },
+            margin: { t: 30, b: 100 }, plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
+          });
+        });
+    }
+
+    function fetchTimeSeriesChart() {
+      fetch("https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1")
+        .then(res => res.json())
+        .then(data => {
+          const ts = Object.keys(data).sort();
+          const zai = ts.map(t => data[t]["在席中"] ?? 0);
+          const ken = ts.map(t => data[t]["研修中"] ?? 0);
+          const shapes = [];
+          const dateSet = new Set(ts.map(t => t.split("T")[0]));
+          for (const date of dateSet) {
+            const weekday = new Date(`${date}T00:00`).getDay();
+            if (weekday >= 1 && weekday <= 5) {
+              for (let h = 0; h < 24; h++) {
+                if (h >= 18 || h < 6) {
+                  const h1 = h.toString().padStart(2, "0"); const h2 = ((h + 1) % 24).toString().padStart(2, "0");
+                  shapes.push({ type: "rect", xref: "x", yref: "paper", x0: `${date}T${h1}:00`, x1: `${date}T${h2}:00`, y0: 0, y1: 1, fillcolor: "rgba(200,200,200,0.2)", line: { width: 0 } });
+                }
+              }
+            }
+            if (weekday === 0 || weekday === 6) {
+              for (let h = 0; h < 24; h++) {
+                const h1 = h.toString().padStart(2, "0"); const h2 = ((h + 1) % 24).toString().padStart(2, "0");
+                shapes.push({ type: "rect", xref: "x", yref: "paper", x0: `${date}T${h1}:00`, x1: `${date}T${h2}:00`, y0: 0, y1: 1, fillcolor: h % 2 === 0 ? "rgba(255,100,100,0.05)" : "rgba(255,100,100,0.1)", line: { width: 0 } });
+              }
+            }
+          }
+          Plotly.newPlot("summary-chart", [
+            { x: ts, y: zai, mode: "lines+markers", name: "在席中", line: { color: "#b71c1c" } },
+            { x: ts, y: ken, mode: "lines+markers", name: "研修中", line: { color: "#f1c40f" } }
+          ], {
+            xaxis: { title: "時間", type: "date", tickformat: "%m/%d %H:%M" }, yaxis: { title: "人数" },
+            margin: { t: 30, b: 80, l: 60, r: 30 }, shapes: shapes, plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
+          });
+        });
+    }
+  </script>
+<script>
+  window.addEventListener("message", function (event) {
+    if (event.data.type === "resize" && typeof event.data.height === "number") {
+      const iframe = document.querySelector("iframe");
+      if (iframe) iframe.style.height = event.data.height + "px";
+    }
+  });
+</script>
+</body>
+</html>
