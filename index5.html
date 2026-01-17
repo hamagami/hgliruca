@@ -1,76 +1,98 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="300;url=index_xmas.html" />
+  <meta http-equiv="refresh" content="300;url=index5.html" />
   <title>濱上研 取り組みモニタ</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       font-family: sans-serif;
     }
+
     .container {
       display: flex;
       flex-direction: column;
       padding: 10px;
       gap: 20px;
     }
+
     .top-section {
       display: flex;
       flex-direction: row;
       gap: 20px;
     }
+
     .left-column {
       width: 66.6%;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
+
     .right-column {
       width: 33.3%;
       display: flex;
       flex-direction: column;
     }
+
     .chart-box {
       width: 100%;
       height: 600px;
     }
+
     .table-box {
       width: 100%;
       text-align: left;
     }
+
     .table-description {
       background-color: #f0f0f0;
       padding: 6px 10px;
       font-size: 14px;
       margin-bottom: 8px;
     }
+
     table {
       border-collapse: collapse;
       width: 100%;
       text-align: center;
     }
-    th, td {
+
+    th,
+    td {
       padding: 6px 10px;
       border: 1px solid #aaa;
     }
+
     .blinking {
       animation: blinkFade 3s ease-in-out infinite;
     }
+
     @keyframes blinkFade {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
     }
   </style>
 
-<style>
-  #barChartContainer iframe {
-    height: 800px !important;
-  }
-</style>
+  <style>
+    #barChartContainer iframe {
+      height: 800px !important;
+    }
+  </style>
 </head>
+
 <body onload="fetchAll()">
   <h1 style="text-align:center;">&#127875; 濱上研 取り組みモニター&#x1f47b;</h1>
   <p style="text-align:center;">update per 5min <span id="real-time"></span></p>
@@ -78,9 +100,11 @@
   <div class="container">
     <div class="top-section">
       <div class="left-column">
-        <div id="barChartContainer" class="chart-box"><iframe src="https://hamagami.github.io/hgliruca/score_graph0601.html" width="100%" height="100%" frameborder="0"></iframe></div>
+        <div id="barChartContainer" class="chart-box"><iframe
+            src="https://hamagami.github.io/hgliruca/score_graph0601.html" width="100%" height="100%"
+            frameborder="0"></iframe></div>
         <!-- scatter-chart removed -->
-<div id="summary-chart" class="chart-box"></div>
+        <div id="summary-chart" class="chart-box"></div>
       </div>
       <div class="right-column">
         <div class="table-box">
@@ -289,7 +313,7 @@
         });
     }
   </script>
-<script>
+  <script>
   window.addEventListener("message", function (event) {
     if (event.data.type === "resize" && typeof event.data.height === "number") {
       const iframe = document.querySelector("iframe");
@@ -298,7 +322,8 @@
       }
     }
   });
-</script>
+  </script>
 
 </body>
+
 </html>
