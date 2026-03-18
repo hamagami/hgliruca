@@ -273,6 +273,46 @@
       background: rgba(103,183,255,0.09);
     }
 
+    .message-cell {
+      cursor: help;
+    }
+
+    .message-cell[data-full-message] {
+      position: relative;
+    }
+
+    .message-cell[data-full-message]:hover::after {
+      content: attr(data-full-message);
+      position: absolute;
+      left: 0;
+      top: calc(100% + 6px);
+      z-index: 1000;
+      max-width: min(42vw, 560px);
+      min-width: 240px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(8, 15, 28, 0.97);
+      color: #eef4ff;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.38);
+      white-space: normal;
+      line-height: 1.5;
+      text-align: left;
+      word-break: break-word;
+      pointer-events: none;
+    }
+
+    .message-cell[data-full-message]:hover::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: calc(100% + 1px);
+      z-index: 1001;
+      border: 6px solid transparent;
+      border-bottom-color: rgba(8, 15, 28, 0.97);
+      pointer-events: none;
+    }
+
     #dataTable th:nth-child(1), #dataTable td:nth-child(1) { width: 18%; }
     #dataTable th:nth-child(2), #dataTable td:nth-child(2) { width: 16%; }
     #dataTable th:nth-child(3), #dataTable td:nth-child(3) { width: 16%; }
@@ -569,7 +609,7 @@
             <td>${escapeHtml(member.name)}</td>
             <td class="mono muted">${escapeHtml(member.id)}</td>
             <td><span class="status-pill ${status === "不明" ? "blinking" : ""}" style="background:${color.bg};color:${color.fg};">${escapeHtml(status)}</span></td>
-            <td>${escapeHtml(member.message || "")}</td>
+            <td class="message-cell" data-full-message="${escapeHtml(member.message || "")}" title="${escapeHtml(member.message || "")}">${escapeHtml(member.message || "")}</td>
             <td>${formatElapsed(diffMs)}</td>
           `;
         });
