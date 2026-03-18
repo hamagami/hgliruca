@@ -58,7 +58,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 14px;
-      padding: 16px 20px;
+      padding: 12px 18px;
       border: 1px solid var(--line);
       background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
       backdrop-filter: blur(18px);
@@ -68,15 +68,15 @@
 
     .hero h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 24px;
       letter-spacing: 0.02em;
       font-weight: 700;
     }
 
     .hero-sub {
-      margin-top: 6px;
+      margin-top: 4px;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -120,7 +120,7 @@
     }
 
     .kpi {
-      padding: 14px 16px;
+      padding: 10px 14px;
       position: relative;
       overflow: hidden;
     }
@@ -138,11 +138,11 @@
     .kpi .label {
       color: var(--muted);
       font-size: 13px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .kpi .value {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 700;
       line-height: 1;
       margin-bottom: 8px;
@@ -168,7 +168,7 @@
     }
 
     .left-stack {
-      grid-template-rows: minmax(0, 1.08fr) minmax(0, 0.92fr);
+      grid-template-rows: minmax(0, 1.24fr) minmax(0, 0.76fr);
     }
 
     .panel-header {
@@ -176,23 +176,23 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .panel-title {
       margin: 0;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 700;
     }
 
     .panel-desc {
       color: var(--muted);
-      font-size: 12px;
-      line-height: 1.55;
+      font-size: 11px;
+      line-height: 1.4;
     }
 
     .panel-body {
-      padding: 14px 14px 12px;
+      padding: 12px 12px 10px;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -212,6 +212,7 @@
       overflow: hidden;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.03);
+      position: relative;
     }
 
     iframe {
@@ -223,12 +224,51 @@
       background: #fff;
     }
 
+    .iframe-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .iframe-scale {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 1280px;
+      height: 900px;
+      transform: translate(-50%, -50%) scale(1);
+      transform-origin: center center;
+      will-change: transform;
+    }
+
+
     .table-wrap {
       overflow: hidden;
       flex: 1 1 auto;
       min-height: 0;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.08);
+      padding: 0;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .table-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      height: 100%;
+      min-height: 0;
+      padding: 0;
+    }
+
+    .table-pane {
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .table-pane:last-child {
+      border-right: 0;
     }
 
     table {
@@ -238,7 +278,7 @@
       border-spacing: 0;
       min-width: 0;
       table-layout: fixed;
-      background: rgba(255,255,255,0.02);
+      background: transparent;
     }
 
     thead th {
@@ -348,6 +388,11 @@
       .left-stack { grid-template-rows: minmax(320px, 1fr) minmax(260px, 1fr); }
       .right-stack { min-height: auto; }
       .table-wrap { overflow: visible; }
+      .iframe-stage { position: static; inset: auto; overflow: visible; }
+      .iframe-scale { position: relative; left: auto; top: auto; width: 100%; height: 100%; transform: none; }
+      .table-grid { grid-template-columns: 1fr; }
+      .table-pane { border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .table-pane:last-child { border-bottom: 0; }
       table { table-layout: auto; }
       tbody td { white-space: normal; }
       .kpis { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
@@ -397,14 +442,18 @@
           <div class="panel-header">
             <div>
               <h2 class="panel-title">外部サマリー</h2>
-              <div class="panel-desc">外部の集計グラフを埋め込み表示しています。見た目を統一するため、カード化して表示しています。</div>
+              <div class="panel-desc">元の外部サマリーHTMLをそのまま埋め込み、過去1か月の集計仕様を維持します。表示領域に合わせて等比縮小します。</div>
             </div>
           </div>
-          <div class="chart-iframe-wrap">
-            <iframe
-              src="https://hamagami.github.io/hgliruca/score_graph0601.html"
-              title="summary graph"
-              loading="lazy"></iframe>
+          <div class="chart-iframe-wrap" id="external-summary-wrap">
+            <div class="iframe-stage">
+              <div class="iframe-scale" id="external-summary-scale">
+                <iframe
+                  src="https://hamagami.github.io/hgliruca/score_graph0601.html"
+                  title="summary graph"
+                  loading="lazy"></iframe>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -431,18 +480,36 @@
             </div>
           </div>
           <div class="table-wrap">
-            <table id="dataTable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>ID</th>
-                  <th>Status</th>
-                  <th>Message</th>
-                  <th>Update</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <div class="table-grid">
+              <div class="table-pane">
+                <table id="dataTableLeft" class="status-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Status</th>
+                      <th>Message</th>
+                      <th>Update</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="table-pane">
+                <table id="dataTableRight" class="status-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Status</th>
+                      <th>Message</th>
+                      <th>Update</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -474,8 +541,11 @@
     function init() {
       tickClock();
       setInterval(tickClock, 1000);
+      fitExternalSummary();
       fetchTable();
       fetchTimeSeriesChart();
+      setTimeout(fitExternalSummary, 300);
+      setTimeout(fitExternalSummary, 1200);
     }
 
     function tickClock() {
@@ -526,23 +596,35 @@
 
     function renderTable(members) {
       const now = Date.now();
-      const tbody = document.querySelector("#dataTable tbody");
-      tbody.innerHTML = "";
+      const tbodyLeft = document.querySelector("#dataTableLeft tbody");
+      const tbodyRight = document.querySelector("#dataTableRight tbody");
+      tbodyLeft.innerHTML = "";
+      tbodyRight.innerHTML = "";
 
-      members.forEach(member => {
-        const diffMs  = now - new Date(member.updated_at).getTime();
-        const status  = resolveStatus(member.status, diffMs);
-        const color   = STATUS_COLORS[status] || STATUS_COLORS["不明"];
+      const splitIndex = Math.ceil(members.length / 2);
+      const leftMembers = members.slice(0, splitIndex);
+      const rightMembers = members.slice(splitIndex);
 
-        const row = tbody.insertRow();
-        row.innerHTML = `
-          <td>${escapeHtml(member.name)}</td>
-          <td class="mono muted">${escapeHtml(member.id)}</td>
-          <td><span class="status-pill ${status === "不明" ? "blinking" : ""}" style="background:${color.bg};color:${color.fg};">${escapeHtml(status)}</span></td>
-          <td>${escapeHtml(member.message || "")}</td>
-          <td>${formatElapsed(diffMs)}</td>
-        `;
-      });
+      function appendRows(tbody, items, startIndex) {
+        items.forEach((member, offset) => {
+          const diffMs  = now - new Date(member.updated_at).getTime();
+          const status  = resolveStatus(member.status, diffMs);
+          const color   = STATUS_COLORS[status] || STATUS_COLORS["不明"];
+
+          const row = tbody.insertRow();
+          row.dataset.index = startIndex + offset;
+          row.innerHTML = `
+            <td>${escapeHtml(member.name)}</td>
+            <td class="mono muted">${escapeHtml(member.id)}</td>
+            <td><span class="status-pill ${status === "不明" ? "blinking" : ""}" style="background:${color.bg};color:${color.fg};">${escapeHtml(status)}</span></td>
+            <td>${escapeHtml(member.message || "")}</td>
+            <td>${formatElapsed(diffMs)}</td>
+          `;
+        });
+      }
+
+      appendRows(tbodyLeft, leftMembers, 0);
+      appendRows(tbodyRight, rightMembers, splitIndex);
     }
 
     function updateKpis(members) {
@@ -563,6 +645,26 @@
       document.getElementById("kpi-ken").textContent = ken;
       document.getElementById("kpi-away").textContent = away;
       document.getElementById("kpi-unknown").textContent = unknown;
+    }
+
+
+    function fitExternalSummary() {
+      const wrap = document.getElementById("external-summary-wrap");
+      const scaleBox = document.getElementById("external-summary-scale");
+      if (!wrap || !scaleBox) return;
+
+      const BASE_WIDTH = 1280;
+      const BASE_HEIGHT = 900;
+      const PADDING = 8;
+
+      const availableWidth = Math.max(0, wrap.clientWidth - PADDING * 2);
+      const availableHeight = Math.max(0, wrap.clientHeight - PADDING * 2);
+      if (!availableWidth || !availableHeight) return;
+
+      const scale = Math.min(availableWidth / BASE_WIDTH, availableHeight / BASE_HEIGHT);
+      scaleBox.style.width = `${BASE_WIDTH}px`;
+      scaleBox.style.height = `${BASE_HEIGHT}px`;
+      scaleBox.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
 
     function fetchTimeSeriesChart() {
@@ -653,6 +755,7 @@
     }
 
     window.addEventListener("resize", () => {
+      fitExternalSummary();
       if (document.getElementById("summary-chart").data) {
         Plotly.Plots.resize(document.getElementById("summary-chart"));
       }
