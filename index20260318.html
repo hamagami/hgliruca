@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="300;url=index20260318.html" />
+  <meta http-equiv="refresh" content="300;url=index20260317_dashboard_2col_native_embed_responsive.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>濱上研 Dashboard Monitor</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
@@ -204,43 +204,6 @@
       flex: 1 1 auto;
     }
 
-    .chart-iframe-wrap {
-      width: 100%;
-      min-height: 0;
-      flex: 1 1 auto;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      position: relative;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      min-height: 0;
-      border: 0;
-      display: block;
-      background: #fff;
-    }
-
-    .iframe-stage {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-    }
-
-    .iframe-scale {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 1280px;
-      height: 900px;
-      transform: translate(-50%, -50%) scale(1);
-      transform-origin: center center;
-      will-change: transform;
-    }
-
 
     .table-wrap {
       overflow: hidden;
@@ -388,8 +351,6 @@
       .left-stack { grid-template-rows: minmax(320px, 1fr) minmax(260px, 1fr); }
       .right-stack { min-height: auto; }
       .table-wrap { overflow: visible; }
-      .iframe-stage { position: static; inset: auto; overflow: visible; }
-      .iframe-scale { position: relative; left: auto; top: auto; width: 100%; height: 100%; transform: none; }
       .table-grid { grid-template-columns: 1fr; }
       .table-pane { border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
       .table-pane:last-child { border-bottom: 0; }
@@ -442,19 +403,10 @@
           <div class="panel-header">
             <div>
               <h2 class="panel-title">外部サマリー</h2>
-              <div class="panel-desc">元の外部サマリーHTMLをそのまま埋め込み、過去1か月の集計仕様を維持します。表示領域に合わせて等比縮小します。</div>
+              <div class="panel-desc">score_graph0601.html のロジックをそのまま内蔵し、過去1か月の充足率グラフをレスポンシブ表示します。</div>
             </div>
           </div>
-          <div class="chart-iframe-wrap" id="external-summary-wrap">
-            <div class="iframe-stage">
-              <div class="iframe-scale" id="external-summary-scale">
-                <iframe
-                  src="https://hamagami.github.io/hgliruca/score_graph0601.html"
-                  title="summary graph"
-                  loading="lazy"></iframe>
-              </div>
-            </div>
-          </div>
+          <div id="native-score-chart" class="chart-box"></div>
         </div>
 
         <div class="card panel-body">
@@ -521,7 +473,8 @@
   <script>
     const API = {
       members: "https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members",
-      timeData: "https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1"
+      timeData: "https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1",
+      scoreSummary: "https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_debug.json?rlkey=p6jhidej843o2wm5wb1mf9nj1&dl=1"
     };
 
     const STATUS_COLORS = {
@@ -537,15 +490,14 @@
 
     const STALE_THRESHOLD_MS = 8 * 3600 * 1000;
     let latestMembers = [];
+    let latestScoreSummary = null;
 
     function init() {
       tickClock();
       setInterval(tickClock, 1000);
-      fitExternalSummary();
       fetchTable();
+      fetchScoreChart();
       fetchTimeSeriesChart();
-      setTimeout(fitExternalSummary, 300);
-      setTimeout(fitExternalSummary, 1200);
     }
 
     function tickClock() {
@@ -647,24 +599,162 @@
       document.getElementById("kpi-unknown").textContent = unknown;
     }
 
+    function fetchScoreChart() {
+      fetch(API.scoreSummary)
+        .then(res => res.json())
+        .then(data => { latestScoreSummary = data; renderScoreChart(data); })
+        .catch(err => console.error("外部サマリー取得失敗:", err));
+    }
 
-    function fitExternalSummary() {
-      const wrap = document.getElementById("external-summary-wrap");
-      const scaleBox = document.getElementById("external-summary-scale");
-      if (!wrap || !scaleBox) return;
+    function renderScoreChartFromExisting() {
+      if (latestScoreSummary) renderScoreChart(latestScoreSummary);
+    }
 
-      const BASE_WIDTH = 1280;
-      const BASE_HEIGHT = 900;
-      const PADDING = 8;
+    function renderScoreChart(data) {
+      const excluded = ["HMG", "TKH", "HGW"];
+      const records = Object.entries(data)
+        .filter(([name]) => !excluded.some(prefix => name.startsWith(prefix)))
+        .map(([name, values]) => ({
+          name,
+          zaiseki: Number(values["在席中"] || 0),
+          kenshu: Number(values["研修中"] || 0),
+          score: Number(values["score"] || 0)
+        }));
 
-      const availableWidth = Math.max(0, wrap.clientWidth - PADDING * 2);
-      const availableHeight = Math.max(0, wrap.clientHeight - PADDING * 2);
-      if (!availableWidth || !availableHeight) return;
+      records.sort((a, b) => b.score - a.score);
 
-      const scale = Math.min(availableWidth / BASE_WIDTH, availableHeight / BASE_HEIGHT);
-      scaleBox.style.width = `${BASE_WIDTH}px`;
-      scaleBox.style.height = `${BASE_HEIGHT}px`;
-      scaleBox.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      const names = records.map(r => r.name);
+      const zaisekiScore = records.map(r => r.zaiseki / 80);
+      const kenshuScore = records.map(r => Math.min(r.kenshu, 40) / 80);
+      const totalScore = records.map(r => r.score);
+
+      const scoreOneIndex = records.findIndex(r => r.score < 1.0);
+      const scoreOneX = scoreOneIndex > 0 ? scoreOneIndex - 0.5 : -1;
+      const compact = window.innerWidth < 1360;
+      const tiny = window.innerWidth < 980;
+
+      const traces = [
+        {
+          x: names,
+          y: zaisekiScore,
+          type: 'bar',
+          name: '在席中',
+          marker: { color: 'steelblue' },
+          hovertemplate: '%{x}<br>在席中: %{y:.3f}<extra></extra>'
+        },
+        {
+          x: names,
+          y: kenshuScore,
+          type: 'bar',
+          name: '研修中',
+          marker: {
+            color: records.map(() => 'orange'),
+            line: {
+              color: records.map(r => r.kenshu === 40 ? 'red' : 'rgba(0,0,0,0)'),
+              width: records.map(r => r.kenshu === 40 ? 2 : 0)
+            }
+          },
+          hovertemplate: '%{x}<br>研修中: %{y:.3f}<extra></extra>'
+        },
+        {
+          x: names,
+          y: totalScore.map(s => s + 0.01),
+          text: totalScore.map(s => s.toFixed(3)),
+          mode: 'text',
+          type: 'scatter',
+          textposition: 'top center',
+          textfont: { size: tiny ? 9 : compact ? 10 : 11, color: '#e9eef8' },
+          cliponaxis: false,
+          showlegend: false,
+          hoverinfo: 'skip'
+        }
+      ];
+
+      const layout = {
+        barmode: 'stack',
+        title: {
+          text: '直近1カ月の取り組み充足率（縦軸: score）赤枠は研修時間上限超過',
+          font: { size: tiny ? 12 : compact ? 14 : 16, color: '#edf3ff' },
+          x: 0.02,
+          xanchor: 'left'
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(255,255,255,0.02)',
+        font: { color: '#e5efff' },
+        bargap: tiny ? 0.24 : 0.16,
+        xaxis: {
+          title: tiny ? '' : '名前（score降順）',
+          tickangle: tiny ? -90 : compact ? -55 : -35,
+          automargin: true,
+          gridcolor: 'rgba(255,255,255,0.05)',
+          zerolinecolor: 'rgba(255,255,255,0.08)',
+          tickfont: { size: tiny ? 9 : compact ? 10 : 11 }
+        },
+        yaxis: {
+          title: 'score',
+          rangemode: 'tozero',
+          gridcolor: 'rgba(255,255,255,0.08)',
+          zerolinecolor: 'rgba(255,255,255,0.10)',
+          tickfont: { size: tiny ? 10 : 11 }
+        },
+        legend: {
+          title: { text: 'ステータス' },
+          orientation: 'h',
+          x: 0,
+          y: 1.13,
+          font: { size: tiny ? 10 : 11 }
+        },
+        height: null,
+        margin: { l: 48, r: 16, t: tiny ? 72 : 84, b: tiny ? 88 : compact ? 92 : 78 },
+        shapes: [
+          {
+            type: 'line',
+            x0: scoreOneX,
+            x1: scoreOneX,
+            y0: 0,
+            y1: 1.2,
+            xref: 'x',
+            yref: 'paper',
+            line: { color: 'red', dash: 'dash' }
+          },
+          {
+            type: 'line',
+            x0: -0.5,
+            x1: Math.max(names.length - 0.5, -0.5),
+            y0: 1.0,
+            y1: 1.0,
+            xref: 'x',
+            yref: 'y',
+            line: { color: 'rgba(255,255,255,0.7)', dash: 'dot' }
+          }
+        ],
+        annotations: [
+          {
+            x: scoreOneX,
+            y: 1.1,
+            xref: 'x',
+            yref: 'paper',
+            text: 'score=1.0',
+            showarrow: false,
+            font: { color: 'red', size: tiny ? 10 : 11 }
+          },
+          {
+            x: Math.max(names.length - 1, 0),
+            y: 1.0,
+            xref: 'x',
+            yref: 'y',
+            text: 'score=1.0',
+            showarrow: false,
+            font: { color: '#f3f4f6', size: tiny ? 10 : 11 },
+            xanchor: 'right'
+          }
+        ]
+      };
+
+      Plotly.newPlot('native-score-chart', traces, layout, {
+        responsive: true,
+        displayModeBar: false
+      });
     }
 
     function fetchTimeSeriesChart() {
@@ -755,16 +845,12 @@
     }
 
     window.addEventListener("resize", () => {
-      fitExternalSummary();
+      const scoreChart = document.getElementById("native-score-chart");
+      if (scoreChart?.data) {
+        renderScoreChartFromExisting();
+      }
       if (document.getElementById("summary-chart").data) {
         Plotly.Plots.resize(document.getElementById("summary-chart"));
-      }
-    });
-
-    window.addEventListener("message", ({ data }) => {
-      if (data?.type === "resize" && typeof data.height === "number") {
-        const iframe = document.querySelector("iframe");
-        if (iframe) iframe.style.height = `${data.height}px`;
       }
     });
   </script>
