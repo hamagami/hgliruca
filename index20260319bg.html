@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>濱上研 Dashboard Monitor</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #06101b;
+      --bg2: #0c1726;
+      --panel: rgba(11, 21, 35, 0.76);
+      --panel-strong: rgba(9, 17, 29, 0.90);
+      --line: rgba(255,255,255,0.07);
+      --line-soft: rgba(255,255,255,0.04);
+      --text: #edf3ff;
+      --muted: #9aa9c1;
+      --accent: #7aa9ea;
+      --accent2: #8f7be8;
+      --highlight: rgba(186, 166, 108, 0.18);
+      --highlight-strong: rgba(186, 166, 108, 0.28);
+      --success: #55c48e;
+      --warn: #d59d57;
+      --danger: #ff6b81;
+      --shadow: 0 18px 34px rgba(0,0,0,0.28);
+      --shadow-soft: 0 10px 24px rgba(0,0,0,0.18);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 18%, rgba(122,169,234,0.15), transparent 24%),
+        radial-gradient(circle at 85% 14%, rgba(143,123,232,0.10), transparent 22%),
+        radial-gradient(circle at 55% 100%, rgba(186,166,108,0.08), transparent 24%),
+        linear-gradient(135deg, var(--bg), var(--bg2) 55%, #081321);
+    }
+
+    body {
+      padding: 14px;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .shell {
+      max-width: 1800px;
+      height: calc(100vh - 28px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018));
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.02em;
+      font-weight: 700;
+    }
+
+    .hero-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 12px rgba(61,220,151,0.8);
+      animation: pulse 1.8s infinite ease-in-out;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.012)), var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px);
+    }
+
+    .left-stack > .card:first-child {
+      background: linear-gradient(180deg, rgba(255,255,255,0.034), rgba(255,255,255,0.012)), rgba(11,21,35,0.82);
+      border-color: rgba(186,166,108,0.16);
+      box-shadow: 0 18px 36px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .right-stack .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.016), rgba(255,255,255,0.010)), rgba(10,19,31,0.74);
+      border-color: rgba(255,255,255,0.06);
+    }
+
+    .kpi {
+      padding: 12px 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi::before {
+      content: "";
+      position: absolute;
+      inset: auto -20px -30px auto;
+      width: 110px;
+      height: 110px;
+      background: radial-gradient(circle, rgba(103,183,255,0.22), transparent 70%);
+      pointer-events: none;
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      margin-bottom: 9px;
+      font-weight: 500;
+    }
+
+    .kpi .value {
+      font-size: 25px;
+      font-weight: 640;
+      line-height: 1;
+      margin-bottom: 7px;
+    }
+
+    .kpi .sub {
+      font-size: 11px;
+      color: var(--muted);
+      opacity: 0.85;
+      font-weight: 400;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(420px, 1fr);
+      gap: 12px;
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    .left-stack, .right-stack {
+      display: grid;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .left-stack {
+      grid-template-rows: minmax(0, 1.02fr) minmax(0, 0.56fr) minmax(0, 0.52fr);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+    }
+
+    .panel-desc {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+      opacity: 0.84;
+      max-width: 96%;
+    }
+
+    .panel-body {
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .chart-box {
+      min-height: 0;
+      height: 100%;
+      flex: 1 1 auto;
+    }
+
+
+    .table-wrap {
+      overflow: hidden;
+      flex: 1 1 auto;
+      min-height: 0;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 0;
+      background: rgba(255,255,255,0.018);
+    }
+
+    .table-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      height: 100%;
+      min-height: 0;
+      padding: 0;
+    }
+
+    .table-pane {
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .table-pane:last-child {
+      border-right: 0;
+    }
+
+    table {
+      width: 100%;
+      height: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 0;
+      table-layout: fixed;
+      background: transparent;
+    }
+
+    thead th {
+      position: static;
+      background: rgba(7, 17, 31, 0.96);
+      color: #cfe0ff;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    tbody td {
+      padding: 7px 8px;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(255,255,255,0.016);
+    }
+
+    tbody tr:hover {
+      background: rgba(122,169,234,0.08);
+    }
+
+    .message-cell {
+      cursor: help;
+    }
+
+    .message-cell[data-full-message] {
+      position: relative;
+    }
+
+    .message-cell[data-full-message]:hover::after {
+      content: attr(data-full-message);
+      position: absolute;
+      left: 0;
+      top: calc(100% + 6px);
+      z-index: 1000;
+      max-width: min(42vw, 560px);
+      min-width: 240px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(8, 15, 28, 0.97);
+      color: #eef4ff;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.38);
+      white-space: normal;
+      line-height: 1.5;
+      text-align: left;
+      word-break: break-word;
+      pointer-events: none;
+    }
+
+    .message-cell[data-full-message]:hover::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: calc(100% + 1px);
+      z-index: 1001;
+      border: 6px solid transparent;
+      border-bottom-color: rgba(8, 15, 28, 0.97);
+      pointer-events: none;
+    }
+
+    #dataTable th:nth-child(1), #dataTable td:nth-child(1) { width: 18%; }
+    #dataTable th:nth-child(2), #dataTable td:nth-child(2) { width: 16%; }
+    #dataTable th:nth-child(3), #dataTable td:nth-child(3) { width: 16%; }
+    #dataTable th:nth-child(4), #dataTable td:nth-child(4) { width: 28%; }
+    #dataTable th:nth-child(5), #dataTable td:nth-child(5) { width: 22%; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+
+    .mono { font-family: Consolas, Monaco, monospace; }
+    .muted { color: var(--muted); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .legend .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.032);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .chip-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: right;
+      padding-right: 4px;
+    }
+
+
+    .hero, .card, .kpi, .table-wrap, .status-pill, tbody tr, .badge, .chip {
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease, opacity 0.22s ease;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.015) 40%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.015) 60%, transparent 100%);
+      transform: translateX(-120%);
+      animation: heroSweep 15s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(0,0,0,0.22);
+      border-color: rgba(186,166,108,0.16);
+    }
+
+    .kpi .value {
+      text-shadow: 0 0 16px rgba(122,169,234,0.08);
+    }
+
+    tbody tr {
+      animation: rowFadeIn 0.42s ease both;
+    }
+
+    tbody tr:hover {
+      transform: translateX(1px);
+    }
+
+    .status-pill {
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 rgba(122,169,234,0);
+    }
+
+    .message-cell[data-full-message]:hover::after {
+      animation: tooltipPop 0.14s ease-out;
+    }
+
+    .table-pane tbody tr:nth-child(1) { animation-delay: 0.03s; }
+    .table-pane tbody tr:nth-child(2) { animation-delay: 0.06s; }
+    .table-pane tbody tr:nth-child(3) { animation-delay: 0.09s; }
+    .table-pane tbody tr:nth-child(4) { animation-delay: 0.12s; }
+    .table-pane tbody tr:nth-child(5) { animation-delay: 0.15s; }
+    .table-pane tbody tr:nth-child(6) { animation-delay: 0.18s; }
+    .table-pane tbody tr:nth-child(7) { animation-delay: 0.21s; }
+    .table-pane tbody tr:nth-child(8) { animation-delay: 0.24s; }
+    .table-pane tbody tr:nth-child(9) { animation-delay: 0.27s; }
+    .table-pane tbody tr:nth-child(10) { animation-delay: 0.30s; }
+    .table-pane tbody tr:nth-child(n+11) { animation-delay: 0.33s; }
+
+    @keyframes heroSweep {
+      0%, 12% { transform: translateX(-120%); opacity: 0; }
+      18% { opacity: 1; }
+      38% { transform: translateX(120%); opacity: 0.55; }
+      100% { transform: translateX(120%); opacity: 0; }
+    }
+
+    @keyframes rowFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes tooltipPop {
+      from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes statusBreath {
+      0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 rgba(122,169,234,0); filter: brightness(1); }
+      50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 10px rgba(255,255,255,0.06); filter: brightness(1.02); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.22); opacity: 0.75; }
+    }
+
+    @keyframes blinkFade {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.38; }
+    }
+
+    .blinking { animation: blinkFade 1.6s ease-in-out infinite; }
+
+
+
+    
+/* ===== 背景のゆっくりした動き ===== */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -20vmax;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(122,169,234,0.18), transparent 30%),
+    radial-gradient(circle at 80% 15%, rgba(143,123,232,0.14), transparent 28%),
+    radial-gradient(circle at 50% 85%, rgba(186,166,108,0.10), transparent 30%);
+  filter: blur(40px);
+  animation: bgDrift1 32s ease-in-out infinite alternate;
+}
+
+body::after {
+  background:
+    linear-gradient(120deg,
+      transparent 0%,
+      rgba(255,255,255,0.03) 45%,
+      rgba(255,255,255,0.06) 50%,
+      rgba(255,255,255,0.03) 55%,
+      transparent 100%);
+  opacity: 0.25;
+  animation: bgDrift2 22s linear infinite;
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes bgDrift1 {
+  0%   { transform: translate(-3%, -2%) scale(1); }
+  50%  { transform: translate(2%, 1.5%) scale(1.05); }
+  100% { transform: translate(4%, -3%) scale(1.08); }
+}
+
+@keyframes bgDrift2 {
+  0%   { transform: translateX(-60%); }
+  100% { transform: translateX(60%); }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+      .badge-dot, .blinking, tbody tr, .hero::after, body::before, body::after {
+        animation: none !important;
+      }
+      .hero, .card, .kpi, .table-wrap, .status-pill, tbody tr, .badge, .chip {
+        transition: none !important;
+      }
+    }
+
+    @media (max-width: 1400px) {
+      .main { grid-template-columns: minmax(0, 1.3fr) minmax(380px, 1fr); }
+      .kpis { grid-template-columns: repeat(5, minmax(100px, 1fr)); }
+      .kpi .value { font-size: 24px; }
+    }
+
+    @media (max-width: 1280px) {
+      body { height: auto; overflow: auto; }
+      .shell { height: auto; grid-template-rows: auto auto auto auto; }
+      .main { grid-template-columns: 1fr; }
+      .left-stack { grid-template-rows: minmax(320px, 1fr) minmax(260px, 1fr); }
+      .right-stack { min-height: auto; }
+      .table-wrap { overflow: visible; }
+      .table-grid { grid-template-columns: 1fr; }
+      .table-pane { border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .table-pane:last-child { border-bottom: 0; }
+      table { table-layout: auto; }
+      tbody td { white-space: normal; }
+      .kpis { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+    }
+
+    @media (max-width: 780px) {
+      body { padding: 12px; }
+      .hero { flex-direction: column; align-items: flex-start; }
+      .kpis { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .hero h1 { font-size: 24px; }
+    }
+
+  </style>
+</head>
+<body onload="init()">
+  <div class="shell">
+    <section class="hero">
+      <div>
+        <h1>濱上研 取り組みダッシュボード</h1>
+        <div class="hero-sub">
+          <span class="badge"><span class="badge-dot"></span>Live monitor</span>
+          <span class="badge">5分ごとに自動更新</span>
+          <span class="badge">現在時刻 <strong id="real-time"></strong></span>
+          <span class="badge">最終データ更新 <strong id="last-refresh">--:--:--</strong></span>
+        </div>
+      </div>
+      <div class="legend">
+        <span class="chip"><span class="chip-dot" style="background:#2563eb"></span>在席</span>
+        <span class="chip"><span class="chip-dot" style="background:#d78f78"></span>離席</span>
+        <span class="chip"><span class="chip-dot" style="background:#d59d57"></span>研修中</span>
+        <span class="chip"><span class="chip-dot" style="background:#172030"></span>帰宅</span>
+        <span class="chip"><span class="chip-dot" style="background:#7b8596"></span>不明</span>
+      </div>
+    </section>
+
+    <section class="kpis">
+      <div class="card kpi"><div class="label">総メンバー</div><div class="value" id="kpi-total">--</div><div class="sub">取得できたメンバー数</div></div>
+      <div class="card kpi"><div class="label">在席</div><div class="value" id="kpi-zai">--</div><div class="sub">現在研究室にいる人数</div></div>
+      <div class="card kpi"><div class="label">研修中</div><div class="value" id="kpi-ken">--</div><div class="sub">研修ステータス人数</div></div>
+      <div class="card kpi"><div class="label">離席・帰宅</div><div class="value" id="kpi-away">--</div><div class="sub">離席/帰宅の合計</div></div>
+      <div class="card kpi"><div class="label">不明</div><div class="value" id="kpi-unknown">--</div><div class="sub">8時間以上更新なし</div></div>
+    </section>
+
+    <section class="main">
+      <div class="left-stack">
+        <div class="card panel-body">
+          <div class="panel-header">
+            <div>
+            </div>
+          </div>
+          <div id="native-score-chart" class="chart-box"></div>
+        </div>
+
+        <div class="card panel-body">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">過去30日の推移</h2>
+              <div class="panel-desc">直近30日分の在席中・研修中の全体トレンドです。短期の揺れを見る下段グラフとの対比に使えます。</div>
+            </div>
+          </div>
+          <div id="summary-chart-30d" class="chart-box"></div>
+        </div>
+
+        <div class="card panel-body">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">時系列トレンド</h2>
+              <div class="panel-desc">直近5日を表示。細線は過去30日データをもとにした24時間移動平均です。</div>
+            </div>
+          </div>
+          <div id="summary-chart" class="chart-box"></div>
+        </div>
+      </div>
+
+      <div class="right-stack">
+        <div class="card panel-body">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">現在のステータス一覧</h2>
+              <div class="panel-desc">
+                同じステイタスが8時間以上続く場合は、iruca のステイタスに関わらず「不明」と表示します。<br>
+                長時間同一ステイタスが続く場合は、同じ内容でも再更新してください。
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <div class="table-grid">
+              <div class="table-pane">
+                <table id="dataTableLeft" class="status-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Status</th>
+                      <th>Message</th>
+                      <th>Update</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="table-pane">
+                <table id="dataTableRight" class="status-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Status</th>
+                      <th>Message</th>
+                      <th>Update</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">Refined glass-style lab monitoring dashboard.</div>
+  </div>
+
+  <script>
+    const API = {
+      members: "https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members",
+      timeData: "https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1",
+      scoreSummary: "https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_debug.json?rlkey=p6jhidej843o2wm5wb1mf9nj1&dl=1"
+    };
+
+    const STATUS_COLORS = {
+      "在席中": { bg: "#2563eb", fg: "#ffffff" },
+      "在席":   { bg: "#2563eb", fg: "#ffffff" },
+      "離席中": { bg: "#d78f78", fg: "#111827" },
+      "離席":   { bg: "#d78f78", fg: "#111827" },
+      "研修中": { bg: "#d59d57", fg: "#111827" },
+      "帰宅":   { bg: "#172030", fg: "#ffffff" },
+      "取込中": { bg: "#f4f1a7", fg: "#111827" },
+      "不明":   { bg: "#7b8596", fg: "#ffffff" }
+    };
+
+    const STALE_THRESHOLD_MS = 8 * 3600 * 1000;
+    let latestMembers = [];
+    let latestScoreSummary = null;
+    let latestTimeSeriesData = null;
+    let latestHighlightPulseTimer = null;
+    let activeBarAnimationTimer = null;
+    let autoRefreshTimer = null;
+
+    function init() {
+      tickClock();
+      setInterval(tickClock, 1000);
+      refreshDashboard({ markTime: false });
+      startAutoRefresh();
+    }
+
+    function startAutoRefresh() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(() => {
+        refreshDashboard({ silent: true });
+      }, 5 * 60 * 1000);
+    }
+
+    function refreshDashboard({ silent = false, markTime = true } = {}) {
+      if (!silent) document.body.classList.add('is-refreshing');
+      Promise.allSettled([
+        fetchTable({ markTime: false }),
+        fetchScoreChart(),
+        fetchTimeSeriesChart()
+      ]).finally(() => {
+        if (markTime) markRefreshTime();
+        document.body.classList.remove('is-refreshing');
+      });
+    }
+
+    function tickClock() {
+      const now = new Date();
+      document.getElementById("real-time").textContent = now.toLocaleTimeString("ja-JP");
+    }
+
+    function markRefreshTime() {
+      document.getElementById("last-refresh").textContent = new Date().toLocaleTimeString("ja-JP");
+    }
+
+    function formatElapsed(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const sec  = totalSec % 60;
+      const min  = Math.floor(totalSec / 60) % 60;
+      const hour = Math.floor(totalSec / 3600) % 24;
+      const day  = Math.floor(totalSec / 86400);
+      if (day > 0) return `${day}日前`;
+      if (hour > 0) return `${hour}時間前`;
+      if (min > 0) return `${min}分前`;
+      return `${sec}秒前`;
+    }
+
+    function resolveStatus(status, diffMs) {
+      return diffMs > STALE_THRESHOLD_MS ? "不明" : (status || "不明");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function fetchTable({ markTime = false } = {}) {
+      return fetch(API.members)
+        .then(res => res.json())
+        .then(members => {
+          latestMembers = members;
+          renderTable(members);
+          updateKpis(members);
+          if (latestScoreSummary) renderScoreChartFromExisting();
+          if (markTime) markRefreshTime();
+        })
+        .catch(err => console.error("テーブル取得失敗:", err));
+    }
+
+    function renderTable(members) {
+      const now = Date.now();
+      const tbodyLeft = document.querySelector("#dataTableLeft tbody");
+      const tbodyRight = document.querySelector("#dataTableRight tbody");
+      tbodyLeft.innerHTML = "";
+      tbodyRight.innerHTML = "";
+
+      const splitIndex = Math.ceil(members.length / 2);
+      const leftMembers = members.slice(0, splitIndex);
+      const rightMembers = members.slice(splitIndex);
+
+      function appendRows(tbody, items, startIndex) {
+        items.forEach((member, offset) => {
+          const diffMs  = now - new Date(member.updated_at).getTime();
+          const status  = resolveStatus(member.status, diffMs);
+          const color   = STATUS_COLORS[status] || STATUS_COLORS["不明"];
+
+          const row = tbody.insertRow();
+          row.dataset.index = startIndex + offset;
+          row.innerHTML = `
+            <td>${escapeHtml(member.name)}</td>
+            <td class="mono muted">${escapeHtml(member.id)}</td>
+            <td><span class="status-pill ${status === "不明" ? "blinking" : ""}" style="background:${color.bg};color:${color.fg};">${escapeHtml(status)}</span></td>
+            <td class="message-cell" data-full-message="${escapeHtml(member.message || "")}" title="${escapeHtml(member.message || "")}">${escapeHtml(member.message || "")}</td>
+            <td>${formatElapsed(diffMs)}</td>
+          `;
+        });
+      }
+
+      appendRows(tbodyLeft, leftMembers, 0);
+      appendRows(tbodyRight, rightMembers, splitIndex);
+    }
+
+    function updateKpis(members) {
+      const now = Date.now();
+      let zai = 0, ken = 0, away = 0, unknown = 0;
+
+      members.forEach(member => {
+        const diffMs = now - new Date(member.updated_at).getTime();
+        const status = resolveStatus(member.status, diffMs);
+        if (status === "在席中" || status === "在席") zai += 1;
+        else if (status === "研修中") ken += 1;
+        else if (status === "離席" || status === "離席中" || status === "帰宅") away += 1;
+        else if (status === "不明") unknown += 1;
+      });
+
+      document.getElementById("kpi-total").textContent = members.length;
+      document.getElementById("kpi-zai").textContent = zai;
+      document.getElementById("kpi-ken").textContent = ken;
+      document.getElementById("kpi-away").textContent = away;
+      document.getElementById("kpi-unknown").textContent = unknown;
+    }
+
+    function fetchScoreChart() {
+      return fetch(API.scoreSummary)
+        .then(res => res.json())
+        .then(data => { latestScoreSummary = data; renderScoreChart(data); })
+        .catch(err => console.error("外部サマリー取得失敗:", err));
+    }
+
+    function renderScoreChartFromExisting() {
+      if (latestScoreSummary) renderScoreChart(latestScoreSummary);
+    }
+
+    function renderScoreChart(data) {
+      const excluded = ["HMG", "TKH", "HGW"];
+      const records = Object.entries(data)
+        .filter(([name]) => !excluded.some(prefix => name.startsWith(prefix)))
+        .map(([name, values]) => ({
+          name,
+          zaiseki: Number(values["在席中"] || 0),
+          kenshu: Number(values["研修中"] || 0),
+          score: Number(values["score"] || 0)
+        }));
+
+      records.sort((a, b) => b.score - a.score);
+
+      const names = records.map(r => r.name);
+      const zaisekiScore = records.map(r => r.zaiseki / 80);
+      const kenshuScore = records.map(r => Math.min(r.kenshu, 40) / 80);
+      const totalScore = records.map(r => r.score);
+
+      const now = Date.now();
+      const memberStatusMap = new Map(latestMembers.map(member => {
+        const diffMs = now - new Date(member.updated_at).getTime();
+        return [member.name, resolveStatus(member.status, diffMs)];
+      }));
+      const activeZaisekiFlags = records.map(r => {
+        const status = memberStatusMap.get(r.name);
+        return status === '在席中' || status === '在席';
+      });
+      const activeKenshuFlags = records.map(r => memberStatusMap.get(r.name) === '研修中');
+
+      const scoreOneIndex = records.findIndex(r => r.score < 1.0);
+      const scoreOneX = scoreOneIndex > 0 ? scoreOneIndex - 0.5 : -1;
+      const compact = window.innerWidth < 1360;
+      const tiny = window.innerWidth < 980;
+
+      const CHART_COLORS = {
+        present: {
+          base: 'rgba(37,99,235,0.72)',
+          pulse: 'rgba(59,130,246,0.86)',
+          lineBase: 'rgba(191,219,254,0.24)',
+          linePulse: 'rgba(219,234,254,0.70)'
+        },
+        training: {
+          base: 'rgba(213,157,87,0.72)',
+          pulse: 'rgba(222,172,106,0.86)',
+          lineBase: 'rgba(242,223,193,0.24)',
+          linePulse: 'rgba(248,236,216,0.70)'
+        }
+      };
+
+      const zaisekiBaseColors = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.base : 'rgba(37,99,235,0.64)');
+      const zaisekiPulseColors = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.pulse : 'rgba(37,99,235,0.64)');
+      const zaisekiLineBase = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.lineBase : 'rgba(255,255,255,0.10)');
+      const zaisekiLinePulse = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.linePulse : 'rgba(255,255,255,0.10)');
+      const zaisekiWidthBase = activeZaisekiFlags.map(flag => flag ? 1.2 : 0.6);
+      const zaisekiWidthPulse = activeZaisekiFlags.map(flag => flag ? 2.8 : 0.6);
+
+      const kenshuBaseColors = activeKenshuFlags.map(flag => flag ? CHART_COLORS.training.base : 'rgba(213,157,87,0.64)');
+      const kenshuPulseColors = activeKenshuFlags.map(flag => flag ? CHART_COLORS.training.pulse : 'rgba(213,157,87,0.64)');
+      const kenshuLineBase = records.map((r, i) => {
+        if (activeKenshuFlags[i]) return CHART_COLORS.training.lineBase;
+        if (r.kenshu === 40) return 'rgba(255,138,138,0.72)';
+        return 'rgba(255,255,255,0.10)';
+      });
+      const kenshuLinePulse = records.map((r, i) => {
+        if (activeKenshuFlags[i]) return CHART_COLORS.training.linePulse;
+        if (r.kenshu === 40) return 'rgba(255,138,138,0.72)';
+        return 'rgba(255,255,255,0.10)';
+      });
+      const kenshuWidthBase = records.map((r, i) => {
+        if (activeKenshuFlags[i]) return 1.2;
+        if (r.kenshu === 40) return 1.6;
+        return 0.6;
+      });
+      const kenshuWidthPulse = records.map((r, i) => {
+        if (activeKenshuFlags[i]) return 2.8;
+        if (r.kenshu === 40) return 1.6;
+        return 0.6;
+      });
+
+      const traces = [
+        {
+          x: names,
+          y: zaisekiScore,
+          type: 'bar',
+          name: '在席中',
+          marker: {
+            color: zaisekiBaseColors,
+            line: { color: zaisekiLineBase, width: zaisekiWidthBase }
+          },
+          hovertemplate: '%{x}<br>在席中: %{y:.3f}<extra></extra>'
+        },
+        {
+          x: names,
+          y: kenshuScore,
+          type: 'bar',
+          name: '研修中',
+          marker: {
+            color: kenshuBaseColors,
+            line: {
+              color: kenshuLineBase,
+              width: kenshuWidthBase
+            }
+          },
+          hovertemplate: '%{x}<br>研修中: %{y:.3f}<extra></extra>'
+        },
+        {
+          x: names,
+          y: totalScore.map(s => s + 0.01),
+          text: totalScore.map(s => s.toFixed(3)),
+          mode: 'text',
+          type: 'scatter',
+          textposition: 'top center',
+          textfont: { size: tiny ? 9 : compact ? 10 : 11, color: '#e9eef8' },
+          cliponaxis: false,
+          showlegend: false,
+          hoverinfo: 'skip'
+        }
+      ];
+
+      const layout = {
+        barmode: 'stack',
+        title: {
+          text: '直近1カ月の取り組み充足率（縦軸: score）赤枠は研修時間上限超過',
+          font: { size: tiny ? 12 : compact ? 14 : 16, color: '#edf3ff' },
+          x: 0.02,
+          xanchor: 'left'
+        },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(255,255,255,0.02)',
+        font: { color: '#e5efff' },
+        bargap: tiny ? 0.24 : 0.16,
+        xaxis: {
+          title: tiny ? '' : '名前（score降順）',
+          tickangle: tiny ? -90 : compact ? -55 : -35,
+          automargin: true,
+          gridcolor: 'rgba(255,255,255,0.05)',
+          zerolinecolor: 'rgba(255,255,255,0.08)',
+          tickfont: { size: tiny ? 9 : compact ? 10 : 11 }
+        },
+        yaxis: {
+          title: 'score',
+          rangemode: 'tozero',
+          gridcolor: 'rgba(255,255,255,0.08)',
+          zerolinecolor: 'rgba(255,255,255,0.10)',
+          tickfont: { size: tiny ? 10 : 11 }
+        },
+        legend: {
+          title: { text: 'ステータス' },
+          orientation: 'h',
+          x: 0,
+          y: 1.13,
+          font: { size: tiny ? 10 : 11 }
+        },
+        hoverlabel: {
+          bgcolor: 'rgba(15,23,42,0.96)',
+          bordercolor: 'rgba(255,255,255,0.12)',
+          font: { color: '#edf2ff', size: tiny ? 10 : 11 }
+        },
+        height: null,
+        margin: { l: 48, r: 16, t: tiny ? 72 : 84, b: tiny ? 88 : compact ? 92 : 78 },
+        shapes: [
+          {
+            type: 'line',
+            x0: scoreOneX,
+            x1: scoreOneX,
+            y0: 0,
+            y1: 1.2,
+            xref: 'x',
+            yref: 'paper',
+            line: { color: 'red', dash: 'dash' }
+          },
+          {
+            type: 'line',
+            x0: -0.5,
+            x1: Math.max(names.length - 0.5, -0.5),
+            y0: 1.0,
+            y1: 1.0,
+            xref: 'x',
+            yref: 'y',
+            line: { color: 'rgba(255,255,255,0.7)', dash: 'dot' }
+          }
+        ],
+        annotations: [
+          {
+            x: scoreOneX,
+            y: 1.1,
+            xref: 'x',
+            yref: 'paper',
+            text: 'score=1.0',
+            showarrow: false,
+            font: { color: 'red', size: tiny ? 10 : 11 }
+          },
+          {
+            x: Math.max(names.length - 1, 0),
+            y: 1.0,
+            xref: 'x',
+            yref: 'y',
+            text: 'score=1.0',
+            showarrow: false,
+            font: { color: '#f3f4f6', size: tiny ? 10 : 11 },
+            xanchor: 'right'
+          }
+        ]
+      };
+
+      Plotly.newPlot('native-score-chart', traces, layout, {
+        responsive: true,
+        displayModeBar: false
+      }).then(() => {
+        if (activeBarAnimationTimer) {
+          clearInterval(activeBarAnimationTimer);
+          activeBarAnimationTimer = null;
+        }
+        const hasActiveBars = activeZaisekiFlags.some(Boolean) || activeKenshuFlags.some(Boolean);
+        if (!hasActiveBars || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        let pulseOn = false;
+        activeBarAnimationTimer = setInterval(() => {
+          pulseOn = !pulseOn;
+          Plotly.restyle('native-score-chart', {
+            'marker.color': [pulseOn ? zaisekiPulseColors : zaisekiBaseColors],
+            'marker.line.color': [pulseOn ? zaisekiLinePulse : zaisekiLineBase],
+            'marker.line.width': [pulseOn ? zaisekiWidthPulse : zaisekiWidthBase]
+          }, [0]);
+          Plotly.restyle('native-score-chart', {
+            'marker.color': [pulseOn ? kenshuPulseColors : kenshuBaseColors],
+            'marker.line.color': [pulseOn ? kenshuLinePulse : kenshuLineBase],
+            'marker.line.width': [pulseOn ? kenshuWidthPulse : kenshuWidthBase]
+          }, [1]);
+        }, 1300);
+      });
+    }
+
+    function fetchTimeSeriesChart() {
+      fetch(API.timeData)
+        .then(res => res.json())
+        .then(data => {
+          latestTimeSeriesData = data;
+          renderTimeSeriesCharts(data);
+        })
+        .catch(err => console.error("時系列取得失敗:", err));
+    }
+
+    function getLatestMeta(timestamps, presentValues = [], trainingValues = []) {
+      if (!timestamps || timestamps.length === 0) return null;
+      const lastIndex = timestamps.length - 1;
+      const lastTs = timestamps[lastIndex];
+      const lastMs = new Date(lastTs).getTime();
+      const prevMs = lastIndex > 0 ? new Date(timestamps[lastIndex - 1]).getTime() : lastMs - 3600000;
+      const intervalMs = Math.max(30 * 60 * 1000, (lastMs - prevMs) || 3600000);
+      return {
+        lastIndex,
+        lastTs,
+        lastMs,
+        prevMs,
+        intervalMs,
+        halfMs: intervalMs / 2,
+        present: Number(presentValues[lastIndex] ?? 0),
+        training: Number(trainingValues[lastIndex] ?? 0)
+      };
+    }
+
+    function getLatestHighlightPalette(meta) {
+      if (!meta) return null;
+      if (meta.present > 0 && meta.training > 0) {
+        return { fillBase: 'rgba(186,166,108,0.12)', fillPeak: 'rgba(186,166,108,0.24)', border: 'rgba(186,166,108,0.30)', label: '在席+研修' };
+      }
+      if (meta.present > 0) {
+        return { fillBase: 'rgba(186,166,108,0.10)', fillPeak: 'rgba(186,166,108,0.22)', border: 'rgba(186,166,108,0.28)', label: '在席中' };
+      }
+      if (meta.training > 0) {
+        return { fillBase: 'rgba(190,145,90,0.10)', fillPeak: 'rgba(190,145,90,0.22)', border: 'rgba(190,145,90,0.28)', label: '研修中' };
+      }
+      return { fillBase: 'rgba(255,255,255,0.06)', fillPeak: 'rgba(255,255,255,0.14)', border: 'rgba(255,255,255,0.14)', label: 'データなし' };
+    }
+
+    function withAlpha(rgba, alpha) {
+      return rgba.replace(/rgba\(([^,]+),([^,]+),([^,]+),[^\)]+\)/, `rgba($1,$2,$3,${alpha})`);
+    }
+
+    function toLocalDateTimeString(ms) {
+      const d = new Date(ms);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
+    }
+
+    function buildLatestHighlightShapes(meta, pulsePhase = 0) {
+      const palette = getLatestHighlightPalette(meta);
+      if (!meta || !palette) return [];
+
+      const interval = Math.max(meta.intervalMs, 30 * 60 * 1000);
+      const tailSegments = 5;
+      const alphas = [0.34, 0.24, 0.17, 0.11, 0.07];
+      const shapes = [];
+
+      for (let i = tailSegments - 1; i >= 0; i--) {
+        const startMs = meta.lastMs - ((i + 0.5) * interval);
+        const endMs = meta.lastMs - ((i - 0.5) * interval);
+        shapes.push({
+          type: 'rect',
+          xref: 'x', yref: 'paper',
+          x0: toLocalDateTimeString(startMs),
+          x1: toLocalDateTimeString(endMs),
+          y0: 0, y1: 1,
+          fillcolor: withAlpha(palette.fillPeak, alphas[i] ?? 0.06),
+          line: { width: 0 },
+          layer: 'below'
+        });
+      }
+
+      return shapes;
+    }
+
+    function buildLatestAnnotation(meta) {
+      const palette = getLatestHighlightPalette(meta);
+      if (!meta || !palette) return [];
+      const d = new Date(meta.lastMs);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return [{
+        x: meta.lastTs,
+        y: 1,
+        xref: 'x',
+        yref: 'paper',
+        text: `最新 ${hh}:${mm}　在席 ${meta.present} / 研修 ${meta.training}`,
+        showarrow: false,
+        xanchor: 'right',
+        yanchor: 'bottom',
+        yshift: 8,
+        font: { size: 11, color: '#f4ecd5' },
+        bgcolor: 'rgba(7,15,30,0.92)',
+        bordercolor: palette.border,
+        borderwidth: 1,
+        borderpad: 5
+      }];
+    }
+
+    function buildChartRange(timestamps, futureMarginRatio = 0.14) {
+      if (!timestamps || timestamps.length === 0) return null;
+      const meta = getLatestMeta(timestamps);
+      const firstMs = new Date(timestamps[0]).getTime();
+      const spanMs = Math.max(meta.intervalMs * 8, meta.lastMs - firstMs);
+      const futureMs = Math.max(meta.intervalMs * 2.2, spanMs * futureMarginRatio);
+      return [timestamps[0], toLocalDateTimeString(meta.lastMs + futureMs)];
+    }
+
+    function buildLinearForecast(timestamps, values, futureRatio = 0.14, maxSteps = 6) {
+      if (!timestamps || timestamps.length < 2 || !values || values.length < 2) {
+        return { x: [], y: [] };
+      }
+      const ms = timestamps.map(t => new Date(t).getTime());
+      const n = values.length;
+      const lookback = Math.min(Math.max(4, Math.floor(n * 0.18)), 10, n);
+      const xs = ms.slice(n - lookback);
+      const ys = values.slice(n - lookback).map(v => Number(v ?? 0));
+      const baseX = xs[0];
+      const xNorm = xs.map(v => (v - baseX) / 3600000);
+      const meanX = xNorm.reduce((a, b) => a + b, 0) / xNorm.length;
+      const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+      let num = 0, den = 0;
+      for (let i = 0; i < xNorm.length; i++) {
+        const dx = xNorm[i] - meanX;
+        num += dx * (ys[i] - meanY);
+        den += dx * dx;
+      }
+      const slopePerHour = den === 0 ? 0 : num / den;
+      const meta = getLatestMeta(timestamps, values, values);
+      const firstMs = ms[0];
+      const spanMs = Math.max(meta.intervalMs * 8, meta.lastMs - firstMs);
+      const futureMs = Math.max(meta.intervalMs * 2.2, spanMs * futureRatio);
+      const stepMs = Math.max(meta.intervalMs, Math.round(futureMs / maxSteps));
+      const points = Math.max(3, Math.min(maxSteps, Math.round(futureMs / stepMs) + 1));
+      const outX = [timestamps[n - 1]];
+      const outY = [ys[ys.length - 1]];
+      for (let i = 1; i <= points; i++) {
+        const nextMs = meta.lastMs + stepMs * i;
+        const deltaHours = (nextMs - meta.lastMs) / 3600000;
+        const nextY = Math.max(0, ys[ys.length - 1] + slopePerHour * deltaHours);
+        outX.push(new Date(nextMs).toISOString());
+        outY.push(Number(nextY.toFixed(2)));
+      }
+      return { x: outX, y: outY };
+    }
+
+    function startLatestHighlightPulse(shortTs, zShort, kShort, last30Ts, z30, k30) {
+      if (latestHighlightPulseTimer) clearInterval(latestHighlightPulseTimer);
+      const shortChart = document.getElementById('summary-chart');
+      const longChart = document.getElementById('summary-chart-30d');
+      if (!shortChart?.data && !longChart?.data) return;
+      const shortMeta = getLatestMeta(shortTs, zShort, kShort);
+      const longMeta = getLatestMeta(last30Ts, z30, k30);
+      let phase = 0;
+      const tick = () => {
+        phase += 0.55;
+        const shortShapes = buildBackgroundShapes(shortTs, zShort, kShort, phase);
+        const longShapes = buildBackgroundShapes(last30Ts, z30, k30, phase);
+        if (shortChart?.data) {
+          Plotly.relayout(shortChart, {
+            shapes: shortShapes,
+            annotations: buildLatestAnnotation(shortMeta)
+          });
+        }
+        if (longChart?.data) {
+          Plotly.relayout(longChart, {
+            shapes: longShapes,
+            annotations: buildLatestAnnotation(longMeta)
+          });
+        }
+      };
+      tick();
+      latestHighlightPulseTimer = setInterval(tick, 650);
+    }
+
+    function renderTimeSeriesCharts(data) {
+      const allTs = Object.keys(data).sort((a, b) => new Date(a) - new Date(b));
+      const allDates = allTs.map(t => new Date(t));
+      const endTime = allDates.length ? allDates[allDates.length - 1].getTime() : Date.now();
+      const THIRTY_DAYS_MS = 30 * 24 * 3600 * 1000;
+      const FIVE_DAYS_MS = 5 * 24 * 3600 * 1000;
+
+      const last30Ts = allTs.filter(t => endTime - new Date(t).getTime() <= THIRTY_DAYS_MS);
+      const shortTs = allTs.filter(t => endTime - new Date(t).getTime() <= FIVE_DAYS_MS);
+
+      const z30 = last30Ts.map(t => data[t]["在席中"] ?? 0);
+      const k30 = last30Ts.map(t => data[t]["研修中"] ?? 0);
+      const zShort = shortTs.map(t => data[t]["在席中"] ?? 0);
+      const kShort = shortTs.map(t => data[t]["研修中"] ?? 0);
+
+      const z30MA = rollingAverageByHours(last30Ts, z30, 24);
+      const k30MA = rollingAverageByHours(last30Ts, k30, 24);
+      const shortMAIndex = new Map(last30Ts.map((t, i) => [t, i]));
+      const zShortMA = shortTs.map(t => {
+        const idx = shortMAIndex.get(t);
+        return idx == null ? null : z30MA[idx];
+      });
+      const kShortMA = shortTs.map(t => {
+        const idx = shortMAIndex.get(t);
+        return idx == null ? null : k30MA[idx];
+      });
+
+
+      Plotly.newPlot("summary-chart-30d", [
+        {
+          x: last30Ts, y: z30, mode: "lines", name: "在席中",
+          line: { color: "#7aa9ea", width: 2.15 }
+        },
+        {
+          x: last30Ts, y: z30MA, mode: "lines", name: "在席中 24h移動平均",
+          line: { color: "rgba(122,169,234,0.42)", width: 1.0, dash: "dot" }
+        },
+        {
+          x: last30Ts, y: k30, mode: "lines", name: "研修中",
+          line: { color: "#d59d57", width: 1.95 }
+        },
+        {
+          x: last30Ts, y: k30MA, mode: "lines", name: "研修中 24h移動平均",
+          line: { color: "rgba(213,157,87,0.42)", width: 1.0, dash: "dot" }
+        }
+      ], {
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(255,255,255,0.02)",
+        font: { color: "#e5efff" },
+        yaxis: {
+          title: "人数",
+          gridcolor: "rgba(255,255,255,0.06)",
+          zerolinecolor: "rgba(255,255,255,0.08)"
+        },
+        margin: { t: 8, b: 40, l: 48, r: 12 },
+        legend: { orientation: "h", x: 0, y: 1.12, font: { size: 10 } },
+        shapes: buildBackgroundShapes(last30Ts, z30, k30, 0),
+        annotations: buildLatestAnnotation(getLatestMeta(last30Ts, z30, k30)),
+        xaxis: {
+          title: "時間",
+          type: "date",
+          tickformat: "%m/%d",
+          gridcolor: "rgba(255,255,255,0.06)",
+          zerolinecolor: "rgba(255,255,255,0.08)",
+          range: buildChartRange(last30Ts)
+        },
+      }, {
+        responsive: true,
+        displayModeBar: false
+      });
+
+      Plotly.newPlot("summary-chart", [
+        {
+          x: shortTs, y: zShort, mode: "lines+markers", name: "在席中",
+          line: { color: "#7aa9ea", width: 2.4 },
+          marker: { size: 4, color: "#a8c5ef" },
+          fill: "tozeroy",
+          fillcolor: "rgba(122,169,234,0.10)"
+        },
+        {
+          x: shortTs, y: zShortMA, mode: "lines", name: "在席中 移動平均",
+          line: { color: "rgba(168,197,239,0.78)", width: 1.0 }
+        },
+        {
+          x: shortTs, y: kShort, mode: "lines+markers", name: "研修中",
+          line: { color: "#d59d57", width: 2.4 },
+          marker: { size: 4, color: "#ffd18a" }
+        },
+        {
+          x: shortTs, y: kShortMA, mode: "lines", name: "研修中 移動平均",
+          line: { color: "rgba(229,193,140,0.78)", width: 1.0 }
+        }
+      ], {
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(255,255,255,0.02)",
+        font: { color: "#e5efff" },
+        yaxis: {
+          title: "人数",
+          gridcolor: "rgba(255,255,255,0.06)",
+          zerolinecolor: "rgba(255,255,255,0.08)"
+        },
+        margin: { t: 8, b: 42, l: 48, r: 12 },
+        legend: { orientation: "h", x: 0, y: 1.14, font: { size: 10 } },
+        shapes: buildBackgroundShapes(shortTs, zShort, kShort, 0),
+        annotations: buildLatestAnnotation(getLatestMeta(shortTs, zShort, kShort)),
+        xaxis: {
+          title: "時間",
+          type: "date",
+          tickformat: "%m/%d %H:%M",
+          gridcolor: "rgba(255,255,255,0.06)",
+          zerolinecolor: "rgba(255,255,255,0.08)",
+          range: buildChartRange(shortTs)
+        },
+      }, {
+        responsive: true,
+        displayModeBar: false
+      });
+
+      startLatestHighlightPulse(shortTs, zShort, kShort, last30Ts, z30, k30);
+    }
+
+    function rollingAverageByHours(timestamps, values, hours) {
+      const result = [];
+      const timeMs = timestamps.map(t => new Date(t).getTime());
+      const windowMs = hours * 3600 * 1000;
+      let left = 0;
+      let sum = 0;
+      for (let right = 0; right < values.length; right++) {
+        sum += values[right];
+        while (timeMs[right] - timeMs[left] > windowMs && left < right) {
+          sum -= values[left];
+          left++;
+        }
+        result.push(sum / (right - left + 1));
+      }
+      return result;
+    }
+
+    function buildBackgroundShapes(timestamps, presentValues = [], trainingValues = [], pulsePhase = 0) {
+      const dateSet = new Set(timestamps.map(t => t.split("T")[0]));
+      const shapes = [];
+
+      for (const date of dateSet) {
+        const weekday = new Date(`${date}T00:00`).getDay();
+        const isWeekend = weekday === 0 || weekday === 6;
+        const isWeekday = !isWeekend;
+
+        for (let h = 0; h < 24; h++) {
+          const isNight = h >= 18 || h < 6;
+          if (!isWeekday || !isNight) {
+            if (!isWeekend) continue;
+          }
+
+          const nextDate = (h === 23)
+            ? new Date(new Date(`${date}T00:00`).getTime() + 86400000).toISOString().slice(0,10)
+            : date;
+          const h0 = String(h).padStart(2, "0");
+          const h1 = String((h + 1) % 24).padStart(2, "0");
+
+          shapes.push({
+            type: "rect",
+            xref: "x", yref: "paper",
+            x0: `${date}T${h0}:00`,
+            x1: `${nextDate}T${h1}:00`,
+            y0: 0, y1: 1,
+            fillcolor: isWeekend
+              ? (h % 2 === 0 ? "rgba(104,122,255,0.10)" : "rgba(104,122,255,0.18)")
+              : "rgba(255,255,255,0.06)",
+            line: { width: 0 }
+          });
+        }
+      }
+
+      const latestShapes = buildLatestHighlightShapes(getLatestMeta(timestamps, presentValues, trainingValues), pulsePhase);
+      shapes.push(...latestShapes);
+      return shapes;
+    }
+
+    window.addEventListener("resize", () => {
+      const scoreChart = document.getElementById("native-score-chart");
+      if (scoreChart?.data) {
+        renderScoreChartFromExisting();
+      }
+      if (latestTimeSeriesData) {
+        const shortChart = document.getElementById("summary-chart");
+        const longChart = document.getElementById("summary-chart-30d");
+        if (shortChart?.data) Plotly.Plots.resize(shortChart);
+        if (longChart?.data) Plotly.Plots.resize(longChart);
+      }
+    });
+  </script>
+</body>
+</html>
