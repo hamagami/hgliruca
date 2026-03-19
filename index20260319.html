@@ -7,20 +7,24 @@
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     :root {
-      --bg: #07111f;
-      --bg2: #0d1b2a;
-      --panel: rgba(12, 24, 42, 0.78);
-      --panel-strong: rgba(10, 18, 32, 0.92);
-      --line: rgba(255,255,255,0.08);
+      --bg: #06101b;
+      --bg2: #0c1726;
+      --panel: rgba(11, 21, 35, 0.76);
+      --panel-strong: rgba(9, 17, 29, 0.90);
+      --line: rgba(255,255,255,0.07);
+      --line-soft: rgba(255,255,255,0.04);
       --text: #edf3ff;
-      --muted: #9fb0c9;
-      --accent: #67b7ff;
-      --accent2: #7c5cff;
-      --success: #3ddc97;
-      --warn: #ffb454;
+      --muted: #9aa9c1;
+      --accent: #7aa9ea;
+      --accent2: #8f7be8;
+      --highlight: rgba(186, 166, 108, 0.18);
+      --highlight-strong: rgba(186, 166, 108, 0.28);
+      --success: #55c48e;
+      --warn: #d59d57;
       --danger: #ff6b81;
-      --shadow: 0 18px 40px rgba(0,0,0,0.35);
-      --radius: 20px;
+      --shadow: 0 18px 34px rgba(0,0,0,0.28);
+      --shadow-soft: 0 10px 24px rgba(0,0,0,0.18);
+      --radius: 22px;
     }
 
     * { box-sizing: border-box; }
@@ -31,10 +35,10 @@
       font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at 15% 20%, rgba(103,183,255,0.18), transparent 26%),
-        radial-gradient(circle at 85% 15%, rgba(124,92,255,0.16), transparent 24%),
-        radial-gradient(circle at 50% 100%, rgba(61,220,151,0.10), transparent 25%),
-        linear-gradient(135deg, var(--bg), var(--bg2) 55%, #081423);
+        radial-gradient(circle at 14% 18%, rgba(122,169,234,0.15), transparent 24%),
+        radial-gradient(circle at 85% 14%, rgba(143,123,232,0.10), transparent 22%),
+        radial-gradient(circle at 55% 100%, rgba(186,166,108,0.08), transparent 24%),
+        linear-gradient(135deg, var(--bg), var(--bg2) 55%, #081321);
     }
 
     body {
@@ -57,12 +61,12 @@
       justify-content: space-between;
       align-items: center;
       gap: 14px;
-      padding: 12px 18px;
+      padding: 14px 20px;
       border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018));
       backdrop-filter: blur(18px);
       border-radius: 28px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-soft);
     }
 
     .hero h1 {
@@ -111,15 +115,26 @@
     }
 
     .card {
-      background: var(--panel);
+      background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.012)), var(--panel);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-soft);
       backdrop-filter: blur(14px);
     }
 
+    .left-stack > .card:first-child {
+      background: linear-gradient(180deg, rgba(255,255,255,0.034), rgba(255,255,255,0.012)), rgba(11,21,35,0.82);
+      border-color: rgba(186,166,108,0.16);
+      box-shadow: 0 18px 36px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .right-stack .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.016), rgba(255,255,255,0.010)), rgba(10,19,31,0.74);
+      border-color: rgba(255,255,255,0.06);
+    }
+
     .kpi {
-      padding: 10px 14px;
+      padding: 12px 15px;
       position: relative;
       overflow: hidden;
     }
@@ -136,20 +151,24 @@
 
     .kpi .label {
       color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 8px;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      margin-bottom: 9px;
+      font-weight: 500;
     }
 
     .kpi .value {
-      font-size: 24px;
-      font-weight: 700;
+      font-size: 25px;
+      font-weight: 640;
       line-height: 1;
-      margin-bottom: 8px;
+      margin-bottom: 7px;
     }
 
     .kpi .sub {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
+      opacity: 0.85;
+      font-weight: 400;
     }
 
     .main {
@@ -175,23 +194,26 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .panel-title {
       margin: 0;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 650;
+      letter-spacing: 0.01em;
     }
 
     .panel-desc {
       color: var(--muted);
       font-size: 11px;
-      line-height: 1.4;
+      line-height: 1.5;
+      opacity: 0.84;
+      max-width: 96%;
     }
 
     .panel-body {
-      padding: 12px 12px 10px;
+      padding: 14px 14px 12px;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -208,10 +230,10 @@
       overflow: hidden;
       flex: 1 1 auto;
       min-height: 0;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
       padding: 0;
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.018);
     }
 
     .table-grid {
@@ -265,11 +287,11 @@
     }
 
     tbody tr:nth-child(odd) {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.016);
     }
 
     tbody tr:hover {
-      background: rgba(103,183,255,0.09);
+      background: rgba(122,169,234,0.08);
     }
 
     .message-cell {
@@ -348,8 +370,8 @@
       border-radius: 999px;
       font-size: 12px;
       color: var(--muted);
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.032);
+      border: 1px solid rgba(255,255,255,0.05);
     }
 
     .chip-dot {
@@ -367,7 +389,7 @@
 
 
     .hero, .card, .kpi, .table-wrap, .status-pill, tbody tr, .badge, .chip {
-      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease, opacity 0.25s ease;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease, opacity 0.22s ease;
     }
 
     .hero {
@@ -379,44 +401,36 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.02) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.02) 65%, transparent 100%);
+      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.015) 40%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.015) 60%, transparent 100%);
       transform: translateX(-120%);
-      animation: heroSweep 10s ease-in-out infinite;
+      animation: heroSweep 15s ease-in-out infinite;
       pointer-events: none;
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 22px 48px rgba(0,0,0,0.42);
-      border-color: rgba(103,183,255,0.18);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(0,0,0,0.22);
+      border-color: rgba(186,166,108,0.16);
     }
 
     .kpi .value {
-      text-shadow: 0 0 18px rgba(103,183,255,0.10);
-    }
-
-    .kpi:hover .value {
-      text-shadow: 0 0 22px rgba(103,183,255,0.28);
+      text-shadow: 0 0 16px rgba(122,169,234,0.08);
     }
 
     tbody tr {
-      animation: rowFadeIn 0.45s ease both;
+      animation: rowFadeIn 0.42s ease both;
     }
 
     tbody tr:hover {
-      transform: translateX(2px);
+      transform: translateX(1px);
     }
 
     .status-pill {
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 rgba(103,183,255,0);
-    }
-
-    .status-pill:not(.blinking) {
-      animation: statusBreath 3.6s ease-in-out infinite;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 rgba(122,169,234,0);
     }
 
     .message-cell[data-full-message]:hover::after {
-      animation: tooltipPop 0.16s ease-out;
+      animation: tooltipPop 0.14s ease-out;
     }
 
     .table-pane tbody tr:nth-child(1) { animation-delay: 0.03s; }
@@ -449,8 +463,8 @@
     }
 
     @keyframes statusBreath {
-      0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 rgba(103,183,255,0); filter: brightness(1); }
-      50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 16px rgba(255,255,255,0.10); filter: brightness(1.04); }
+      0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 rgba(122,169,234,0); filter: brightness(1); }
+      50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 10px rgba(255,255,255,0.06); filter: brightness(1.02); }
     }
 
     @keyframes pulse {
@@ -468,7 +482,7 @@
 
 
     @media (prefers-reduced-motion: reduce) {
-      .badge-dot, .blinking, .status-pill:not(.blinking), tbody tr, .hero::after {
+      .badge-dot, .blinking, tbody tr, .hero::after {
         animation: none !important;
       }
       .hero, .card, .kpi, .table-wrap, .status-pill, tbody tr, .badge, .chip {
@@ -519,11 +533,11 @@
         </div>
       </div>
       <div class="legend">
-        <span class="chip"><span class="chip-dot" style="background:#3b82f6"></span>在席</span>
-        <span class="chip"><span class="chip-dot" style="background:#ff8f6b"></span>離席</span>
-        <span class="chip"><span class="chip-dot" style="background:#ffb454"></span>研修中</span>
-        <span class="chip"><span class="chip-dot" style="background:#101828"></span>帰宅</span>
-        <span class="chip"><span class="chip-dot" style="background:#6b7280"></span>不明</span>
+        <span class="chip"><span class="chip-dot" style="background:#2563eb"></span>在席</span>
+        <span class="chip"><span class="chip-dot" style="background:#d78f78"></span>離席</span>
+        <span class="chip"><span class="chip-dot" style="background:#d59d57"></span>研修中</span>
+        <span class="chip"><span class="chip-dot" style="background:#172030"></span>帰宅</span>
+        <span class="chip"><span class="chip-dot" style="background:#7b8596"></span>不明</span>
       </div>
     </section>
 
@@ -540,8 +554,6 @@
         <div class="card panel-body">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">外部サマリー</h2>
-              <div class="panel-desc">score_graph0601.html のロジックをそのまま内蔵し、過去1か月の充足率グラフをレスポンシブ表示します。</div>
             </div>
           </div>
           <div id="native-score-chart" class="chart-box"></div>
@@ -615,7 +627,7 @@
       </div>
     </section>
 
-    <div class="footer-note">Designed as a glass-style lab monitoring dashboard.</div>
+    <div class="footer-note">Refined glass-style lab monitoring dashboard.</div>
   </div>
 
   <script>
@@ -628,12 +640,12 @@
     const STATUS_COLORS = {
       "在席中": { bg: "#2563eb", fg: "#ffffff" },
       "在席":   { bg: "#2563eb", fg: "#ffffff" },
-      "離席中": { bg: "#ff8f6b", fg: "#111827" },
-      "離席":   { bg: "#ff8f6b", fg: "#111827" },
-      "研修中": { bg: "#ffb454", fg: "#111827" },
-      "帰宅":   { bg: "#111827", fg: "#ffffff" },
+      "離席中": { bg: "#d78f78", fg: "#111827" },
+      "離席":   { bg: "#d78f78", fg: "#111827" },
+      "研修中": { bg: "#d59d57", fg: "#111827" },
+      "帰宅":   { bg: "#172030", fg: "#ffffff" },
       "取込中": { bg: "#f4f1a7", fg: "#111827" },
-      "不明":   { bg: "#6b7280", fg: "#ffffff" }
+      "不明":   { bg: "#7b8596", fg: "#ffffff" }
     };
 
     const STALE_THRESHOLD_MS = 8 * 3600 * 1000;
@@ -817,28 +829,28 @@
 
       const CHART_COLORS = {
         present: {
-          base: 'rgba(37,99,235,0.78)',
-          pulse: 'rgba(59,130,246,0.92)',
-          lineBase: 'rgba(191,219,254,0.32)',
-          linePulse: 'rgba(219,234,254,0.95)'
+          base: 'rgba(37,99,235,0.72)',
+          pulse: 'rgba(59,130,246,0.86)',
+          lineBase: 'rgba(191,219,254,0.24)',
+          linePulse: 'rgba(219,234,254,0.70)'
         },
         training: {
-          base: 'rgba(255,180,84,0.76)',
-          pulse: 'rgba(251,191,118,0.92)',
-          lineBase: 'rgba(255,237,213,0.34)',
-          linePulse: 'rgba(255,247,237,0.95)'
+          base: 'rgba(213,157,87,0.72)',
+          pulse: 'rgba(222,172,106,0.86)',
+          lineBase: 'rgba(242,223,193,0.24)',
+          linePulse: 'rgba(248,236,216,0.70)'
         }
       };
 
-      const zaisekiBaseColors = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.base : 'rgba(37,99,235,0.68)');
-      const zaisekiPulseColors = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.pulse : 'rgba(37,99,235,0.68)');
+      const zaisekiBaseColors = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.base : 'rgba(37,99,235,0.64)');
+      const zaisekiPulseColors = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.pulse : 'rgba(37,99,235,0.64)');
       const zaisekiLineBase = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.lineBase : 'rgba(255,255,255,0.10)');
       const zaisekiLinePulse = activeZaisekiFlags.map(flag => flag ? CHART_COLORS.present.linePulse : 'rgba(255,255,255,0.10)');
       const zaisekiWidthBase = activeZaisekiFlags.map(flag => flag ? 1.2 : 0.6);
       const zaisekiWidthPulse = activeZaisekiFlags.map(flag => flag ? 2.8 : 0.6);
 
-      const kenshuBaseColors = activeKenshuFlags.map(flag => flag ? CHART_COLORS.training.base : 'rgba(255,180,84,0.66)');
-      const kenshuPulseColors = activeKenshuFlags.map(flag => flag ? CHART_COLORS.training.pulse : 'rgba(255,180,84,0.66)');
+      const kenshuBaseColors = activeKenshuFlags.map(flag => flag ? CHART_COLORS.training.base : 'rgba(213,157,87,0.64)');
+      const kenshuPulseColors = activeKenshuFlags.map(flag => flag ? CHART_COLORS.training.pulse : 'rgba(213,157,87,0.64)');
       const kenshuLineBase = records.map((r, i) => {
         if (activeKenshuFlags[i]) return CHART_COLORS.training.lineBase;
         if (r.kenshu === 40) return 'rgba(255,138,138,0.72)';
@@ -1046,15 +1058,15 @@
     function getLatestHighlightPalette(meta) {
       if (!meta) return null;
       if (meta.present > 0 && meta.training > 0) {
-        return { fillBase: 'rgba(255,234,138,0.14)', fillPeak: 'rgba(255,234,138,0.30)', border: 'rgba(255,234,138,0.34)', label: '在席+研修' };
+        return { fillBase: 'rgba(186,166,108,0.12)', fillPeak: 'rgba(186,166,108,0.24)', border: 'rgba(186,166,108,0.30)', label: '在席+研修' };
       }
       if (meta.present > 0) {
-        return { fillBase: 'rgba(255,234,138,0.12)', fillPeak: 'rgba(255,234,138,0.28)', border: 'rgba(255,234,138,0.30)', label: '在席中' };
+        return { fillBase: 'rgba(186,166,108,0.10)', fillPeak: 'rgba(186,166,108,0.22)', border: 'rgba(186,166,108,0.28)', label: '在席中' };
       }
       if (meta.training > 0) {
-        return { fillBase: 'rgba(255,210,122,0.12)', fillPeak: 'rgba(255,210,122,0.28)', border: 'rgba(255,210,122,0.30)', label: '研修中' };
+        return { fillBase: 'rgba(190,145,90,0.10)', fillPeak: 'rgba(190,145,90,0.22)', border: 'rgba(190,145,90,0.28)', label: '研修中' };
       }
-      return { fillBase: 'rgba(255,255,255,0.08)', fillPeak: 'rgba(255,255,255,0.18)', border: 'rgba(255,255,255,0.16)', label: 'データなし' };
+      return { fillBase: 'rgba(255,255,255,0.06)', fillPeak: 'rgba(255,255,255,0.14)', border: 'rgba(255,255,255,0.14)', label: 'データなし' };
     }
 
     function withAlpha(rgba, alpha) {
@@ -1115,7 +1127,7 @@
         xanchor: 'right',
         yanchor: 'bottom',
         yshift: 8,
-        font: { size: 11, color: '#fffbe8' },
+        font: { size: 11, color: '#f4ecd5' },
         bgcolor: 'rgba(7,15,30,0.92)',
         bordercolor: palette.border,
         borderwidth: 1,
@@ -1230,19 +1242,19 @@
       Plotly.newPlot("summary-chart-30d", [
         {
           x: last30Ts, y: z30, mode: "lines", name: "在席中",
-          line: { color: "#60a5fa", width: 2.2 }
+          line: { color: "#7aa9ea", width: 2.15 }
         },
         {
           x: last30Ts, y: z30MA, mode: "lines", name: "在席中 24h移動平均",
-          line: { color: "rgba(96,165,250,0.55)", width: 1.2, dash: "dot" }
+          line: { color: "rgba(122,169,234,0.42)", width: 1.0, dash: "dot" }
         },
         {
           x: last30Ts, y: k30, mode: "lines", name: "研修中",
-          line: { color: "#ffb454", width: 2.0 }
+          line: { color: "#d59d57", width: 1.95 }
         },
         {
           x: last30Ts, y: k30MA, mode: "lines", name: "研修中 24h移動平均",
-          line: { color: "rgba(255,180,84,0.55)", width: 1.2, dash: "dot" }
+          line: { color: "rgba(213,157,87,0.42)", width: 1.0, dash: "dot" }
         }
       ], {
         paper_bgcolor: "rgba(0,0,0,0)",
@@ -1273,23 +1285,23 @@
       Plotly.newPlot("summary-chart", [
         {
           x: shortTs, y: zShort, mode: "lines+markers", name: "在席中",
-          line: { color: "#60a5fa", width: 2.6 },
-          marker: { size: 4, color: "#93c5fd" },
+          line: { color: "#7aa9ea", width: 2.4 },
+          marker: { size: 4, color: "#a8c5ef" },
           fill: "tozeroy",
-          fillcolor: "rgba(96,165,250,0.12)"
+          fillcolor: "rgba(122,169,234,0.10)"
         },
         {
           x: shortTs, y: zShortMA, mode: "lines", name: "在席中 移動平均",
-          line: { color: "rgba(147,197,253,0.9)", width: 1.1 }
+          line: { color: "rgba(168,197,239,0.78)", width: 1.0 }
         },
         {
           x: shortTs, y: kShort, mode: "lines+markers", name: "研修中",
-          line: { color: "#ffb454", width: 2.6 },
+          line: { color: "#d59d57", width: 2.4 },
           marker: { size: 4, color: "#ffd18a" }
         },
         {
           x: shortTs, y: kShortMA, mode: "lines", name: "研修中 移動平均",
-          line: { color: "rgba(255,209,138,0.9)", width: 1.1 }
+          line: { color: "rgba(229,193,140,0.78)", width: 1.0 }
         }
       ], {
         paper_bgcolor: "rgba(0,0,0,0)",
