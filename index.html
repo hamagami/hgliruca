@@ -32,15 +32,23 @@ body::before{
 }
 body::after{
   content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
-  background:radial-gradient(ellipse at 30% 20%,rgba(59,130,246,0.04) 0%,transparent 50%),
-    radial-gradient(ellipse at 70% 80%,rgba(139,92,246,0.03) 0%,transparent 50%);
+  background:radial-gradient(ellipse at 30% 20%,rgba(59,130,246,0.05) 0%,transparent 50%),
+    radial-gradient(ellipse at 70% 80%,rgba(139,92,246,0.04) 0%,transparent 50%);
   pointer-events:none;z-index:0;animation:bgShift 20s ease-in-out infinite alternate;
 }
 @keyframes bgShift{0%{transform:translate(0,0)}100%{transform:translate(2%,1%)}}
 
+/* ── LIVE FX ── */
+
+
+
+
+
+
+
 /* ── LAYOUT ── */
 #app{
-  position:relative;z-index:1;
+  position:relative;z-index:3;
   display:grid;
   grid-template-columns:1fr 400px;
   grid-template-rows:50px 1fr;
@@ -86,6 +94,38 @@ body::after{
 .kc.b .kv{color:var(--blue)}.kc.a .kv{color:var(--amber)}.kc.g .kv{color:var(--gray)}.kc.r .kv{color:var(--red)}.kc.p .kv{color:var(--purple)}
 .ks{font-size:8px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
 
+/* Scanline value tooltip */
+.scan-tip{
+  font-family:var(--mono);font-size:9px;
+  background:rgba(10,13,18,0.88);border:1px solid rgba(59,130,246,0.35);
+  border-radius:4px;padding:3px 7px;color:var(--text2);
+  line-height:1.6;
+}
+.scan-tip .sv-z{color:var(--blue);}
+.scan-tip .sv-k{color:var(--amber);}
+.scan-tip .sv-t{color:rgba(255,255,255,0.3);font-size:8px;display:block;margin-bottom:1px;}
+
+/* Per-chart horizontal scanline (JS-driven) */
+.scan-label{
+  position:absolute;top:6px;pointer-events:none;z-index:6;
+  font-family:var(--mono);font-size:9px;line-height:1.5;
+  background:rgba(10,13,18,0.82);
+  border:1px solid rgba(59,130,246,0.35);
+  border-radius:4px;padding:3px 7px;
+  white-space:nowrap;
+  transition:left 0.08s linear, opacity 0.4s;
+  opacity:0;
+}
+.scan-label .sv-zai{color:#3b82f6;}
+.scan-label .sv-ken{color:#d97706;}
+.scan-label .sv-ts {color:#4a5568;font-size:8px;display:block;}
+.chart-scanline{
+  position:absolute;top:0;bottom:0;width:3px;pointer-events:none;z-index:5;left:-4px;
+  background:linear-gradient(180deg,transparent 0%,rgba(59,130,246,0.2) 25%,rgba(59,130,246,0.55) 50%,rgba(59,130,246,0.2) 75%,transparent 100%);
+  box-shadow:0 0 10px 3px rgba(59,130,246,0.18);
+  transition:opacity 0.4s;
+}
+
 /* Chart cards */
 .cc{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;
   display:flex;flex-direction:column;min-height:0;}
@@ -96,7 +136,7 @@ body::after{
   padding:2px 6px;border-radius:3px;border:1px solid var(--border);}
 .cw{flex:1;min-height:0;position:relative;}
 /* Plotly div needs explicit height */
-.cw .plotly-wrap{width:100%;height:100%;position:absolute;top:0;left:0;}
+.cw .plotly-wrap{width:100%;height:100%;position:absolute;top:0;left:0;background:transparent;}
 
 /* ── RIGHT ── */
 #right{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
@@ -208,17 +248,23 @@ body::after{
 
     <div class="cc t3">
       <div class="ch"><div class="ct">人数推移</div><div class="ctag">直近30日</div></div>
-      <div class="cw">
+      <div class="cw" style="overflow:hidden;">
         <div class="lp" id="t3l"><div class="spin"></div>読み込み中...</div>
         <div id="t3c" class="plotly-wrap" style="display:none"></div>
+        <div class="chart-scanline" id="scan30"></div>
+        <div class="scan-label" id="label30"></div>
+        <div id="scan30-tip" style="display:none;position:absolute;top:6px;pointer-events:none;z-index:10;transform:translateX(-50%);white-space:nowrap;"></div>
       </div>
     </div>
 
     <div class="cc t5">
       <div class="ch"><div class="ct">短期トレンド</div><div class="ctag">直近5日</div></div>
-      <div class="cw">
+      <div class="cw" style="overflow:hidden;">
         <div class="lp" id="t5l"><div class="spin"></div>読み込み中...</div>
         <div id="t5c" class="plotly-wrap" style="display:none"></div>
+        <div class="chart-scanline" id="scan5"></div>
+        <div class="scan-label" id="label5"></div>
+        <div id="scan5-tip" style="display:none;position:absolute;top:6px;pointer-events:none;z-index:10;transform:translateX(-50%);white-space:nowrap;"></div>
       </div>
     </div>
   </div>
@@ -492,6 +538,10 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
   const zai = filtered.map(t => raw[t]['在席中'] ?? 0);
   const ken = filtered.map(t => raw[t]['研修中'] ?? 0);
 
+  // Store for scanline tooltip
+  if(days===30) window._tsData30 = {ts: filtered, zai, ken};
+  if(days===5)  window._tsData5  = {ts: filtered, zai, ken};
+
   // 24h moving average
   const ih = filtered.length>1
     ? (new Date(filtered[filtered.length-1]).getTime()-new Date(filtered[0]).getTime())
@@ -740,6 +790,104 @@ async function loadAll() {
   setInterval(async()=>{ await loadAll(); startCD(); }, REFRESH);
 })();
 
+
+
+
+
+
+
+/* ══════════════════════════════════════
+   SCANLINE FX — time series sync
+   ══════════════════════════════════════ */
+(function initScanlines(){
+
+  const PERIOD_30  = 22000; // ms for one full 30-day sweep
+  const DAYS_LONG  = 30;
+  const DAYS_SHORT = 5;
+  const OVERLAP    = DAYS_SHORT / DAYS_LONG; // 5/30
+
+  let startTime = null;
+
+  // Interpolate zai/ken value at fractional position within a dataset
+  function valueAt(tsData, frac) {
+    if(!tsData || !tsData.ts.length) return null;
+    const n   = tsData.ts.length;
+    const idx = frac * (n - 1);
+    const lo  = Math.floor(idx), hi = Math.min(lo + 1, n - 1);
+    const t   = idx - lo;
+    const zai = Math.round(tsData.zai[lo] * (1-t) + tsData.zai[hi] * t);
+    const ken = Math.round(tsData.ken[lo] * (1-t) + tsData.ken[hi] * t);
+    // timestamp at this position
+    const ms  = new Date(tsData.ts[lo]).getTime() * (1-t)
+               + new Date(tsData.ts[hi]).getTime() * t;
+    const d   = new Date(ms);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return {zai, ken, dateStr};
+  }
+
+  function updateLabel(labelEl, scanEl, val, frac) {
+    if(!labelEl || !scanEl) return;
+    if(!val) { labelEl.style.opacity='0'; return; }
+
+    labelEl.innerHTML =
+      `<span class="sv-ts">${val.dateStr}</span>` +
+      `<span class="sv-zai">在席 ${val.zai}</span>` +
+      ` <span class="sv-ken">研修 ${val.ken}</span>`;
+
+    // Position label: follow scan line, flip to left side near right edge
+    const parentW  = scanEl.parentElement.offsetWidth;
+    const scanLeft = parseFloat(scanEl.style.left) || 0;
+    const labelW   = labelEl.offsetWidth || 90;
+    const MARGIN   = 6;
+
+    let left;
+    if(scanLeft + labelW + MARGIN + 4 > parentW) {
+      left = scanLeft - labelW - MARGIN; // flip left
+    } else {
+      left = scanLeft + 6;
+    }
+    labelEl.style.left    = left + 'px';
+    labelEl.style.opacity = '1';
+  }
+
+  function tick(ts){
+    if(!startTime) startTime = ts;
+    const elapsed = (ts - startTime) % PERIOD_30;
+    const frac30  = elapsed / PERIOD_30;
+
+    const s30 = document.getElementById('scan30');
+    const s5  = document.getElementById('scan5');
+    const l30 = document.getElementById('label30');
+    const l5  = document.getElementById('label5');
+
+    // ── 30-day scanline ──
+    if(s30){
+      const w30 = s30.parentElement.offsetWidth;
+      s30.style.left = (frac30 * (w30 + 8) - 4) + 'px';
+      const val30 = valueAt(window._tsData30, frac30);
+      updateLabel(l30, s30, val30, frac30);
+    }
+
+    // ── 5-day scanline (only in last 5/30 of the 30-day sweep) ──
+    if(s5){
+      const rangeStart = 1 - OVERLAP;
+      if(frac30 >= rangeStart){
+        const frac5 = (frac30 - rangeStart) / OVERLAP;
+        const w5    = s5.parentElement.offsetWidth;
+        s5.style.left    = (frac5 * (w5 + 8) - 4) + 'px';
+        s5.style.opacity = '1';
+        const val5 = valueAt(window._tsData5, frac5);
+        updateLabel(l5, s5, val5, frac5);
+      } else {
+        s5.style.opacity = '0';
+        if(l5) l5.style.opacity = '0';
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
 
 </script>
 </body>
