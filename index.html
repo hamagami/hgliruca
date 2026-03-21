@@ -417,10 +417,26 @@ function renderScore(data, members) {
   }
 
   // ── Overlay: pulse for active members, red border for training cap ──
-  // Wait for Plotly to finish rendering then draw SVG overlays
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    drawScoreOverlay(names, pv, tv, actv, trn);
-  }));
+  _lastOverlayArgs = {names, pv, tv, actv, trn};
+
+  function scheduleOverlay() {
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(_lastOverlayArgs) {
+        const {names,pv,tv,actv,trn} = _lastOverlayArgs;
+        drawScoreOverlay(names, pv, tv, actv, trn);
+      }
+    }));
+  }
+
+  scheduleOverlay();
+
+  // Re-draw on every Plotly relayout (resize, zoom, etc.)
+  const scEl = document.getElementById('sc');
+  if(scEl && !scEl._overlayListenerAttached) {
+    scEl._overlayListenerAttached = true;
+    scEl.on('plotly_relayout', scheduleOverlay);
+    scEl.on('plotly_autosize', scheduleOverlay);
+  }
 
   // ── Zero / missing members displayed below chart ──
   // Score=0 members (in score data but zero activity)
@@ -583,6 +599,7 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
 /* ── Score chart overlay: pulse (JS-driven) + training-cap red border ── */
 let _pulseRects = [];   // [{el, phase}]
 let _pulseTimer = null;
+let _lastOverlayArgs = null;
 
 function drawScoreOverlay(names, pv, tv, actv, trn) {
   // Stop previous pulse loop
@@ -722,6 +739,8 @@ async function loadAll() {
   startCD();
   setInterval(async()=>{ await loadAll(); startCD(); }, REFRESH);
 })();
+
+
 </script>
 </body>
 </html>
