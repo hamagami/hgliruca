@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>濱上研 取り組みダッシュボード</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0d12; --bg2:#0f1318; --bg3:#141920; --bg4:#1a2130;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.12);
+  --text:#e2e8f0; --text2:#8892a4; --text3:#4a5568;
+  --blue:#3b82f6; --blue-dim:rgba(59,130,246,0.15);
+  --amber:#d97706; --amber-dim:rgba(217,119,6,0.15);
+  --green:#10b981; --green-dim:rgba(16,185,129,0.12);
+  --red:#ef4444; --red-dim:rgba(239,68,68,0.12);
+  --gray:#6b7280; --gray-dim:rgba(107,114,128,0.12);
+  --purple:#8b5cf6;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);position:relative;}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(ellipse at 30% 20%,rgba(59,130,246,0.04) 0%,transparent 50%),
+    radial-gradient(ellipse at 70% 80%,rgba(139,92,246,0.03) 0%,transparent 50%);
+  pointer-events:none;z-index:0;animation:bgShift 20s ease-in-out infinite alternate;
+}
+@keyframes bgShift{0%{transform:translate(0,0)}100%{transform:translate(2%,1%)}}
+
+/* ── LAYOUT ── */
+#app{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:1fr 400px;
+  grid-template-rows:50px 1fr;
+  height:100vh;overflow:hidden;
+}
+
+/* ── HEADER ── */
+#header{
+  grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 16px;
+  background:rgba(10,13,18,0.97);border-bottom:1px solid var(--border2);flex-shrink:0;
+}
+.logo-mark{width:26px;height:26px;border:1.5px solid var(--blue);border-radius:5px;
+  display:grid;place-items:center;position:relative;overflow:hidden;flex-shrink:0;}
+.logo-mark::after{content:'';position:absolute;width:9px;height:9px;background:var(--blue);
+  border-radius:2px;animation:lp 3s ease-in-out infinite;}
+@keyframes lp{0%,100%{opacity:.7;transform:scale(.85)}50%{opacity:1;transform:scale(1.1)}}
+.htitle{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.05em;white-space:nowrap;}
+.htitle span{color:var(--blue);margin-right:5px;}
+.hsep{width:1px;height:20px;background:var(--border2);flex-shrink:0;}
+.hmeta{font-family:var(--mono);font-size:11px;color:var(--text2);display:flex;align-items:center;gap:14px;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#clock{font-family:var(--mono);font-size:14px;color:var(--text);letter-spacing:.08em;}
+.cwrap{display:flex;align-items:center;gap:6px;}
+#pbar{width:55px;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;}
+#pfill{height:100%;background:var(--blue);border-radius:2px;transition:width 1s linear;}
+.legend{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.li{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap;}
+.ld{width:6px;height:6px;border-radius:50%;}
+
+/* ── LEFT ── */
+#left{padding:10px 10px 10px 14px;display:flex;flex-direction:column;gap:8px;
+  overflow:hidden;border-right:1px solid var(--border);min-height:0;}
+
+/* KPI */
+#kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex-shrink:0;}
+.kc{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;position:relative;overflow:hidden;}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:7px 7px 0 0;}
+.kc.b::before{background:var(--blue)}.kc.a::before{background:var(--amber)}
+.kc.g::before{background:var(--gray)}.kc.r::before{background:var(--red)}.kc.p::before{background:var(--purple)}
+.kl{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
+.kv{font-family:var(--mono);font-size:22px;font-weight:300;line-height:1;}
+.kc.b .kv{color:var(--blue)}.kc.a .kv{color:var(--amber)}.kc.g .kv{color:var(--gray)}.kc.r .kv{color:var(--red)}.kc.p .kv{color:var(--purple)}
+.ks{font-size:8px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
+
+/* Chart cards */
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;
+  display:flex;flex-direction:column;min-height:0;}
+.cc.sc{flex:2;}.cc.t3{flex:1.1;}.cc.t5{flex:1.1;}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-shrink:0;}
+.ct{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;}
+.ctag{font-family:var(--mono);font-size:8px;color:var(--text3);background:var(--bg4);
+  padding:2px 6px;border-radius:3px;border:1px solid var(--border);}
+.cw{flex:1;min-height:0;position:relative;}
+/* Plotly div needs explicit height */
+.cw .plotly-wrap{width:100%;height:100%;position:absolute;top:0;left:0;}
+
+/* ── RIGHT ── */
+#right{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.rh{flex-shrink:0;padding:10px 14px 8px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;}
+.ptitle{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;}
+.mbadge{background:var(--blue-dim);color:var(--blue);font-size:9px;padding:2px 6px;border-radius:3px;font-family:var(--mono);}
+
+/* Member grid — 2 cols, scrollable */
+#mgrid{
+  flex:1;overflow-y:auto;padding:8px 10px 10px;
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;align-content:start;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+#mgrid::-webkit-scrollbar{width:3px;}
+#mgrid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* Member card */
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:6px 8px;display:flex;flex-direction:column;gap:3px;transition:border-color .3s;min-width:0;}
+.mc:hover{border-color:var(--border2);}
+.mc-r1{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0;}
+.mc-r2{display:flex;align-items:center;gap:4px;min-width:0;}
+.mc-name{font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+.mc-time{font-family:var(--mono);font-size:8px;color:var(--text3);white-space:nowrap;flex-shrink:0;}
+.mc-msg{font-size:9px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;cursor:default;}
+.spill{font-family:var(--mono);font-size:8px;padding:1px 6px;border-radius:20px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+.st-在席中,.st-在席{background:var(--blue-dim);color:var(--blue);}
+.st-離席中,.st-離席{background:var(--gray-dim);color:var(--gray);}
+.st-研修中{background:var(--amber-dim);color:var(--amber);}
+.st-帰宅{background:var(--gray-dim);color:var(--gray);}
+.st-取込中{background:var(--green-dim);color:var(--green);}
+.st-不明{background:var(--red-dim);color:var(--red);animation:ub 2.5s ease-in-out infinite;}
+@keyframes ub{0%,100%{opacity:.85}50%{opacity:.4}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.ab{border-color:rgba(59,130,246,.3)!important;background:linear-gradient(110deg,var(--bg2) 30%,rgba(59,130,246,.08) 50%,var(--bg2) 70%);background-size:200% 100%;animation:shimmer 3s ease infinite;}
+.at{border-color:rgba(217,119,6,.3)!important;background:linear-gradient(110deg,var(--bg2) 30%,rgba(217,119,6,.08) 50%,var(--bg2) 70%);background-size:200% 100%;animation:shimmer 3s ease infinite;}
+
+.lp{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-family:var(--mono);font-size:10px;gap:7px;}
+.spin{width:12px;height:12px;border:1.5px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes fi{0%{opacity:.4}100%{opacity:1}}
+.flash{animation:fi .35s ease;}
+.tip{position:fixed;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;
+  padding:5px 9px;font-size:10px;color:var(--text);max-width:200px;word-break:break-all;
+  z-index:999;pointer-events:none;opacity:0;transition:opacity .15s;}
+.tip.show{opacity:1;}
+
+/* Zero-member pills */
+.sz-pill{font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:3px;white-space:nowrap;border:1px solid var(--border);}
+.sz-actv{color:rgba(59,130,246,0.7);border-color:rgba(59,130,246,0.25);}
+.sz-trn {color:rgba(217,119,6,0.7);border-color:rgba(217,119,6,0.25);}
+.sz-unk {color:rgba(239,68,68,0.6);border-color:rgba(239,68,68,0.2);}
+.sz-other{color:rgba(107,114,128,0.6);border-color:rgba(107,114,128,0.2);}
+
+/* Score chart: active pulse overlay + training cap */
+#sc-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="header">
+    <div class="logo-mark"></div>
+    <div class="htitle"><span>//</span>濱上研 取り組みダッシュボード</div>
+    <div class="hsep"></div>
+    <div class="hmeta">
+      <span><span class="ldot"></span>LIVE</span>
+      <span id="clock">--:--:--</span>
+      <span>更新: <span id="lupd">—</span></span>
+      <span class="cwrap">次回 <span id="nxt">5:00</span>
+        <div id="pbar"><div id="pfill"></div></div>
+      </span>
+    </div>
+    <div class="legend">
+      <div class="li"><span class="ld" style="background:var(--blue)"></span>在席</div>
+      <div class="li"><span class="ld" style="background:var(--amber)"></span>研修中</div>
+      <div class="li"><span class="ld" style="background:var(--gray)"></span>離席/帰宅</div>
+      <div class="li"><span class="ld" style="background:var(--red)"></span>不明</div>
+    </div>
+  </header>
+
+  <div id="left">
+    <div id="kpi">
+      <div class="kc p"><div class="kl">Total</div><div class="kv" id="k0">—</div><div class="ks">メンバー</div></div>
+      <div class="kc b"><div class="kl">在席</div><div class="kv" id="k1">—</div><div class="ks">在席中</div></div>
+      <div class="kc a"><div class="kl">研修</div><div class="kv" id="k2">—</div><div class="ks">研修中</div></div>
+      <div class="kc g"><div class="kl">離席/帰宅</div><div class="kv" id="k3">—</div><div class="ks">離席・帰宅</div></div>
+      <div class="kc r"><div class="kl">不明</div><div class="kv" id="k4">—</div><div class="ks">8h+ 経過</div></div>
+    </div>
+
+    <div class="cc sc">
+      <div class="ch">
+        <div class="ct">個人別 取り組み充足率 <span style="color:var(--text3);font-size:8px">（直近1ヶ月）</span></div>
+        <div class="ctag">baseline=1.0</div>
+      </div>
+      <div class="cw" style="position:relative;">
+        <div class="lp" id="sl"><div class="spin"></div>読み込み中...</div>
+        <div id="sc" class="plotly-wrap" style="display:none"></div>
+        <svg id="sc-overlay" style="display:none"></svg>
+      </div>
+      <div id="zero-members" style="display:none;flex-shrink:0;padding-top:5px;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;">
+        <div style="display:flex;align-items:baseline;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+          <span id="zero-label" style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#4a5568;letter-spacing:.05em;white-space:nowrap;">未集計 <span id="zero-count"></span></span>
+          <div id="zero-list" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cc t3">
+      <div class="ch"><div class="ct">人数推移</div><div class="ctag">直近30日</div></div>
+      <div class="cw">
+        <div class="lp" id="t3l"><div class="spin"></div>読み込み中...</div>
+        <div id="t3c" class="plotly-wrap" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="cc t5">
+      <div class="ch"><div class="ct">短期トレンド</div><div class="ctag">直近5日</div></div>
+      <div class="cw">
+        <div class="lp" id="t5l"><div class="spin"></div>読み込み中...</div>
+        <div id="t5c" class="plotly-wrap" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="right">
+    <div class="rh">
+      <div class="ptitle">現在のステータス</div>
+      <span class="mbadge" id="mbadge">—</span>
+    </div>
+    <div id="mgrid">
+      <div class="lp" style="grid-column:1/-1"><div class="spin"></div>読み込み中...</div>
+    </div>
+  </div>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+/* ── URLs — exact copies from index5.html ── */
+const API_M = 'https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members';
+const API_T = 'https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1';
+const API_S = 'https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_debug.json?rlkey=p6jhidej843o2wm5wb1mf9nj1&dl=1';
+
+const REFRESH = 5*60*1000;
+const UNK_MS  = 8*60*60*1000;
+const EXCL    = ['HMG','TKH','HGW'];
+
+/* Plotly dark theme shared config */
+const PLOT_LAYOUT_BASE = {
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor:  'rgba(0,0,0,0)',
+  font: { color: '#8892a4', family: 'JetBrains Mono', size: 9 },
+  margin: { t: 8, b: 40, l: 40, r: 30 },
+  legend: { font: { size: 9 }, bgcolor: 'rgba(0,0,0,0)', x: 0, y: 1 },
+  xaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.08)', tickfont: { size: 8 } },
+  yaxis: { gridcolor: 'rgba(255,255,255,0.05)', zerolinecolor: 'rgba(255,255,255,0.08)', tickfont: { size: 8 } },
+};
+const PLOT_CONFIG = { displayModeBar: false, responsive: true };
+
+let cdSec=300, cdTimer=null;
+let scoreDrawn=false, t3Drawn=false, t5Drawn=false;
+
+/* ── HELPERS ── */
+function formatElapsed(ms) {
+  const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60),d=Math.floor(h/24);
+  return d>0?`${d}日前`:h>0?`${h}時間前`:m>0?`${m}分前`:`${s}秒前`;
+}
+
+function mAvg(arr, w) {
+  return arr.map((_,i)=>{
+    const sl=arr.slice(Math.max(0,i-w+1),i+1);
+    return sl.reduce((a,b)=>a+b,0)/sl.length;
+  });
+}
+
+/* ── CLOCK ── */
+setInterval(()=>{
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+
+/* ── COUNTDOWN ── */
+function startCD() {
+  if(cdTimer) clearInterval(cdTimer);
+  cdSec=300;
+  cdTimer=setInterval(()=>{
+    if(--cdSec<=0) cdSec=300;
+    const m=Math.floor(cdSec/60),s=cdSec%60;
+    document.getElementById('nxt').textContent = m+':'+String(s).padStart(2,'0');
+    document.getElementById('pfill').style.width = (cdSec/300*100)+'%';
+  },1000);
+}
+
+/* ── FETCH — plain fetch, exactly like index5.html ── */
+function fj(url) {
+  return fetch(url).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+}
+
+/* ── MEMBERS ── */
+function renderM(data) {
+  const grid=document.getElementById('mgrid');
+  if(!data||!data.length){
+    grid.innerHTML='<div class="lp" style="grid-column:1/-1;color:var(--text3)">データなし</div>';return;
+  }
+  const now=Date.now();
+  grid.innerHTML=data.map(m=>{
+    const diffMs=now-new Date(m.updated_at).getTime();
+    const sk=diffMs>UNK_MS?'不明':(m.status||'その他');
+    const cl=sk.replace(/[^\w\u3000-\u9fff]/g,'_');
+    let cc='mc';
+    if(sk==='在席中'||sk==='在席') cc+=' ab';
+    else if(sk==='研修中') cc+=' at';
+    const msg=(m.message||'').trim();
+    const msgS=msg.length>16?msg.slice(0,16)+'…':msg;
+    return `<div class="${cc}">
+      <div class="mc-r1">
+        <span class="mc-name">${m.name||'—'}</span>
+        <span class="mc-time">${formatElapsed(diffMs)}</span>
+      </div>
+      <div class="mc-r2">
+        <span class="spill st-${cl}">${sk}</span>
+        ${msg?`<span class="mc-msg" data-f="${msg.replace(/"/g,'&quot;')}">${msgS}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('mbadge').textContent=data.length;
+  grid.classList.add('flash');
+  setTimeout(()=>grid.classList.remove('flash'),400);
+  grid.querySelectorAll('.mc-msg[data-f]').forEach(el=>{
+    const tip=document.getElementById('tip');
+    el.addEventListener('mouseenter',()=>{tip.textContent=el.dataset.f;tip.classList.add('show');});
+    el.addEventListener('mousemove',e=>{tip.style.left=(e.clientX+10)+'px';tip.style.top=(e.clientY-32)+'px';});
+    el.addEventListener('mouseleave',()=>tip.classList.remove('show'));
+  });
+}
+
+/* ── KPI ── */
+function renderK(data) {
+  const now=Date.now(); let p=0,t=0,a=0,u=0;
+  (data||[]).forEach(m=>{
+    const sk=(now-new Date(m.updated_at).getTime())>UNK_MS?'不明':(m.status||'');
+    if(sk==='在席中'||sk==='在席')p++;
+    else if(sk==='研修中')t++;
+    else if(sk==='不明')u++;
+    else a++;
+  });
+  document.getElementById('k0').textContent=(data||[]).length;
+  document.getElementById('k1').textContent=p;
+  document.getElementById('k2').textContent=t;
+  document.getElementById('k3').textContent=a;
+  document.getElementById('k4').textContent=u;
+}
+
+/* ── SCORE CHART (Plotly) ── */
+function renderScore(data, members) {
+  const now=Date.now();
+  const actv=new Set((members||[]).filter(m=>{
+    const sk=(now-new Date(m.updated_at).getTime())>UNK_MS?'不明':(m.status||'');
+    return sk==='在席中'||sk==='在席';
+  }).map(m=>m.name));
+  const trn=new Set((members||[]).filter(m=>{
+    const sk=(now-new Date(m.updated_at).getTime())>UNK_MS?'不明':(m.status||'');
+    return sk==='研修中';
+  }).map(m=>m.name));
+
+  // Members WITH score data (excluding system accounts)
+  const scoreNames=new Set(
+    Object.keys(data).filter(n=>!EXCL.some(p=>n.startsWith(p)))
+  );
+
+  // Only show members who have any activity (score>0 or hours>0)
+  const ents=Object.entries(data)
+    .filter(([n])=>!EXCL.some(p=>n.startsWith(p)))
+    .filter(([,v])=>(v['在席中']||0)+(v['研修中']||0)>0)
+    .sort((a,b)=>(b[1].score||0)-(a[1].score||0));
+
+  const names=ents.map(([n])=>n);
+  const pv=ents.map(([,v])=>+(v['在席中']||0).toFixed(1));
+  const tv=ents.map(([,v])=>Math.min(+(v['研修中']||0).toFixed(1),40));
+  const sv=ents.map(([,v])=>+(v.score||0).toFixed(2));
+  const pbg=names.map(n=>actv.has(n)?'rgba(59,130,246,0.9)':'rgba(59,130,246,0.4)');
+  const tbg=names.map(n=>trn.has(n)?'rgba(217,119,6,0.9)':'rgba(217,119,6,0.4)');
+  const scolor=sv.map(s=>s>=1?'rgba(139,92,246,0.9)':'rgba(239,68,68,0.9)');
+
+  const traces=[
+    { x:names, y:pv, type:'bar', name:'在席中(h)', marker:{color:pbg}, offsetgroup:0 },
+    { x:names, y:tv, type:'bar', name:'研修中(h)', marker:{color:tbg}, offsetgroup:0 },
+    { x:names, y:sv, type:'scatter', mode:'lines+markers', name:'スコア',
+      yaxis:'y2', line:{color:'rgba(139,92,246,0.8)',width:1.5},
+      marker:{color:scolor,size:5},
+      hovertemplate:'%{x}<br>score: %{y:.2f}<extra></extra>',
+      connectgaps:false },
+  ];
+
+  const layout={
+    ...PLOT_LAYOUT_BASE,
+    barmode:'stack',
+    margin:{t:8,b:55,l:40,r:40},
+    xaxis:{...PLOT_LAYOUT_BASE.xaxis, tickangle:-45, tickfont:{size:8}},
+    yaxis:{...PLOT_LAYOUT_BASE.yaxis, title:{text:'時間(h)',font:{size:8}}},
+    yaxis2:{overlaying:'y',side:'right',title:{text:'スコア',font:{size:8,color:'#8b5cf6'}},
+      tickfont:{size:8,color:'#8b5cf6'},gridcolor:'rgba(0,0,0,0)',showgrid:false,zeroline:false},
+    shapes:[{type:'line',xref:'paper',yref:'y2',x0:0,x1:1,y0:1,y1:1,
+      line:{color:'rgba(139,92,246,0.4)',width:1,dash:'dot'}}],
+    showlegend:true,
+    legend:{font:{size:8},bgcolor:'rgba(15,19,24,0.8)',
+      x:1, xanchor:'right', y:1, yanchor:'top'},
+  };
+
+  document.getElementById('sl').style.display='none';
+  const el=document.getElementById('sc'); el.style.display='block';
+  if(scoreDrawn){
+    Plotly.react('sc', traces, layout, PLOT_CONFIG);
+  } else {
+    Plotly.newPlot('sc', traces, layout, PLOT_CONFIG);
+    scoreDrawn=true;
+  }
+
+  // ── Overlay: pulse for active members, red border for training cap ──
+  // Wait for Plotly to finish rendering then draw SVG overlays
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    drawScoreOverlay(names, pv, tv, actv, trn);
+  }));
+
+  // ── Zero / missing members displayed below chart ──
+  // Score=0 members (in score data but zero activity)
+  const zeroInData=Object.entries(data)
+    .filter(([n])=>!EXCL.some(p=>n.startsWith(p)))
+    .filter(([,v])=>(v['在席中']||0)+(v['研修中']||0)===0)
+    .map(([n])=>n);
+
+  // Members in API but absent from score data entirely
+  const missingFromScore=(members||[])
+    .map(m=>m.name)
+    .filter(n=>n&&!EXCL.some(p=>n.startsWith(p))&&!scoreNames.has(n));
+
+  const zeroAll=[...new Set([...zeroInData, ...missingFromScore])].sort();
+
+  const zeroWrap=document.getElementById('zero-members');
+  const zeroList=document.getElementById('zero-list');
+  const zeroCnt =document.getElementById('zero-count');
+
+  if(zeroAll.length>0){
+    zeroWrap.style.display='block';
+    zeroCnt.textContent='('+zeroAll.length+'名)';
+    // Each member: small pill showing current status color
+    zeroList.innerHTML=zeroAll.map(n=>{
+      const member=(members||[]).find(m=>m.name===n);
+      let pillCls='sz-other';
+      if(member){
+        const diffMs=now-new Date(member.updated_at).getTime();
+        const sk=diffMs>UNK_MS?'不明':(member.status||'');
+        if(sk==='在席中'||sk==='在席') pillCls='sz-actv';
+        else if(sk==='研修中') pillCls='sz-trn';
+        else if(sk==='不明') pillCls='sz-unk';
+      }
+      return `<span class="sz-pill ${pillCls}">${n}</span>`;
+    }).join('');
+  } else {
+    zeroWrap.style.display='none';
+  }
+}
+
+/* ── TIME SERIES CHART (Plotly) — same logic as index5.html ── */
+function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
+  /* raw: { "2026-03-19T10:00:00": { "在席中": 12, "研修中": 3 }, ... } */
+  const ts = Object.keys(raw).sort();
+  const cutoff = Date.now() - days*86400000;
+  const filtered = ts.filter(t => new Date(t).getTime() >= cutoff);
+
+  if(!filtered.length){
+    document.getElementById(loadId).innerHTML='<span style="color:var(--text3)">データなし</span>';
+    return;
+  }
+
+  const zai = filtered.map(t => raw[t]['在席中'] ?? 0);
+  const ken = filtered.map(t => raw[t]['研修中'] ?? 0);
+
+  // 24h moving average
+  const ih = filtered.length>1
+    ? (new Date(filtered[filtered.length-1]).getTime()-new Date(filtered[0]).getTime())
+      / filtered.length / 3600000
+    : 1;
+  const w = Math.max(1, Math.round(24/Math.max(ih,0.25)));
+  const zaiMA = mAvg(zai, w);
+  const kenMA = mAvg(ken, w);
+
+  // Background shapes: night & weekend (same as index5.html)
+  const shapes = [];
+  if(days <= 7) { // only draw shapes for short range (too many for 30d)
+    const dateSet = new Set(filtered.map(t=>t.split('T')[0]));
+    for(const date of dateSet){
+      const wd = new Date(date+'T00:00').getDay();
+      if(wd>=1 && wd<=5){
+        for(let h=0;h<24;h++){
+          if(h>=18||h<6){
+            const h1=String(h).padStart(2,'0'), h2=String((h+1)%24).padStart(2,'0');
+            shapes.push({type:'rect',xref:'x',yref:'paper',
+              x0:`${date}T${h1}:00`,x1:`${date}T${h2}:00`,y0:0,y1:1,
+              fillcolor:'rgba(200,200,200,0.08)',line:{width:0}});
+          }
+        }
+      }
+      if(wd===0||wd===6){
+        for(let h=0;h<24;h++){
+          const h1=String(h).padStart(2,'0'), h2=String((h+1)%24).padStart(2,'0');
+          shapes.push({type:'rect',xref:'x',yref:'paper',
+            x0:`${date}T${h1}:00`,x1:`${date}T${h2}:00`,y0:0,y1:1,
+            fillcolor:h%2===0?'rgba(100,100,200,0.06)':'rgba(100,100,200,0.12)',
+            line:{width:0}});
+        }
+      }
+    }
+  }
+
+  // Cubic spline interpolation: insert extra points between each pair
+  // to make the curve visually smoother even with sparse data
+  function interpLinear(xs, ys, steps) {
+    const ox=[], oy=[];
+    for(let i=0;i<xs.length-1;i++){
+      const x0=new Date(xs[i]).getTime(), x1=new Date(xs[i+1]).getTime();
+      const y0=ys[i], y1=ys[i+1];
+      for(let s=0;s<steps;s++){
+        const t=s/steps;
+        // Cosine interpolation for smoothness
+        const tc=(1-Math.cos(t*Math.PI))/2;
+        ox.push(new Date(x0+(x1-x0)*t));
+        oy.push(y0*(1-tc)+y1*tc);
+      }
+    }
+    ox.push(new Date(filtered[filtered.length-1]));
+    oy.push(ys[ys.length-1]);
+    return {x:ox,y:oy};
+  }
+  const INTERP = 8; // interpolation steps between data points
+  const izai  = interpLinear(filtered, zai,   INTERP);
+  const iken  = interpLinear(filtered, ken,   INTERP);
+  const izaiM = interpLinear(filtered, zaiMA, INTERP);
+  const ikenM = interpLinear(filtered, kenMA, INTERP);
+
+  const showMarkers = days<=5;
+  const traces=[
+    { x:izai.x, y:izai.y, mode:showMarkers?'lines+markers':'lines', name:'在席中',
+      line:{color:'rgba(59,130,246,0.85)',width:2,shape:'spline',smoothing:1.3},
+      marker:{size:3,color:'rgba(59,130,246,0.9)'},
+      fill:'tozeroy', fillcolor:'rgba(59,130,246,0.07)',
+      // Original points for hover
+      customdata:filtered, hovertemplate:'%{x|%m/%d %H:%M}<br>在席中: %{y:.0f}人<extra></extra>' },
+    { x:iken.x, y:iken.y, mode:showMarkers?'lines+markers':'lines', name:'研修中',
+      line:{color:'rgba(217,119,6,0.85)',width:2,shape:'spline',smoothing:1.3},
+      marker:{size:3,color:'rgba(217,119,6,0.9)'},
+      fill:'tozeroy', fillcolor:'rgba(217,119,6,0.07)',
+      hovertemplate:'%{x|%m/%d %H:%M}<br>研修中: %{y:.0f}人<extra></extra>' },
+    { x:izaiM.x, y:izaiM.y, mode:'lines', name:'在席MA',
+      line:{color:'rgba(59,130,246,0.28)',width:1,dash:'dot',shape:'spline',smoothing:1.3},
+      hoverinfo:'skip' },
+    { x:ikenM.x, y:ikenM.y, mode:'lines', name:'研修MA',
+      line:{color:'rgba(217,119,6,0.28)',width:1,dash:'dot',shape:'spline',smoothing:1.3},
+      hoverinfo:'skip' },
+  ];
+
+  const layout={
+    ...PLOT_LAYOUT_BASE,
+    margin:{t:8,b:40,l:36,r:16},
+    xaxis:{...PLOT_LAYOUT_BASE.xaxis, type:'date', tickformat:'%m/%d %H:%M', tickfont:{size:8}},
+    yaxis:{...PLOT_LAYOUT_BASE.yaxis, tickfont:{size:8}},
+    shapes,
+    showlegend:true,
+    legend:{font:{size:8},bgcolor:'rgba(0,0,0,0)',x:0,y:1,orientation:'h'},
+  };
+
+  document.getElementById(loadId).style.display='none';
+  const el=document.getElementById(divId); el.style.display='block';
+  if(drawnFlag){
+    Plotly.react(divId, traces, layout, PLOT_CONFIG);
+  } else {
+    Plotly.newPlot(divId, traces, layout, PLOT_CONFIG);
+    setDrawn();
+  }
+}
+
+
+/* ── Score chart overlay: pulse (JS-driven) + training-cap red border ── */
+let _pulseRects = [];   // [{el, phase}]
+let _pulseTimer = null;
+
+function drawScoreOverlay(names, pv, tv, actv, trn) {
+  // Stop previous pulse loop
+  if(_pulseTimer) { cancelAnimationFrame(_pulseTimer); _pulseTimer=null; }
+  _pulseRects = [];
+
+  const scDiv = document.getElementById('sc');
+  const svg   = document.getElementById('sc-overlay');
+  if(!scDiv || !svg) return;
+
+  const gd = scDiv._fullLayout;
+  if(!gd || !gd.xaxis || !gd.yaxis) return;
+
+  const xa = gd.xaxis, ya = gd.yaxis;
+  const plotW = gd.width, plotH = gd.height;
+  const ml = gd.margin.l, mt = gd.margin.t;
+
+  svg.setAttribute('width',  plotW);
+  svg.setAttribute('height', plotH);
+  svg.style.display = 'block';
+  svg.innerHTML = '';
+
+  const barW = Math.max(6, Math.abs(xa.l2p(0.35) - xa.l2p(-0.35)));
+
+  names.forEach((name, i) => {
+    const isActive   = actv.has(name);
+    const isTraining = trn.has(name);
+    const trainingCap = tv[i] >= 40;
+    if(!isActive && !isTraining && !trainingCap) return;
+
+    const xPx    = xa.l2p(xa.d2l(name)) + ml;
+    const yBase  = ya.l2p(0)           + mt;
+    const yZaiTop= ya.l2p(pv[i])       + mt;
+    const yTrnTop= ya.l2p(pv[i]+tv[i]) + mt;
+    const zaiH   = Math.max(1, yBase   - yZaiTop);
+    const trnH   = Math.max(1, yZaiTop - yTrnTop);
+
+    function mkPulseRect(x, y, w, h, color, phaseOffset) {
+      const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      r.setAttribute('x', x); r.setAttribute('y', y);
+      r.setAttribute('width', w); r.setAttribute('height', h);
+      r.setAttribute('fill', color); r.setAttribute('rx', '2');
+      r.style.opacity = '0';
+      svg.appendChild(r);
+      _pulseRects.push({ el: r, phase: phaseOffset });
+    }
+
+    function mkBorder(x, y, w, h) {
+      const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      r.setAttribute('x', x-1); r.setAttribute('y', y-1);
+      r.setAttribute('width', w+2); r.setAttribute('height', h+2);
+      r.setAttribute('fill', 'none');
+      r.setAttribute('stroke', 'rgba(239,68,68,0.9)');
+      r.setAttribute('stroke-width', '1.5');
+      r.setAttribute('rx', '3');
+      svg.appendChild(r);
+    }
+
+    const phaseOffset = (i * 0.4) % (Math.PI * 2);
+
+    if(isActive && pv[i] > 0) {
+      mkPulseRect(xPx-barW/2, yZaiTop, barW, zaiH,
+                  'rgba(59,130,246,1)', phaseOffset);
+    }
+    if(isTraining && tv[i] > 0) {
+      mkPulseRect(xPx-barW/2, yTrnTop, barW, trnH,
+                  'rgba(217,119,6,1)', phaseOffset);
+    }
+    if(trainingCap && tv[i] > 0) {
+      mkBorder(xPx-barW/2, yTrnTop, barW, trnH);
+    }
+  });
+
+  // JS animation loop — drives opacity via sin wave
+  const PERIOD = 1400; // ms per cycle — faster = more noticeable
+  function tick(ts) {
+    _pulseRects.forEach(({el, phase}) => {
+      const t = (ts / PERIOD) * Math.PI * 2;
+      // sin: -1→1, remap to 0→1, then apply power curve to spend more time near 0
+      const raw = (Math.sin(t + phase) + 1) / 2;      // 0..1
+      const op  = Math.pow(raw, 0.6) * 0.85;           // 0..0.85, snappy fall-off
+      el.style.opacity = op.toFixed(3);
+    });
+    _pulseTimer = requestAnimationFrame(tick);
+  }
+  if(_pulseRects.length > 0) {
+    _pulseTimer = requestAnimationFrame(tick);
+  }
+}
+
+/* ── MAIN ── */
+let t3Drawn2=false, t5Drawn2=false;
+
+async function loadAll() {
+  const [mr, tr, sr] = await Promise.allSettled([
+    fj(API_M),
+    fj(API_T),
+    fj(API_S),
+  ]);
+
+  // Members + KPI
+  if(mr.status==='fulfilled'){
+    const d=Array.isArray(mr.value)?mr.value:(mr.value.members||[]);
+    renderM(d);
+    renderK(d);
+    if(sr.status==='fulfilled') renderScore(sr.value, d);
+  } else {
+    console.error('Members:', mr.reason);
+    document.getElementById('mgrid').innerHTML=
+      '<div class="lp" style="grid-column:1/-1;color:var(--red)">メンバーデータ取得失敗</div>';
+    if(sr.status==='fulfilled') renderScore(sr.value, []);
+  }
+
+  // Score alone fallback
+  if(mr.status!=='fulfilled' && sr.status==='fulfilled') renderScore(sr.value,[]);
+
+  // Time series
+  if(tr.status==='fulfilled'){
+    renderTimeSeries(tr.value, 30, 't3c','t3l', t3Drawn2, ()=>{ t3Drawn2=true; });
+    renderTimeSeries(tr.value,  5, 't5c','t5l', t5Drawn2, ()=>{ t5Drawn2=true; });
+  } else {
+    console.error('TimeSeries:', tr.reason);
+    ['t3l','t5l'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.innerHTML='<span style="color:var(--red)">時系列データ取得失敗 — コンソールを確認</span>';
+    });
+  }
+
+  if(sr.status!=='fulfilled') console.error('Score:', sr.reason);
+
+  document.getElementById('lupd').textContent =
+    new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+}
+
+(async()=>{
+  await loadAll();
+  startCD();
+  setInterval(async()=>{ await loadAll(); startCD(); }, REFRESH);
+})();
+</script>
+</body>
+</html>
