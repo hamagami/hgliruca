@@ -9,61 +9,51 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0a0d12; --bg2:#0f1318; --bg3:#141920; --bg4:#1a2130;
-  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.12);
-  --text:#e2e8f0; --text2:#8892a4; --text3:#4a5568;
-  --blue:#3b82f6; --blue-dim:rgba(59,130,246,0.15);
-  --amber:#d97706; --amber-dim:rgba(217,119,6,0.15);
-  --green:#10b981; --green-dim:rgba(16,185,129,0.12);
-  --red:#ef4444; --red-dim:rgba(239,68,68,0.12);
-  --gray:#6b7280; --gray-dim:rgba(107,114,128,0.12);
-  --purple:#8b5cf6;
-  --mono:'JetBrains Mono',monospace;
-  --sans:'Noto Sans JP',sans-serif;
+--bg:#0a0d12; --bg2:#0f1318; --bg3:#141920; --bg4:#1a2130;
+--border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.12);
+--text:#e2e8f0; --text2:#8892a4; --text3:#4a5568;
+--blue:#3b82f6; --blue-dim:rgba(59,130,246,0.15);
+--amber:#d97706; --amber-dim:rgba(217,119,6,0.15);
+--green:#10b981; --green-dim:rgba(16,185,129,0.12);
+--red:#ef4444; --red-dim:rgba(239,68,68,0.12);
+--gray:#6b7280; --gray-dim:rgba(107,114,128,0.12);
+--purple:#8b5cf6;
+--mono:'JetBrains Mono',monospace;
+--sans:'Noto Sans JP',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);position:relative;}
 body::before{
-  content:'';position:fixed;inset:0;
-  background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
-  background-size:40px 40px;pointer-events:none;z-index:0;
+content:'';position:fixed;inset:0;
+background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),
+linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
+background-size:40px 40px;pointer-events:none;z-index:0;
 }
 body::after{
-  content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
-  background:radial-gradient(ellipse at 30% 20%,rgba(59,130,246,0.05) 0%,transparent 50%),
-    radial-gradient(ellipse at 70% 80%,rgba(139,92,246,0.04) 0%,transparent 50%);
-  pointer-events:none;z-index:0;animation:bgShift 20s ease-in-out infinite alternate;
+content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;
+background:radial-gradient(ellipse at 30% 20%,rgba(59,130,246,0.05) 0%,transparent 50%),
+radial-gradient(ellipse at 70% 80%,rgba(139,92,246,0.04) 0%,transparent 50%);
+pointer-events:none;z-index:0;animation:bgShift 20s ease-in-out infinite alternate;
 }
 @keyframes bgShift{0%{transform:translate(0,0)}100%{transform:translate(2%,1%)}}
-
-/* ── LIVE FX ── */
-
-
-
-
-
-
-
 /* ── LAYOUT ── */
 #app{
-  position:relative;z-index:3;
-  display:grid;
-  grid-template-columns:1fr 400px;
-  grid-template-rows:50px 1fr;
-  height:100vh;overflow:hidden;
+position:relative;z-index:3;
+display:grid;
+grid-template-columns:1fr 400px;
+grid-template-rows:50px 1fr;
+height:100vh;overflow:hidden;
 }
-
 /* ── HEADER ── */
 #header{
-  grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 16px;
-  background:rgba(10,13,18,0.97);border-bottom:1px solid var(--border2);flex-shrink:0;
+grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 16px;
+background:rgba(10,13,18,0.97);border-bottom:1px solid var(--border2);flex-shrink:0;
 }
 .logo-mark{width:26px;height:26px;border:1.5px solid var(--blue);border-radius:5px;
-  display:grid;place-items:center;position:relative;overflow:hidden;flex-shrink:0;}
+display:grid;place-items:center;position:relative;overflow:hidden;flex-shrink:0;}
 .logo-mark::after{content:'';position:absolute;width:9px;height:9px;background:var(--blue);
-  border-radius:2px;animation:lp 3s ease-in-out infinite;}
+border-radius:2px;animation:lp 3s ease-in-out infinite;}
 @keyframes lp{0%,100%{opacity:.7;transform:scale(.85)}50%{opacity:1;transform:scale(1.1)}}
 .htitle{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.05em;white-space:nowrap;}
 .htitle span{color:var(--blue);margin-right:5px;}
@@ -78,11 +68,9 @@ body::after{
 .legend{display:flex;align-items:center;gap:10px;margin-left:auto;}
 .li{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap;}
 .ld{width:6px;height:6px;border-radius:50%;}
-
 /* ── LEFT ── */
 #left{padding:10px 10px 10px 14px;display:flex;flex-direction:column;gap:8px;
-  overflow:hidden;border-right:1px solid var(--border);min-height:0;}
-
+overflow:hidden;border-right:1px solid var(--border);min-height:0;}
 /* KPI */
 #kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex-shrink:0;}
 .kc{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;position:relative;overflow:hidden;}
@@ -93,70 +81,64 @@ body::after{
 .kv{font-family:var(--mono);font-size:22px;font-weight:300;line-height:1;}
 .kc.b .kv{color:var(--blue)}.kc.a .kv{color:var(--amber)}.kc.g .kv{color:var(--gray)}.kc.r .kv{color:var(--red)}.kc.p .kv{color:var(--purple)}
 .ks{font-size:8px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
-
 /* Scanline value tooltip */
 .scan-tip{
-  font-family:var(--mono);font-size:9px;
-  background:rgba(10,13,18,0.88);border:1px solid rgba(59,130,246,0.35);
-  border-radius:4px;padding:3px 7px;color:var(--text2);
-  line-height:1.6;
+font-family:var(--mono);font-size:9px;
+background:rgba(10,13,18,0.88);border:1px solid rgba(59,130,246,0.35);
+border-radius:4px;padding:3px 7px;color:var(--text2);
+line-height:1.6;
 }
 .scan-tip .sv-z{color:var(--blue);}
 .scan-tip .sv-k{color:var(--amber);}
 .scan-tip .sv-t{color:rgba(255,255,255,0.3);font-size:8px;display:block;margin-bottom:1px;}
-
 /* Per-chart horizontal scanline (JS-driven) */
 .scan-label{
-  position:absolute;top:6px;pointer-events:none;z-index:6;
-  font-family:var(--mono);font-size:9px;line-height:1.5;
-  background:rgba(10,13,18,0.82);
-  border:1px solid rgba(59,130,246,0.35);
-  border-radius:4px;padding:3px 7px;
-  white-space:nowrap;
-  transition:left 0.08s linear, opacity 0.4s;
-  opacity:0;
+position:absolute;top:6px;pointer-events:none;z-index:6;
+font-family:var(--mono);font-size:9px;line-height:1.5;
+background:rgba(10,13,18,0.82);
+border:1px solid rgba(59,130,246,0.35);
+border-radius:4px;padding:3px 7px;
+white-space:nowrap;
+transition:left 0.08s linear, opacity 0.4s;
+opacity:0;
 }
 .scan-label .sv-zai{color:#3b82f6;}
 .scan-label .sv-ken{color:#d97706;}
 .scan-label .sv-ts {color:#4a5568;font-size:8px;display:block;}
 .chart-scanline{
-  position:absolute;top:0;bottom:0;width:3px;pointer-events:none;z-index:5;left:-4px;
-  background:linear-gradient(180deg,transparent 0%,rgba(59,130,246,0.2) 25%,rgba(59,130,246,0.55) 50%,rgba(59,130,246,0.2) 75%,transparent 100%);
-  box-shadow:0 0 10px 3px rgba(59,130,246,0.18);
-  transition:opacity 0.4s;
+position:absolute;top:0;bottom:0;width:3px;pointer-events:none;z-index:5;left:-4px;
+background:linear-gradient(180deg,transparent 0%,rgba(59,130,246,0.2) 25%,rgba(59,130,246,0.55) 50%,rgba(59,130,246,0.2) 75%,transparent 100%);
+box-shadow:0 0 10px 3px rgba(59,130,246,0.18);
+transition:opacity 0.4s;
 }
-
 /* Chart cards */
 .cc{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;
-  display:flex;flex-direction:column;min-height:0;}
+display:flex;flex-direction:column;min-height:0;}
 .cc.sc{flex:2;}.cc.t3{flex:1.1;}.cc.t5{flex:1.1;}
 .ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-shrink:0;}
 .ct{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;}
 .ctag{font-family:var(--mono);font-size:8px;color:var(--text3);background:var(--bg4);
-  padding:2px 6px;border-radius:3px;border:1px solid var(--border);}
+padding:2px 6px;border-radius:3px;border:1px solid var(--border);}
 .cw{flex:1;min-height:0;position:relative;}
 /* Plotly div needs explicit height */
 .cw .plotly-wrap{width:100%;height:100%;position:absolute;top:0;left:0;background:transparent;}
-
 /* ── RIGHT ── */
 #right{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
 .rh{flex-shrink:0;padding:10px 14px 8px 12px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;}
+display:flex;align-items:center;justify-content:space-between;}
 .ptitle{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;}
 .mbadge{background:var(--blue-dim);color:var(--blue);font-size:9px;padding:2px 6px;border-radius:3px;font-family:var(--mono);}
-
 /* Member grid — 2 cols, scrollable */
 #mgrid{
-  flex:1;overflow-y:auto;padding:8px 10px 10px;
-  display:grid;grid-template-columns:1fr 1fr;gap:5px;align-content:start;
-  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+flex:1;overflow-y:auto;padding:8px 10px 10px;
+display:grid;grid-template-columns:1fr 1fr;gap:5px;align-content:start;
+scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
 }
 #mgrid::-webkit-scrollbar{width:3px;}
 #mgrid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
 /* Member card */
 .mc{background:var(--bg2);border:1px solid var(--border);border-radius:6px;
-  padding:6px 8px;display:flex;flex-direction:column;gap:3px;transition:border-color .3s;min-width:0;}
+padding:6px 8px;display:flex;flex-direction:column;gap:3px;transition:border-color .3s;min-width:0;}
 .mc:hover{border-color:var(--border2);}
 .mc-r1{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0;}
 .mc-r2{display:flex;align-items:center;gap:4px;min-width:0;}
@@ -174,127 +156,198 @@ body::after{
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 .ab{border-color:rgba(59,130,246,.3)!important;background:linear-gradient(110deg,var(--bg2) 30%,rgba(59,130,246,.08) 50%,var(--bg2) 70%);background-size:200% 100%;animation:shimmer 3s ease infinite;}
 .at{border-color:rgba(217,119,6,.3)!important;background:linear-gradient(110deg,var(--bg2) 30%,rgba(217,119,6,.08) 50%,var(--bg2) 70%);background-size:200% 100%;animation:shimmer 3s ease infinite;}
-
 .lp{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-family:var(--mono);font-size:10px;gap:7px;}
 .spin{width:12px;height:12px;border:1.5px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg)}}
 @keyframes fi{0%{opacity:.4}100%{opacity:1}}
 .flash{animation:fi .35s ease;}
 .tip{position:fixed;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;
-  padding:5px 9px;font-size:10px;color:var(--text);max-width:200px;word-break:break-all;
-  z-index:999;pointer-events:none;opacity:0;transition:opacity .15s;}
+padding:5px 9px;font-size:10px;color:var(--text);max-width:200px;word-break:break-all;
+z-index:999;pointer-events:none;opacity:0;transition:opacity .15s;}
 .tip.show{opacity:1;}
-
 /* Zero-member pills */
 .sz-pill{font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:3px;white-space:nowrap;border:1px solid var(--border);}
 .sz-actv{color:rgba(59,130,246,0.7);border-color:rgba(59,130,246,0.25);}
 .sz-trn {color:rgba(217,119,6,0.7);border-color:rgba(217,119,6,0.25);}
 .sz-unk {color:rgba(239,68,68,0.6);border-color:rgba(239,68,68,0.2);}
 .sz-other{color:rgba(107,114,128,0.6);border-color:rgba(107,114,128,0.2);}
-
 /* Score chart: active pulse overlay + training cap */
 #sc-overlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+
+/* ═══════════════════════════════════════════
+   スマートフォン対応 (768px以下)
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  html, body { overflow: auto; height: auto; }
+
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 50px auto auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  #header {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .hsep { display: none; }
+  .legend { display: none; }
+
+  #left {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow: visible;
+    height: auto;
+    min-height: 0;
+    padding: 8px;
+  }
+
+  #kpi {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* グラフカードの高さを固定して Plotly が描画できるようにする */
+  .cc.sc {
+    flex: none;
+    height: 300px;
+  }
+  .cc.t3 {
+    flex: none;
+    height: 220px;
+  }
+  .cc.t5 {
+    flex: none;
+    height: 220px;
+  }
+
+  /* plotly-wrap を absolute → relative に切り替え */
+  .cw {
+    flex: 1;
+    min-height: 0;
+  }
+  .cw .plotly-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  #right {
+    height: auto;
+    min-height: 300px;
+  }
+
+  #mgrid {
+    overflow-y: visible;
+    max-height: none;
+  }
+}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <header id="header">
-    <div class="logo-mark"></div>
-    <div class="htitle"><span>//</span>濱上研 取り組みダッシュボード</div>
-    <div class="hsep"></div>
-    <div class="hmeta">
-      <span><span class="ldot"></span>LIVE</span>
-      <span id="clock">--:--:--</span>
-      <span>更新: <span id="lupd">—</span></span>
-      <span class="cwrap">次回 <span id="nxt">5:00</span>
-        <div id="pbar"><div id="pfill"></div></div>
-      </span>
-    </div>
-    <div class="legend">
-      <div class="li"><span class="ld" style="background:var(--blue)"></span>在席</div>
-      <div class="li"><span class="ld" style="background:var(--amber)"></span>研修中</div>
-      <div class="li"><span class="ld" style="background:var(--gray)"></span>離席/帰宅</div>
-      <div class="li"><span class="ld" style="background:var(--red)"></span>不明</div>
-    </div>
-  </header>
+<header id="header">
+  <div class="logo-mark"></div>
+  <div class="htitle"><span>//</span>濱上研 取り組みダッシュボード</div>
+  <div class="hsep"></div>
+  <div class="hmeta">
+    <span><span class="ldot"></span>LIVE</span>
+    <span id="clock">--:--:--</span>
+    <span>更新: <span id="lupd">—</span></span>
+    <span class="cwrap">次回 <span id="nxt">5:00</span>
+      <div id="pbar"><div id="pfill"></div></div>
+    </span>
+  </div>
+  <div class="legend">
+    <div class="li"><span class="ld" style="background:var(--blue)"></span>在席</div>
+    <div class="li"><span class="ld" style="background:var(--amber)"></span>研修中</div>
+    <div class="li"><span class="ld" style="background:var(--gray)"></span>離席/帰宅</div>
+    <div class="li"><span class="ld" style="background:var(--red)"></span>不明</div>
+  </div>
+</header>
 
-  <div id="left">
-    <div id="kpi">
-      <div class="kc p"><div class="kl">Total</div><div class="kv" id="k0">—</div><div class="ks">メンバー</div></div>
-      <div class="kc b"><div class="kl">在席</div><div class="kv" id="k1">—</div><div class="ks">在席中</div></div>
-      <div class="kc a"><div class="kl">研修</div><div class="kv" id="k2">—</div><div class="ks">研修中</div></div>
-      <div class="kc g"><div class="kl">離席/帰宅</div><div class="kv" id="k3">—</div><div class="ks">離席・帰宅</div></div>
-      <div class="kc r"><div class="kl">不明</div><div class="kv" id="k4">—</div><div class="ks">8h+ 経過</div></div>
-    </div>
+<div id="left">
+  <div id="kpi">
+    <div class="kc p"><div class="kl">Total</div><div class="kv" id="k0">—</div><div class="ks">メンバー</div></div>
+    <div class="kc b"><div class="kl">在席</div><div class="kv" id="k1">—</div><div class="ks">在席中</div></div>
+    <div class="kc a"><div class="kl">研修</div><div class="kv" id="k2">—</div><div class="ks">研修中</div></div>
+    <div class="kc g"><div class="kl">離席/帰宅</div><div class="kv" id="k3">—</div><div class="ks">離席・帰宅</div></div>
+    <div class="kc r"><div class="kl">不明</div><div class="kv" id="k4">—</div><div class="ks">8h+ 経過</div></div>
+  </div>
 
-    <div class="cc sc">
-      <div class="ch">
-        <div class="ct">個人別 取り組み充足率 <span style="color:var(--text3);font-size:8px">（直近1ヶ月）</span></div>
-        <div class="ctag">baseline=1.0</div>
-      </div>
-      <div class="cw" style="position:relative;">
-        <div class="lp" id="sl"><div class="spin"></div>読み込み中...</div>
-        <div id="sc" class="plotly-wrap" style="display:none"></div>
-        <svg id="sc-overlay" style="display:none"></svg>
-      </div>
-      <div id="zero-members" style="display:none;flex-shrink:0;padding-top:5px;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;">
-        <div style="display:flex;align-items:baseline;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
-          <span id="zero-label" style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#4a5568;letter-spacing:.05em;white-space:nowrap;">未集計 <span id="zero-count"></span></span>
-          <div id="zero-list" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;"></div>
-        </div>
-      </div>
+  <div class="cc sc">
+    <div class="ch">
+      <div class="ct">個人別 取り組み充足率 <span style="color:var(--text3);font-size:8px">（直近1ヶ月）</span></div>
+      <div class="ctag">baseline=1.0</div>
     </div>
-
-    <div class="cc t3">
-      <div class="ch"><div class="ct">人数推移</div><div class="ctag">直近30日</div></div>
-      <div class="cw" style="overflow:hidden;">
-        <div class="lp" id="t3l"><div class="spin"></div>読み込み中...</div>
-        <div id="t3c" class="plotly-wrap" style="display:none"></div>
-        <div class="chart-scanline" id="scan30"></div>
-        <div class="scan-label" id="label30"></div>
-        <div id="scan30-tip" style="display:none;position:absolute;top:6px;pointer-events:none;z-index:10;transform:translateX(-50%);white-space:nowrap;"></div>
-      </div>
+    <div class="cw" style="position:relative;">
+      <div class="lp" id="sl"><div class="spin"></div>読み込み中...</div>
+      <div id="sc" class="plotly-wrap" style="display:none"></div>
+      <svg id="sc-overlay" style="display:none"></svg>
     </div>
-
-    <div class="cc t5">
-      <div class="ch"><div class="ct">短期トレンド</div><div class="ctag">直近5日</div></div>
-      <div class="cw" style="overflow:hidden;">
-        <div class="lp" id="t5l"><div class="spin"></div>読み込み中...</div>
-        <div id="t5c" class="plotly-wrap" style="display:none"></div>
-        <div class="chart-scanline" id="scan5"></div>
-        <div class="scan-label" id="label5"></div>
-        <div id="scan5-tip" style="display:none;position:absolute;top:6px;pointer-events:none;z-index:10;transform:translateX(-50%);white-space:nowrap;"></div>
+    <div id="zero-members" style="display:none;flex-shrink:0;padding-top:5px;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;">
+      <div style="display:flex;align-items:baseline;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+        <span id="zero-label" style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#4a5568;letter-spacing:.05em;white-space:nowrap;">未集計 <span id="zero-count"></span></span>
+        <div id="zero-list" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;"></div>
       </div>
     </div>
   </div>
 
-  <div id="right">
-    <div class="rh">
-      <div class="ptitle">現在のステータス</div>
-      <span class="mbadge" id="mbadge">—</span>
+  <div class="cc t3">
+    <div class="ch"><div class="ct">人数推移</div><div class="ctag">直近30日</div></div>
+    <div class="cw" style="overflow:hidden;">
+      <div class="lp" id="t3l"><div class="spin"></div>読み込み中...</div>
+      <div id="t3c" class="plotly-wrap" style="display:none"></div>
+      <div class="chart-scanline" id="scan30"></div>
+      <div class="scan-label" id="label30"></div>
+      <div id="scan30-tip" style="display:none;position:absolute;top:6px;pointer-events:none;z-index:10;transform:translateX(-50%);white-space:nowrap;"></div>
     </div>
-    <div id="mgrid">
-      <div class="lp" style="grid-column:1/-1"><div class="spin"></div>読み込み中...</div>
+  </div>
+
+  <div class="cc t5">
+    <div class="ch"><div class="ct">短期トレンド</div><div class="ctag">直近5日</div></div>
+    <div class="cw" style="overflow:hidden;">
+      <div class="lp" id="t5l"><div class="spin"></div>読み込み中...</div>
+      <div id="t5c" class="plotly-wrap" style="display:none"></div>
+      <div class="chart-scanline" id="scan5"></div>
+      <div class="scan-label" id="label5"></div>
+      <div id="scan5-tip" style="display:none;position:absolute;top:6px;pointer-events:none;z-index:10;transform:translateX(-50%);white-space:nowrap;"></div>
     </div>
   </div>
 </div>
+
+<div id="right">
+  <div class="rh">
+    <div class="ptitle">現在のステータス</div>
+    <span class="mbadge" id="mbadge">—</span>
+  </div>
+  <div id="mgrid">
+    <div class="lp" style="grid-column:1/-1"><div class="spin"></div>読み込み中...</div>
+  </div>
+</div>
+
+</div>
+
 <div class="tip" id="tip"></div>
 
 <script>
-/* ── URLs — exact copies from index5.html ── */
+/* ── URLs ── */
 const API_M = 'https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members';
 const API_T = 'https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1';
 const API_S = 'https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_debug.json?rlkey=p6jhidej843o2wm5wb1mf9nj1&dl=1';
-
 const REFRESH = 5*60*1000;
-const UNK_MS  = 8*60*60*1000;
-const EXCL    = ['HMG','TKH','HGW'];
+const UNK_MS = 8*60*60*1000;
+const EXCL = ['HMG','TKH','HGW'];
 
 /* Plotly dark theme shared config */
 const PLOT_LAYOUT_BASE = {
   paper_bgcolor: 'rgba(0,0,0,0)',
-  plot_bgcolor:  'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
   font: { color: '#8892a4', family: 'JetBrains Mono', size: 9 },
   margin: { t: 8, b: 40, l: 40, r: 30 },
   legend: { font: { size: 9 }, bgcolor: 'rgba(0,0,0,0)', x: 0, y: 1 },
@@ -311,7 +364,6 @@ function formatElapsed(ms) {
   const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60),d=Math.floor(h/24);
   return d>0?`${d}日前`:h>0?`${h}時間前`:m>0?`${m}分前`:`${s}秒前`;
 }
-
 function mAvg(arr, w) {
   return arr.map((_,i)=>{
     const sl=arr.slice(Math.max(0,i-w+1),i+1);
@@ -337,7 +389,7 @@ function startCD() {
   },1000);
 }
 
-/* ── FETCH — plain fetch, exactly like index5.html ── */
+/* ── FETCH ── */
 function fj(url) {
   return fetch(url).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
 }
@@ -409,12 +461,10 @@ function renderScore(data, members) {
     return sk==='研修中';
   }).map(m=>m.name));
 
-  // Members WITH score data (excluding system accounts)
   const scoreNames=new Set(
     Object.keys(data).filter(n=>!EXCL.some(p=>n.startsWith(p)))
   );
 
-  // Only show members who have any activity (score>0 or hours>0)
   const ents=Object.entries(data)
     .filter(([n])=>!EXCL.some(p=>n.startsWith(p)))
     .filter(([,v])=>(v['在席中']||0)+(v['研修中']||0)>0)
@@ -424,6 +474,7 @@ function renderScore(data, members) {
   const pv=ents.map(([,v])=>+(v['在席中']||0).toFixed(1));
   const tv=ents.map(([,v])=>Math.min(+(v['研修中']||0).toFixed(1),40));
   const sv=ents.map(([,v])=>+(v.score||0).toFixed(2));
+
   const pbg=names.map(n=>actv.has(n)?'rgba(59,130,246,0.9)':'rgba(59,130,246,0.4)');
   const tbg=names.map(n=>trn.has(n)?'rgba(217,119,6,0.9)':'rgba(217,119,6,0.4)');
   const scolor=sv.map(s=>s>=1?'rgba(139,92,246,0.9)':'rgba(239,68,68,0.9)');
@@ -462,9 +513,7 @@ function renderScore(data, members) {
     scoreDrawn=true;
   }
 
-  // ── Overlay: pulse for active members, red border for training cap ──
   _lastOverlayArgs = {names, pv, tv, actv, trn};
-
   function scheduleOverlay() {
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       if(_lastOverlayArgs) {
@@ -473,10 +522,8 @@ function renderScore(data, members) {
       }
     }));
   }
-
   scheduleOverlay();
 
-  // Re-draw on every Plotly relayout (resize, zoom, etc.)
   const scEl = document.getElementById('sc');
   if(scEl && !scEl._overlayListenerAttached) {
     scEl._overlayListenerAttached = true;
@@ -484,20 +531,16 @@ function renderScore(data, members) {
     scEl.on('plotly_autosize', scheduleOverlay);
   }
 
-  // ── Zero / missing members displayed below chart ──
-  // Score=0 members (in score data but zero activity)
   const zeroInData=Object.entries(data)
     .filter(([n])=>!EXCL.some(p=>n.startsWith(p)))
     .filter(([,v])=>(v['在席中']||0)+(v['研修中']||0)===0)
     .map(([n])=>n);
 
-  // Members in API but absent from score data entirely
   const missingFromScore=(members||[])
     .map(m=>m.name)
     .filter(n=>n&&!EXCL.some(p=>n.startsWith(p))&&!scoreNames.has(n));
 
   const zeroAll=[...new Set([...zeroInData, ...missingFromScore])].sort();
-
   const zeroWrap=document.getElementById('zero-members');
   const zeroList=document.getElementById('zero-list');
   const zeroCnt =document.getElementById('zero-count');
@@ -505,7 +548,6 @@ function renderScore(data, members) {
   if(zeroAll.length>0){
     zeroWrap.style.display='block';
     zeroCnt.textContent='('+zeroAll.length+'名)';
-    // Each member: small pill showing current status color
     zeroList.innerHTML=zeroAll.map(n=>{
       const member=(members||[]).find(m=>m.name===n);
       let pillCls='sz-other';
@@ -523,9 +565,8 @@ function renderScore(data, members) {
   }
 }
 
-/* ── TIME SERIES CHART (Plotly) — same logic as index5.html ── */
+/* ── TIME SERIES CHART (Plotly) ── */
 function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
-  /* raw: { "2026-03-19T10:00:00": { "在席中": 12, "研修中": 3 }, ... } */
   const ts = Object.keys(raw).sort();
   const cutoff = Date.now() - days*86400000;
   const filtered = ts.filter(t => new Date(t).getTime() >= cutoff);
@@ -538,11 +579,9 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
   const zai = filtered.map(t => raw[t]['在席中'] ?? 0);
   const ken = filtered.map(t => raw[t]['研修中'] ?? 0);
 
-  // Store for scanline tooltip
   if(days===30) window._tsData30 = {ts: filtered, zai, ken};
   if(days===5)  window._tsData5  = {ts: filtered, zai, ken};
 
-  // 24h moving average
   const ih = filtered.length>1
     ? (new Date(filtered[filtered.length-1]).getTime()-new Date(filtered[0]).getTime())
       / filtered.length / 3600000
@@ -551,9 +590,8 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
   const zaiMA = mAvg(zai, w);
   const kenMA = mAvg(ken, w);
 
-  // Background shapes: night & weekend (same as index5.html)
   const shapes = [];
-  if(days <= 7) { // only draw shapes for short range (too many for 30d)
+  if(days <= 7) {
     const dateSet = new Set(filtered.map(t=>t.split('T')[0]));
     for(const date of dateSet){
       const wd = new Date(date+'T00:00').getDay();
@@ -579,8 +617,6 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
     }
   }
 
-  // Cubic spline interpolation: insert extra points between each pair
-  // to make the curve visually smoother even with sparse data
   function interpLinear(xs, ys, steps) {
     const ox=[], oy=[];
     for(let i=0;i<xs.length-1;i++){
@@ -588,7 +624,6 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
       const y0=ys[i], y1=ys[i+1];
       for(let s=0;s<steps;s++){
         const t=s/steps;
-        // Cosine interpolation for smoothness
         const tc=(1-Math.cos(t*Math.PI))/2;
         ox.push(new Date(x0+(x1-x0)*t));
         oy.push(y0*(1-tc)+y1*tc);
@@ -598,19 +633,20 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
     oy.push(ys[ys.length-1]);
     return {x:ox,y:oy};
   }
-  const INTERP = 8; // interpolation steps between data points
+
+  const INTERP = 8;
   const izai  = interpLinear(filtered, zai,   INTERP);
   const iken  = interpLinear(filtered, ken,   INTERP);
   const izaiM = interpLinear(filtered, zaiMA, INTERP);
   const ikenM = interpLinear(filtered, kenMA, INTERP);
 
   const showMarkers = days<=5;
+
   const traces=[
     { x:izai.x, y:izai.y, mode:showMarkers?'lines+markers':'lines', name:'在席中',
       line:{color:'rgba(59,130,246,0.85)',width:2,shape:'spline',smoothing:1.3},
       marker:{size:3,color:'rgba(59,130,246,0.9)'},
       fill:'tozeroy', fillcolor:'rgba(59,130,246,0.07)',
-      // Original points for hover
       customdata:filtered, hovertemplate:'%{x|%m/%d %H:%M}<br>在席中: %{y:.0f}人<extra></extra>' },
     { x:iken.x, y:iken.y, mode:showMarkers?'lines+markers':'lines', name:'研修中',
       line:{color:'rgba(217,119,6,0.85)',width:2,shape:'spline',smoothing:1.3},
@@ -645,19 +681,17 @@ function renderTimeSeries(raw, days, divId, loadId, drawnFlag, setDrawn) {
   }
 }
 
-
-/* ── Score chart overlay: pulse (JS-driven) + training-cap red border ── */
-let _pulseRects = [];   // [{el, phase}]
+/* ── Score chart overlay ── */
+let _pulseRects = [];
 let _pulseTimer = null;
 let _lastOverlayArgs = null;
 
 function drawScoreOverlay(names, pv, tv, actv, trn) {
-  // Stop previous pulse loop
   if(_pulseTimer) { cancelAnimationFrame(_pulseTimer); _pulseTimer=null; }
   _pulseRects = [];
 
   const scDiv = document.getElementById('sc');
-  const svg   = document.getElementById('sc-overlay');
+  const svg = document.getElementById('sc-overlay');
   if(!scDiv || !svg) return;
 
   const gd = scDiv._fullLayout;
@@ -667,7 +701,7 @@ function drawScoreOverlay(names, pv, tv, actv, trn) {
   const plotW = gd.width, plotH = gd.height;
   const ml = gd.margin.l, mt = gd.margin.t;
 
-  svg.setAttribute('width',  plotW);
+  svg.setAttribute('width', plotW);
   svg.setAttribute('height', plotH);
   svg.style.display = 'block';
   svg.innerHTML = '';
@@ -678,14 +712,15 @@ function drawScoreOverlay(names, pv, tv, actv, trn) {
     const isActive   = actv.has(name);
     const isTraining = trn.has(name);
     const trainingCap = tv[i] >= 40;
+
     if(!isActive && !isTraining && !trainingCap) return;
 
-    const xPx    = xa.l2p(xa.d2l(name)) + ml;
-    const yBase  = ya.l2p(0)           + mt;
-    const yZaiTop= ya.l2p(pv[i])       + mt;
-    const yTrnTop= ya.l2p(pv[i]+tv[i]) + mt;
-    const zaiH   = Math.max(1, yBase   - yZaiTop);
-    const trnH   = Math.max(1, yZaiTop - yTrnTop);
+    const xPx  = xa.l2p(xa.d2l(name)) + ml;
+    const yBase = ya.l2p(0) + mt;
+    const yZaiTop = ya.l2p(pv[i]) + mt;
+    const yTrnTop = ya.l2p(pv[i]+tv[i]) + mt;
+    const zaiH = Math.max(1, yBase - yZaiTop);
+    const trnH = Math.max(1, yZaiTop - yTrnTop);
 
     function mkPulseRect(x, y, w, h, color, phaseOffset) {
       const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
@@ -711,26 +746,22 @@ function drawScoreOverlay(names, pv, tv, actv, trn) {
     const phaseOffset = (i * 0.4) % (Math.PI * 2);
 
     if(isActive && pv[i] > 0) {
-      mkPulseRect(xPx-barW/2, yZaiTop, barW, zaiH,
-                  'rgba(59,130,246,1)', phaseOffset);
+      mkPulseRect(xPx-barW/2, yZaiTop, barW, zaiH, 'rgba(59,130,246,1)', phaseOffset);
     }
     if(isTraining && tv[i] > 0) {
-      mkPulseRect(xPx-barW/2, yTrnTop, barW, trnH,
-                  'rgba(217,119,6,1)', phaseOffset);
+      mkPulseRect(xPx-barW/2, yTrnTop, barW, trnH, 'rgba(217,119,6,1)', phaseOffset);
     }
     if(trainingCap && tv[i] > 0) {
       mkBorder(xPx-barW/2, yTrnTop, barW, trnH);
     }
   });
 
-  // JS animation loop — drives opacity via sin wave
-  const PERIOD = 1400; // ms per cycle — faster = more noticeable
+  const PERIOD = 1400;
   function tick(ts) {
     _pulseRects.forEach(({el, phase}) => {
       const t = (ts / PERIOD) * Math.PI * 2;
-      // sin: -1→1, remap to 0→1, then apply power curve to spend more time near 0
-      const raw = (Math.sin(t + phase) + 1) / 2;      // 0..1
-      const op  = Math.pow(raw, 0.6) * 0.85;           // 0..0.85, snappy fall-off
+      const raw = (Math.sin(t + phase) + 1) / 2;
+      const op = Math.pow(raw, 0.6) * 0.85;
       el.style.opacity = op.toFixed(3);
     });
     _pulseTimer = requestAnimationFrame(tick);
@@ -750,7 +781,6 @@ async function loadAll() {
     fj(API_S),
   ]);
 
-  // Members + KPI
   if(mr.status==='fulfilled'){
     const d=Array.isArray(mr.value)?mr.value:(mr.value.members||[]);
     renderM(d);
@@ -763,10 +793,8 @@ async function loadAll() {
     if(sr.status==='fulfilled') renderScore(sr.value, []);
   }
 
-  // Score alone fallback
   if(mr.status!=='fulfilled' && sr.status==='fulfilled') renderScore(sr.value,[]);
 
-  // Time series
   if(tr.status==='fulfilled'){
     renderTimeSeries(tr.value, 30, 't3c','t3l', t3Drawn2, ()=>{ t3Drawn2=true; });
     renderTimeSeries(tr.value,  5, 't5c','t5l', t5Drawn2, ()=>{ t5Drawn2=true; });
@@ -774,7 +802,7 @@ async function loadAll() {
     console.error('TimeSeries:', tr.reason);
     ['t3l','t5l'].forEach(id=>{
       const el=document.getElementById(id);
-      if(el) el.innerHTML='<span style="color:var(--red)">時系列データ取得失敗 — コンソールを確認</span>';
+      if(el) el.innerHTML='<span style="color:var(--red)">時系列データ取得失敗</span>';
     });
   }
 
@@ -790,37 +818,28 @@ async function loadAll() {
   setInterval(async()=>{ await loadAll(); startCD(); }, REFRESH);
 })();
 
-
-
-
-
-
-
 /* ══════════════════════════════════════
    SCANLINE FX — time series sync
    ══════════════════════════════════════ */
 (function initScanlines(){
-
-  const PERIOD_30  = 22000; // ms for one full 30-day sweep
-  const DAYS_LONG  = 30;
+  const PERIOD_30 = 22000;
+  const DAYS_LONG = 30;
   const DAYS_SHORT = 5;
-  const OVERLAP    = DAYS_SHORT / DAYS_LONG; // 5/30
+  const OVERLAP = DAYS_SHORT / DAYS_LONG;
 
   let startTime = null;
 
-  // Interpolate zai/ken value at fractional position within a dataset
   function valueAt(tsData, frac) {
     if(!tsData || !tsData.ts.length) return null;
-    const n   = tsData.ts.length;
+    const n = tsData.ts.length;
     const idx = frac * (n - 1);
-    const lo  = Math.floor(idx), hi = Math.min(lo + 1, n - 1);
-    const t   = idx - lo;
+    const lo = Math.floor(idx), hi = Math.min(lo + 1, n - 1);
+    const t = idx - lo;
     const zai = Math.round(tsData.zai[lo] * (1-t) + tsData.zai[hi] * t);
     const ken = Math.round(tsData.ken[lo] * (1-t) + tsData.ken[hi] * t);
-    // timestamp at this position
-    const ms  = new Date(tsData.ts[lo]).getTime() * (1-t)
-               + new Date(tsData.ts[hi]).getTime() * t;
-    const d   = new Date(ms);
+    const ms = new Date(tsData.ts[lo]).getTime() * (1-t)
+             + new Date(tsData.ts[hi]).getTime() * t;
+    const d = new Date(ms);
     const dateStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     return {zai, ken, dateStr};
   }
@@ -828,39 +847,34 @@ async function loadAll() {
   function updateLabel(labelEl, scanEl, val, frac) {
     if(!labelEl || !scanEl) return;
     if(!val) { labelEl.style.opacity='0'; return; }
-
     labelEl.innerHTML =
       `<span class="sv-ts">${val.dateStr}</span>` +
       `<span class="sv-zai">在席 ${val.zai}</span>` +
       ` <span class="sv-ken">研修 ${val.ken}</span>`;
-
-    // Position label: follow scan line, flip to left side near right edge
-    const parentW  = scanEl.parentElement.offsetWidth;
+    const parentW = scanEl.parentElement.offsetWidth;
     const scanLeft = parseFloat(scanEl.style.left) || 0;
-    const labelW   = labelEl.offsetWidth || 90;
-    const MARGIN   = 6;
-
+    const labelW = labelEl.offsetWidth || 90;
+    const MARGIN = 6;
     let left;
     if(scanLeft + labelW + MARGIN + 4 > parentW) {
-      left = scanLeft - labelW - MARGIN; // flip left
+      left = scanLeft - labelW - MARGIN;
     } else {
       left = scanLeft + 6;
     }
-    labelEl.style.left    = left + 'px';
+    labelEl.style.left = left + 'px';
     labelEl.style.opacity = '1';
   }
 
   function tick(ts){
     if(!startTime) startTime = ts;
     const elapsed = (ts - startTime) % PERIOD_30;
-    const frac30  = elapsed / PERIOD_30;
+    const frac30 = elapsed / PERIOD_30;
 
     const s30 = document.getElementById('scan30');
     const s5  = document.getElementById('scan5');
     const l30 = document.getElementById('label30');
     const l5  = document.getElementById('label5');
 
-    // ── 30-day scanline ──
     if(s30){
       const w30 = s30.parentElement.offsetWidth;
       s30.style.left = (frac30 * (w30 + 8) - 4) + 'px';
@@ -868,13 +882,12 @@ async function loadAll() {
       updateLabel(l30, s30, val30, frac30);
     }
 
-    // ── 5-day scanline (only in last 5/30 of the 30-day sweep) ──
     if(s5){
       const rangeStart = 1 - OVERLAP;
       if(frac30 >= rangeStart){
         const frac5 = (frac30 - rangeStart) / OVERLAP;
-        const w5    = s5.parentElement.offsetWidth;
-        s5.style.left    = (frac5 * (w5 + 8) - 4) + 'px';
+        const w5 = s5.parentElement.offsetWidth;
+        s5.style.left = (frac5 * (w5 + 8) - 4) + 'px';
         s5.style.opacity = '1';
         const val5 = valueAt(window._tsData5, frac5);
         updateLabel(l5, s5, val5, frac5);
@@ -886,9 +899,9 @@ async function loadAll() {
 
     requestAnimationFrame(tick);
   }
+
   requestAnimationFrame(tick);
 })();
-
 </script>
 </body>
 </html>
