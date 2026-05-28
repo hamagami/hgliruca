@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>在席・研修 統計ダッシュボード</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b10;
+      --panel: #0d141c;
+      --panel-2: #111b25;
+      --line: rgba(164, 192, 220, 0.16);
+      --line-strong: rgba(164, 192, 220, 0.28);
+      --text: #e7eef6;
+      --muted: #8ea0b4;
+      --green: #43d17a;
+      --cyan: #41c7e8;
+      --amber: #f2b84b;
+      --red: #ff6b6b;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(37, 65, 88, 0.18), rgba(7, 11, 16, 0) 320px),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+      letter-spacing: 0;
+    }
+
+    .page {
+      width: min(1480px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 22px 0 36px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 16px;
+      padding: 8px 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 750;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    select {
+      height: 36px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #0a1118;
+      color: var(--text);
+      padding: 0 10px;
+      outline: none;
+    }
+
+    select { min-width: 170px; }
+
+    .status-line {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 14px 0 16px;
+    }
+
+    .status-line strong { color: var(--text); font-weight: 650; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)), var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      padding: 14px;
+      min-height: 96px;
+    }
+
+    .card .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .card .value {
+      margin-top: 10px;
+      font-size: 26px;
+      font-weight: 760;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .card .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 12px;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .panel.full { grid-column: 1 / -1; }
+
+    .panel-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 720;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .chart-box {
+      position: relative;
+      height: 300px;
+    }
+
+    .chart-box.short { height: 250px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 8px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child { text-align: left; }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .name-link {
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .name-link:hover { color: var(--cyan); }
+
+    .error {
+      display: none;
+      border: 1px solid rgba(255, 107, 107, 0.35);
+      background: rgba(255, 107, 107, 0.1);
+      color: #ffd3d3;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 980px) {
+      header { grid-template-columns: 1fr; align-items: start; }
+      .controls { justify-content: flex-start; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .page { width: min(100vw - 20px, 1480px); padding-top: 14px; }
+      h1 { font-size: 20px; }
+      .cards { grid-template-columns: 1fr; }
+      .chart-box,
+      .chart-box.short { height: 240px; }
+      th,
+      td { padding: 8px 5px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>//在席・研修 統計ダッシュボード</h1>
+        <div class="subtitle">Dropbox 上の集計 JSON を読み込み、個人別の時間分布と継続時間を表示します。</div>
+      </div>
+      <div class="controls">
+        <label for="personSelect">メンバー</label>
+        <select id="personSelect" disabled>
+          <option>読み込み中...</option>
+        </select>
+      </div>
+    </header>
+
+    <div id="error" class="error"></div>
+
+    <section class="status-line" aria-live="polite">
+      <span>DATA <strong id="dataState">loading</strong></span>
+      <span>期間 <strong id="rangeText">—</strong></span>
+      <span>スナップショット <strong id="snapshotText">—</strong></span>
+      <span>閾値 <strong id="thresholdText">—</strong></span>
+    </section>
+
+    <section class="cards">
+      <article class="card">
+        <div class="label">在席 合計</div>
+        <div class="value" id="presenceTotal">—</div>
+        <div class="hint">異常除外後</div>
+      </article>
+      <article class="card">
+        <div class="label">研修 合計</div>
+        <div class="value" id="trainingTotal">—</div>
+        <div class="hint">異常除外後</div>
+      </article>
+      <article class="card">
+        <div class="label">在席 異常</div>
+        <div class="value" id="presenceAbnormal">—</div>
+        <div class="hint">閾値超過</div>
+      </article>
+      <article class="card">
+        <div class="label">研修 異常</div>
+        <div class="value" id="trainingAbnormal">—</div>
+        <div class="hint">閾値超過</div>
+      </article>
+      <article class="card">
+        <div class="label">在席 セッション</div>
+        <div class="value" id="presenceSessions">—</div>
+        <div class="hint">正常区間数</div>
+      </article>
+      <article class="card">
+        <div class="label">研修 セッション</div>
+        <div class="value" id="trainingSessions">—</div>
+        <div class="hint">正常区間数</div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head">
+          <h2>時刻分布</h2>
+          <div class="panel-note">hour / hours</div>
+        </div>
+        <div class="chart-box"><canvas id="hourChart"></canvas></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>曜日分布</h2>
+          <div class="panel-note">weekday / hours</div>
+        </div>
+        <div class="chart-box"><canvas id="weekdayChart"></canvas></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>在席 継続時間分布</h2>
+          <div class="panel-note">duration / count</div>
+        </div>
+        <div class="chart-box short"><canvas id="presenceDurationChart"></canvas></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>研修 継続時間分布</h2>
+          <div class="panel-note">duration / count</div>
+        </div>
+        <div class="chart-box short"><canvas id="trainingDurationChart"></canvas></div>
+      </article>
+
+      <article class="panel full">
+        <div class="panel-head">
+          <h2>メンバー集計</h2>
+          <div class="panel-note">クリックで選択</div>
+        </div>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>name</th>
+                <th>在席 h</th>
+                <th>研修 h</th>
+                <th>在席異常 h</th>
+                <th>研修異常 h</th>
+                <th>区間</th>
+              </tr>
+            </thead>
+            <tbody id="summaryBody">
+              <tr><td colspan="6">読み込み中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULT_DATA_URL = "https://dl.dropbox.com/scl/fi/jxly2f6z4pb6nd9dq2s1z/status_stats.json?rlkey=zwvh1tn9l5z0mzy8i8omblfut&raw=1";
+
+    const COLORS = {
+      presence: "#43d17a",
+      training: "#41c7e8",
+      presenceBar: "#2f8cff",
+      trainingBar: "#f2a23a",
+      abnormal: "#ff6b6b",
+      grid: "rgba(164, 192, 220, 0.12)",
+      ticks: "#8ea0b4",
+      text: "#e7eef6"
+    };
+
+    const els = {
+      personSelect: document.getElementById("personSelect"),
+      error: document.getElementById("error"),
+      dataState: document.getElementById("dataState"),
+      rangeText: document.getElementById("rangeText"),
+      snapshotText: document.getElementById("snapshotText"),
+      thresholdText: document.getElementById("thresholdText"),
+      presenceTotal: document.getElementById("presenceTotal"),
+      trainingTotal: document.getElementById("trainingTotal"),
+      presenceAbnormal: document.getElementById("presenceAbnormal"),
+      trainingAbnormal: document.getElementById("trainingAbnormal"),
+      presenceSessions: document.getElementById("presenceSessions"),
+      trainingSessions: document.getElementById("trainingSessions"),
+      summaryBody: document.getElementById("summaryBody")
+    };
+
+    let report = null;
+    let charts = {};
+
+    Chart.defaults.color = COLORS.ticks;
+    Chart.defaults.borderColor = COLORS.grid;
+    Chart.defaults.font.family = 'Inter, "Segoe UI", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif';
+
+    function normalizeDropboxUrl(url) {
+      const trimmed = String(url || "").trim();
+      if (!trimmed) return DEFAULT_DATA_URL;
+      try {
+        const parsed = new URL(trimmed, location.href);
+        if (parsed.hostname.endsWith("dropbox.com")) {
+          parsed.searchParams.set("raw", "1");
+          parsed.searchParams.delete("dl");
+          return parsed.toString();
+        }
+        return parsed.toString();
+      } catch {
+        return trimmed;
+      }
+    }
+
+    function initialDataUrl() {
+      const params = new URLSearchParams(location.search);
+      return normalizeDropboxUrl(params.get("data") || DEFAULT_DATA_URL);
+    }
+
+    function hours(seconds) {
+      return Number(seconds || 0) / 3600;
+    }
+
+    function fmtHours(seconds) {
+      const value = hours(seconds);
+      if (value >= 100) return value.toFixed(0) + "h";
+      if (value >= 10) return value.toFixed(1) + "h";
+      return value.toFixed(2) + "h";
+    }
+
+    function fmtDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return date.toLocaleString("ja-JP", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function showError(message) {
+      els.error.style.display = message ? "block" : "none";
+      els.error.textContent = message || "";
+    }
+
+    function durationLabels(dist) {
+      return dist.map((bin) => `${bin.min_hours}-${bin.max_hours}h`);
+    }
+
+    function sessionCount(dist) {
+      return dist.reduce((sum, bin) => sum + Number(bin.count || 0), 0);
+    }
+
+    function chartOptions(stacked = false) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+          tooltip: {
+            callbacks: {
+              label(context) {
+                const value = context.parsed.y ?? 0;
+                return `${context.dataset.label}: ${value.toFixed(2)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { stacked, grid: { display: false }, ticks: { maxRotation: 0 } },
+          y: { stacked, beginAtZero: true, grid: { color: COLORS.grid } }
+        }
+      };
+    }
+
+    function makeBarChart(id, labels, datasets, stacked = false) {
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(document.getElementById(id), {
+        type: "bar",
+        data: { labels, datasets },
+        options: chartOptions(stacked)
+      });
+    }
+
+    function updateCharts(person) {
+      const presence = person.presence;
+      const training = person.training;
+
+      makeBarChart(
+        "hourChart",
+        presence.hour_distribution.map((row) => `${row.hour}:00`),
+        [
+          {
+            label: "在席",
+            data: presence.hour_distribution.map((row) => hours(row.seconds)),
+            backgroundColor: "rgba(47, 140, 255, 0.72)",
+            borderColor: COLORS.presenceBar,
+            borderWidth: 1
+          },
+          {
+            label: "研修",
+            data: training.hour_distribution.map((row) => hours(row.seconds)),
+            backgroundColor: "rgba(242, 162, 58, 0.72)",
+            borderColor: COLORS.trainingBar,
+            borderWidth: 1
+          }
+        ],
+        false
+      );
+
+      makeBarChart(
+        "weekdayChart",
+        ["月", "火", "水", "木", "金", "土", "日"],
+        [
+          {
+            label: "在席",
+            data: presence.weekday_distribution.map((row) => hours(row.seconds)),
+            backgroundColor: "rgba(47, 140, 255, 0.72)",
+            borderColor: COLORS.presenceBar,
+            borderWidth: 1
+          },
+          {
+            label: "研修",
+            data: training.weekday_distribution.map((row) => hours(row.seconds)),
+            backgroundColor: "rgba(242, 162, 58, 0.72)",
+            borderColor: COLORS.trainingBar,
+            borderWidth: 1
+          }
+        ],
+        false
+      );
+
+      makeBarChart(
+        "presenceDurationChart",
+        durationLabels(presence.duration_distribution),
+        [{
+          label: "在席 session",
+          data: presence.duration_distribution.map((row) => row.count),
+          backgroundColor: "rgba(47, 140, 255, 0.72)",
+          borderColor: COLORS.presenceBar,
+          borderWidth: 1
+        }],
+        false
+      );
+
+      makeBarChart(
+        "trainingDurationChart",
+        durationLabels(training.duration_distribution),
+        [{
+          label: "研修 session",
+          data: training.duration_distribution.map((row) => row.count),
+          backgroundColor: "rgba(242, 162, 58, 0.72)",
+          borderColor: COLORS.trainingBar,
+          borderWidth: 1
+        }],
+        false
+      );
+    }
+
+    function updateCards(person) {
+      els.presenceTotal.textContent = fmtHours(person.presence.total_seconds);
+      els.trainingTotal.textContent = fmtHours(person.training.total_seconds);
+      els.presenceAbnormal.textContent = fmtHours(person.presence.abnormal_total_seconds);
+      els.trainingAbnormal.textContent = fmtHours(person.training.abnormal_total_seconds);
+      els.presenceSessions.textContent = String(sessionCount(person.presence.duration_distribution));
+      els.trainingSessions.textContent = String(sessionCount(person.training.duration_distribution));
+    }
+
+    function selectPerson(name) {
+      if (!report || !report.people[name]) return;
+      els.personSelect.value = name;
+      updateCards(report.people[name]);
+      updateCharts(report.people[name]);
+    }
+
+    function renderSummary() {
+      const rows = Object.entries(report.people)
+        .map(([name, person]) => ({
+          name,
+          presence: person.presence.total_seconds || 0,
+          training: person.training.total_seconds || 0,
+          presenceAbnormal: person.presence.abnormal_total_seconds || 0,
+          trainingAbnormal: person.training.abnormal_total_seconds || 0,
+          segments: person.segments_count || 0
+        }))
+        .sort((a, b) => (b.presence + b.training) - (a.presence + a.training));
+
+      els.summaryBody.innerHTML = rows.map((row) => `
+        <tr>
+          <td><span class="name-link" data-name="${escapeHtml(row.name)}">${escapeHtml(row.name)}</span></td>
+          <td>${hours(row.presence).toFixed(2)}</td>
+          <td>${hours(row.training).toFixed(2)}</td>
+          <td>${hours(row.presenceAbnormal).toFixed(2)}</td>
+          <td>${hours(row.trainingAbnormal).toFixed(2)}</td>
+          <td>${row.segments}</td>
+        </tr>
+      `).join("");
+
+      els.summaryBody.querySelectorAll(".name-link").forEach((node) => {
+        node.addEventListener("click", () => selectPerson(node.dataset.name));
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function populatePeople() {
+      const names = Object.keys(report.people).sort((a, b) => a.localeCompare(b, "ja"));
+      els.personSelect.innerHTML = names.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+      els.personSelect.disabled = names.length === 0;
+      if (names.length > 0) {
+        const initialName = names
+          .map((name) => ({ name, total: (report.people[name].presence.total_seconds || 0) + (report.people[name].training.total_seconds || 0) }))
+          .sort((a, b) => b.total - a.total)[0].name;
+        selectPerson(initialName);
+      }
+    }
+
+    function updateMetadata() {
+      const meta = report.metadata || {};
+      els.rangeText.textContent = `${fmtDate(meta.range_start)} - ${fmtDate(meta.range_end)}`;
+      els.snapshotText.textContent = String(meta.snapshot_count || "—");
+      els.thresholdText.textContent = `${meta.max_duration_hours || "—"}h`;
+    }
+
+    async function loadReport(url) {
+      const dataUrl = normalizeDropboxUrl(url);
+      els.dataState.textContent = "loading";
+      showError("");
+
+      try {
+        const response = await fetch(dataUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const json = await response.json();
+        if (!json.people || !json.metadata) throw new Error("集計JSONの形式が想定と違います。");
+
+        report = json;
+        els.dataState.textContent = "ready";
+        updateMetadata();
+        populatePeople();
+        renderSummary();
+      } catch (error) {
+        els.dataState.textContent = "error";
+        showError(
+          `JSONを読み込めませんでした。固定のDropbox共有リンクを確認してください。詳細: ${error.message}`
+        );
+      }
+    }
+
+    els.personSelect.addEventListener("change", () => selectPerson(els.personSelect.value));
+
+    loadReport(initialDataUrl());
+  </script>
+</body>
+</html>
