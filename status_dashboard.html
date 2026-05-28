@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>在席・研修 統計ダッシュボード</title>
   <script src="./status_dashboard_files/chart.umd.min.js.ダウンロード"></script>
+  <script>
+    window.addEventListener("error", (event) => {
+      if (event.target && event.target.tagName === "SCRIPT" && /chart\.js/i.test(event.target.src)) {
+        const fallback = document.createElement("script");
+        fallback.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js";
+        document.head.appendChild(fallback);
+      }
+    }, true);
+  </script>
   <style>
     :root {
       color-scheme: dark;
@@ -846,6 +855,7 @@
 
   <script>
     const DEFAULT_DATA_URL = "https://dl.dropbox.com/scl/fi/jxly2f6z4pb6nd9dq2s1z/status_stats.json?rlkey=zwvh1tn9l5z0mzy8i8omblfut&raw=1";
+    const CORS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 
     const COLORS = {
       presence: "#43d17a",
@@ -903,6 +913,19 @@
     function initialDataUrl() {
       const params = new URLSearchParams(location.search);
       return normalizeDropboxUrl(params.get("data") || DEFAULT_DATA_URL);
+    }
+
+    async function fetchJsonWithFallback(dataUrl) {
+      try {
+        const response = await fetch(dataUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } catch (directError) {
+        const proxiedUrl = CORS_PROXY_URL + encodeURIComponent(dataUrl);
+        const response = await fetch(proxiedUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error(`direct fetch failed: ${directError.message}; proxy HTTP ${response.status}`);
+        return await response.json();
+      }
     }
 
     function hours(seconds) {
@@ -964,6 +987,16 @@
     function showError(message) {
       els.error.style.display = message ? "block" : "none";
       els.error.textContent = message || "";
+    }
+
+    async function waitForChart() {
+      const started = Date.now();
+      while (!window.Chart && Date.now() - started < 8000) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (!window.Chart) {
+        throw new Error("Chart.js を読み込めませんでした。CDNへのアクセスを確認してください。");
+      }
     }
 
     function durationLabels(dist) {
@@ -1098,7 +1131,11 @@
       if (!report || !report.people[name]) return;
       els.personSelect.value = name;
       updateCards(report.people[name]);
-      updateCharts(report.people[name]);
+      try {
+        updateCharts(report.people[name]);
+      } catch (error) {
+        showError(`グラフを描画できませんでした。詳細: ${error.message}`);
+      }
     }
 
     function renderSummary() {
@@ -1165,11 +1202,10 @@
       showError("");
 
       try {
-        const response = await fetch(dataUrl, { cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const json = await response.json();
+        const json = await fetchJsonWithFallback(dataUrl);
         if (!json.people || !json.metadata) throw new Error("集計JSONの形式が想定と違います。");
 
+        await waitForChart();
         report = json;
         els.dataState.textContent = "ready";
         updateMetadata();
@@ -1178,7 +1214,7 @@
       } catch (error) {
         els.dataState.textContent = "error";
         showError(
-          `JSONを読み込めませんでした。固定のDropbox共有リンクを確認してください。詳細: ${error.message}`
+          `JSONを読み込めませんでした。Dropboxの共有リンクまたはCORSプロキシの状態を確認してください。詳細: ${error.message}`
         );
       }
     }
