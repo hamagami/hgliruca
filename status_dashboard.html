@@ -889,10 +889,7 @@
 
     let report = null;
     let charts = {};
-
-    Chart.defaults.color = COLORS.ticks;
-    Chart.defaults.borderColor = COLORS.grid;
-    Chart.defaults.font.family = 'Inter, "Segoe UI", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif';
+    let chartDefaultsApplied = false;
 
     function normalizeDropboxUrl(url) {
       const trimmed = String(url || "").trim();
@@ -996,6 +993,12 @@
       }
       if (!window.Chart) {
         throw new Error("Chart.js を読み込めませんでした。CDNへのアクセスを確認してください。");
+      }
+      if (!chartDefaultsApplied) {
+        Chart.defaults.color = COLORS.ticks;
+        Chart.defaults.borderColor = COLORS.grid;
+        Chart.defaults.font.family = 'Inter, "Segoe UI", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif';
+        chartDefaultsApplied = true;
       }
     }
 
@@ -1127,12 +1130,15 @@
       els.trainingSessions.textContent = String(sessionCount(person.training.duration_distribution));
     }
 
-    function selectPerson(name) {
+    function selectPerson(name, syncSelect = true) {
       if (!report || !report.people[name]) return;
-      els.personSelect.value = name;
-      updateCards(report.people[name]);
+      if (syncSelect) {
+        els.personSelect.value = name;
+      }
+      const selectedPerson = report.people[name];
+      updateCards(selectedPerson);
       try {
-        updateCharts(report.people[name]);
+        updateCharts(selectedPerson);
       } catch (error) {
         showError(`グラフを描画できませんでした。詳細: ${error.message}`);
       }
@@ -1179,7 +1185,13 @@
 
     function populatePeople() {
       const names = Object.keys(report.people).sort((a, b) => a.localeCompare(b, "ja"));
-      els.personSelect.innerHTML = names.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+      els.personSelect.replaceChildren();
+      for (const name of names) {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        els.personSelect.appendChild(option);
+      }
       els.personSelect.disabled = names.length === 0;
       if (names.length > 0) {
         const initialName = names
@@ -1219,7 +1231,7 @@
       }
     }
 
-    els.personSelect.addEventListener("change", () => selectPerson(els.personSelect.value));
+    els.personSelect.addEventListener("change", (event) => selectPerson(event.currentTarget.value, false));
 
     loadReport(initialDataUrl());
   </script>
