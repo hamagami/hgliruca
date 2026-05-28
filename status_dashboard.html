@@ -488,6 +488,17 @@
 
     .name-link:hover { color: var(--cyan); }
 
+    #summaryBody tr.selected-member {
+      background: rgba(65, 199, 232, 0.12);
+      outline: 1px solid rgba(65, 199, 232, 0.32);
+      outline-offset: -1px;
+    }
+
+    #summaryBody tr.selected-member .name-link {
+      color: var(--cyan);
+      font-weight: 800;
+    }
+
     .error {
       display: none;
       border: 1px solid rgba(255, 107, 107, 0.35);
@@ -529,7 +540,7 @@
       </div>
       <div class="controls">
         <label for="personSelect">メンバー</label>
-        <select id="personSelect"><option value="YNK(B4)">YNK(B4)</option><option value="IZM(M1)">IZM(M1)</option><option value="INU(B4)">INU(B4)</option><option value="SRI(B4)">SRI(B4)</option><option value="TKD(M2)">TKD(M2)</option><option value="KWS(M1)">KWS(M1)</option><option value="YSI(M1)">YSI(M1)</option><option value="STU(M1)">STU(M1)</option><option value="MTU(B3.5)">MTU(B3.5)</option><option value="KBT(B4)">KBT(B4)</option><option value="KTM(M1)">KTM(M1)</option><option value="TGC(B4)">TGC(B4)</option><option value="WAN(D)">WAN(D)</option><option value="SKY(M2)">SKY(M2)</option><option value="SZK(M2)">SZK(M2)</option><option value="IWS(M2)">IWS(M2)</option><option value="OSG(B4)">OSG(B4)</option><option value="NGM(M2)">NGM(M2)</option><option value="MRI(B4)">MRI(B4)</option><option value="IKM(D)">IKM(D)</option><option value="TKH(S)">TKH(S)</option><option value="HMG(P)">HMG(P)</option><option value="UNS(M1)">UNS(M1)</option></select>
+        <select id="personSelect"><option value="YNK(B4)">YNK(B4)</option><option value="IZM(M1)">IZM(M1)</option><option value="INU(B4)">INU(B4)</option><option value="SRI(B4)">SRI(B4)</option><option value="TKD(M2)">TKD(M2)</option><option value="YSI(M1)">YSI(M1)</option><option value="KWS(M1)">KWS(M1)</option><option value="STU(M1)">STU(M1)</option><option value="MTU(B3.5)">MTU(B3.5)</option><option value="KBT(B4)">KBT(B4)</option><option value="KTM(M1)">KTM(M1)</option><option value="TGC(B4)">TGC(B4)</option><option value="WAN(D)">WAN(D)</option><option value="SKY(M2)">SKY(M2)</option><option value="SZK(M2)">SZK(M2)</option><option value="IWS(M2)">IWS(M2)</option><option value="OSG(B4)">OSG(B4)</option><option value="NGM(M2)">NGM(M2)</option><option value="MRI(B4)">MRI(B4)</option><option value="IKM(D)">IKM(D)</option><option value="TKH(S)">TKH(S)</option><option value="UNS(M1)">UNS(M1)</option><option value="HMG(P)">HMG(P)</option></select>
       </div>
     </header>
 
@@ -537,8 +548,8 @@
 
     <section class="status-line" aria-live="polite">
       <span>DATA <strong id="dataState">ready</strong></span>
-      <span>期間 <strong id="rangeText">04/01 00:00 - 05/28 17:00</strong></span>
-      <span>スナップショット <strong id="snapshotText">1447</strong></span>
+      <span>期間 <strong id="rangeText">04/01 00:00 - 05/28 22:00</strong></span>
+      <span>スナップショット <strong id="snapshotText">1452</strong></span>
       <span>閾値 <strong id="thresholdText">8h</strong></span>
     </section>
 
@@ -553,7 +564,7 @@
       <article class="card grade-card grade-a" id="gradeCard">
         <div class="label">評価</div>
         <div class="value" id="gradeValue">A</div>
-        <div class="hint" id="gradeHint">週 35.2h / 176%</div>
+        <div class="hint" id="gradeHint">週 35.0h / 175%</div>
       </article>
       <article class="card">
         <div class="label">在席 合計</div>
@@ -592,7 +603,7 @@
         <h2>コメント</h2>
         <div class="panel-note">llmcomment</div>
       </div>
-      <div class="llm-comment" id="llmComment">学部4年として、在席は週平均25.71時間で20時間基準を超えており、取り組み時間は基準の176%に達しています。 研修は週平均9.49時間で、在席を補う取り組みとして記録されています。 また、8時間を超える長い継続区間が合計18.6時間あり、活動記録を正確につける習慣が必要です。 現在の在席での取り組みを維持し、活動記録を整えながら卒業研究の質につなげてください。よい発進なので、このまま加速しましょう。 継続は力なり、よい発進を卒業研究の成果につなげましょう。</div>
+      <div class="llm-comment" id="llmComment">学部4年として、在席は週平均25.60時間で20時間基準を超えており、取り組み時間は基準の175%に達しています。 研修は週平均9.45時間で、在席を補う取り組みとして記録されています。 また、8時間を超える長い継続区間が合計18.6時間あり、活動記録を正確につける習慣が必要です。 現在の在席での取り組みを維持し、活動記録を整えながら卒業研究の質につなげてください。よい発進なので、このまま加速しましょう。 継続は力なり、よい発進を卒業研究の成果につなげましょう。</div>
     </article>
 
     <section class="grid">
@@ -648,37 +659,37 @@
               </tr>
             </thead>
             <tbody id="summaryBody">
-        <tr>
+        <tr class="selected-member">
           <td><span class="name-link" data-name="YNK(B4)">YNK(B4)</span></td>
-          <td><span class="grade-pill grade-a">A</span> 176%</td>
-          <td>211.99</td>
+          <td><span class="grade-pill grade-a">A</span> 175%</td>
+          <td>211.77</td>
           <td>78.20</td>
-          <td>35.20</td>
+          <td>35.05</td>
           <td>18.60</td>
           <td>0.00</td>
-          <td>165</td>
+          <td>166</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="IZM(M1)">IZM(M1)</span></td>
-          <td><span class="grade-pill grade-b">B</span> 113%</td>
-          <td>103.17</td>
-          <td>120.19</td>
-          <td>22.51</td>
+          <td><span class="grade-pill grade-b">B</span> 112%</td>
+          <td>102.97</td>
+          <td>125.39</td>
+          <td>22.45</td>
           <td>68.96</td>
           <td>17.82</td>
-          <td>113</td>
+          <td>114</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="INU(B4)">INU(B4)</span></td>
-          <td><span class="grade-pill grade-a">A</span> 129%</td>
-          <td>211.90</td>
+          <td><span class="grade-pill grade-a">A</span> 128%</td>
+          <td>210.99</td>
           <td>0.00</td>
-          <td>25.70</td>
+          <td>25.50</td>
           <td>20.58</td>
           <td>0.00</td>
-          <td>144</td>
+          <td>145</td>
         </tr>
       
         <tr>
@@ -686,7 +697,7 @@
           <td><span class="grade-pill grade-b">B</span> 126%</td>
           <td>143.05</td>
           <td>65.11</td>
-          <td>25.25</td>
+          <td>25.16</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>85</td>
@@ -694,13 +705,24 @@
       
         <tr>
           <td><span class="name-link" data-name="TKD(M2)">TKD(M2)</span></td>
-          <td><span class="grade-pill grade-b">B</span> 122%</td>
-          <td>137.90</td>
+          <td><span class="grade-pill grade-b">B</span> 123%</td>
+          <td>139.61</td>
           <td>63.19</td>
-          <td>24.39</td>
+          <td>24.51</td>
           <td>0.00</td>
           <td>16.29</td>
-          <td>83</td>
+          <td>84</td>
+        </tr>
+      
+        <tr>
+          <td><span class="name-link" data-name="YSI(M1)">YSI(M1)</span></td>
+          <td><span class="grade-pill grade-b">B</span> 107%</td>
+          <td>125.91</td>
+          <td>51.00</td>
+          <td>21.38</td>
+          <td>8.15</td>
+          <td>40.64</td>
+          <td>111</td>
         </tr>
       
         <tr>
@@ -708,32 +730,21 @@
           <td><span class="grade-pill grade-b">B</span> 106%</td>
           <td>120.40</td>
           <td>54.90</td>
-          <td>21.26</td>
+          <td>21.19</td>
           <td>0.00</td>
           <td>8.17</td>
           <td>86</td>
         </tr>
       
         <tr>
-          <td><span class="name-link" data-name="YSI(M1)">YSI(M1)</span></td>
-          <td><span class="grade-pill grade-b">B</span> 106%</td>
-          <td>123.96</td>
-          <td>51.00</td>
-          <td>21.22</td>
-          <td>8.15</td>
-          <td>40.64</td>
-          <td>110</td>
-        </tr>
-      
-        <tr>
           <td><span class="name-link" data-name="STU(M1)">STU(M1)</span></td>
-          <td><span class="grade-pill grade-b">B</span> 103%</td>
-          <td>99.37</td>
+          <td><span class="grade-pill grade-b">B</span> 102%</td>
+          <td>98.59</td>
           <td>69.83</td>
-          <td>20.52</td>
+          <td>20.36</td>
           <td>11.40</td>
           <td>9.74</td>
-          <td>84</td>
+          <td>85</td>
         </tr>
       
         <tr>
@@ -741,7 +752,7 @@
           <td><span class="grade-pill grade-c">C</span> 99%</td>
           <td>98.89</td>
           <td>64.70</td>
-          <td>19.84</td>
+          <td>19.77</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>67</td>
@@ -749,101 +760,101 @@
       
         <tr>
           <td><span class="name-link" data-name="KBT(B4)">KBT(B4)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 97%</td>
-          <td>140.14</td>
+          <td><span class="grade-pill grade-c">C</span> 96%</td>
+          <td>139.28</td>
           <td>19.16</td>
-          <td>19.32</td>
+          <td>19.15</td>
           <td>0.00</td>
           <td>0.00</td>
-          <td>86</td>
+          <td>87</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="KTM(M1)">KTM(M1)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 96%</td>
-          <td>122.55</td>
+          <td><span class="grade-pill grade-c">C</span> 95%</td>
+          <td>121.72</td>
           <td>36.28</td>
-          <td>19.27</td>
+          <td>19.10</td>
           <td>8.01</td>
           <td>0.00</td>
-          <td>140</td>
+          <td>141</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="TGC(B4)">TGC(B4)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 96%</td>
+          <td><span class="grade-pill grade-c">C</span> 95%</td>
           <td>117.52</td>
-          <td>40.35</td>
-          <td>19.15</td>
+          <td>39.84</td>
+          <td>19.02</td>
           <td>0.00</td>
           <td>0.00</td>
-          <td>93</td>
+          <td>94</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="WAN(D)">WAN(D)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 89%</td>
-          <td>94.75</td>
+          <td><span class="grade-pill grade-c">C</span> 91%</td>
+          <td>98.16</td>
           <td>52.37</td>
-          <td>17.85</td>
+          <td>18.19</td>
           <td>10.40</td>
           <td>10.32</td>
-          <td>61</td>
+          <td>62</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="SKY(M2)">SKY(M2)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 89%</td>
-          <td>96.40</td>
-          <td>50.18</td>
-          <td>17.78</td>
+          <td><span class="grade-pill grade-c">C</span> 91%</td>
+          <td>97.35</td>
+          <td>52.98</td>
+          <td>18.17</td>
           <td>18.94</td>
           <td>104.90</td>
-          <td>88</td>
+          <td>90</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="SZK(M2)">SZK(M2)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 81%</td>
+          <td><span class="grade-pill grade-c">C</span> 83%</td>
           <td>66.73</td>
-          <td>66.43</td>
-          <td>16.15</td>
+          <td>69.96</td>
+          <td>16.52</td>
           <td>27.58</td>
           <td>0.00</td>
-          <td>72</td>
+          <td>73</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="IWS(M2)">IWS(M2)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 76%</td>
+          <td><span class="grade-pill grade-c">C</span> 77%</td>
           <td>89.74</td>
-          <td>35.63</td>
-          <td>15.21</td>
+          <td>37.69</td>
+          <td>15.40</td>
           <td>0.00</td>
           <td>34.02</td>
-          <td>64</td>
+          <td>65</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="OSG(B4)">OSG(B4)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 71%</td>
+          <td><span class="grade-pill grade-c">C</span> 72%</td>
           <td>73.05</td>
-          <td>44.24</td>
-          <td>14.23</td>
+          <td>46.60</td>
+          <td>14.46</td>
           <td>47.47</td>
           <td>23.49</td>
-          <td>59</td>
+          <td>60</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="NGM(M2)">NGM(M2)</span></td>
-          <td><span class="grade-pill grade-c">C</span> 56%</td>
+          <td><span class="grade-pill grade-c">C</span> 51%</td>
           <td>63.47</td>
-          <td>29.21</td>
-          <td>11.24</td>
+          <td>21.34</td>
+          <td>10.25</td>
           <td>0.00</td>
           <td>0.00</td>
-          <td>33</td>
+          <td>32</td>
         </tr>
       
         <tr>
@@ -851,7 +862,7 @@
           <td><span class="grade-pill grade-d">D</span> 43%</td>
           <td>43.66</td>
           <td>27.52</td>
-          <td>8.63</td>
+          <td>8.60</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>66</td>
@@ -861,44 +872,44 @@
           <td><span class="name-link" data-name="IKM(D)">IKM(D)</span></td>
           <td><span class="grade-pill grade-d">D</span> 41%</td>
           <td>40.01</td>
-          <td>28.24</td>
-          <td>8.28</td>
+          <td>28.17</td>
+          <td>8.24</td>
           <td>0.00</td>
           <td>16.79</td>
-          <td>32</td>
+          <td>33</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="TKH(S)">TKH(S)</span></td>
-          <td><span class="grade-pill grade-d">D</span> 41%</td>
+          <td><span class="grade-pill grade-d">D</span> 40%</td>
           <td>66.94</td>
           <td>0.00</td>
-          <td>8.12</td>
+          <td>8.09</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>23</td>
         </tr>
       
         <tr>
-          <td><span class="name-link" data-name="HMG(P)">HMG(P)</span></td>
-          <td><span class="grade-pill grade-d">D</span> 32%</td>
-          <td>53.26</td>
+          <td><span class="name-link" data-name="UNS(M1)">UNS(M1)</span></td>
+          <td><span class="grade-pill grade-d">D</span> 31%</td>
+          <td>46.76</td>
+          <td>5.09</td>
+          <td>6.27</td>
+          <td>17.17</td>
           <td>0.00</td>
-          <td>6.46</td>
-          <td>16.89</td>
-          <td>0.00</td>
-          <td>42</td>
+          <td>27</td>
         </tr>
       
         <tr>
-          <td><span class="name-link" data-name="UNS(M1)">UNS(M1)</span></td>
-          <td><span class="grade-pill grade-d">D</span> 31%</td>
-          <td>46.73</td>
-          <td>5.09</td>
-          <td>6.29</td>
-          <td>17.17</td>
+          <td><span class="name-link" data-name="HMG(P)">HMG(P)</span></td>
+          <td><span class="grade-pill grade-d">D</span> 27%</td>
+          <td>45.28</td>
           <td>0.00</td>
-          <td>26</td>
+          <td>5.47</td>
+          <td>16.89</td>
+          <td>0.00</td>
+          <td>41</td>
         </tr>
       </tbody>
           </table>
@@ -921,7 +932,7 @@
       <article class="panel full">
         <div class="panel-head">
           <h2>//濱上研 取り組みダッシュボード</h2>
-          <div class="panel-note">LIVE <span id="liveClock">18:21:42</span> / 更新 <span id="liveUpdated">—</span></div>
+          <div class="panel-note">LIVE <span id="liveClock">22:29:21</span> / 更新 <span id="liveUpdated">—</span></div>
         </div>
         <div class="live-board">
           <div class="live-left">
@@ -1592,11 +1603,19 @@
       }
       const selectedPerson = report.people[name];
       updateCards(selectedPerson);
+      highlightSummaryRow(name);
       try {
         updateCharts(selectedPerson);
       } catch (error) {
         showError(`グラフを描画できませんでした。詳細: ${error.message}`);
       }
+    }
+
+    function highlightSummaryRow(name) {
+      els.summaryBody.querySelectorAll("tr").forEach((row) => {
+        const link = row.querySelector(".name-link");
+        row.classList.toggle("selected-member", link?.dataset.name === name);
+      });
     }
 
     function getPeopleRows() {
@@ -1632,6 +1651,7 @@
       els.summaryBody.querySelectorAll(".name-link").forEach((node) => {
         node.addEventListener("click", () => selectPerson(node.dataset.name));
       });
+      highlightSummaryRow(els.personSelect.value);
     }
 
     function hourlyDatasetsForPerson(person) {
