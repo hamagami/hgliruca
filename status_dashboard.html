@@ -98,6 +98,39 @@
 
     .status-line strong { color: var(--text); font-weight: 650; }
 
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab-button {
+      height: 38px;
+      border: 1px solid transparent;
+      border-bottom: 0;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    .tab-button:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tab-button.active {
+      border-color: var(--line);
+      background: var(--panel);
+      color: var(--text);
+    }
+
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(7, minmax(130px, 1fr));
@@ -213,6 +246,53 @@
 
     .chart-box.short { height: 250px; }
 
+    .all-chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 8px;
+    }
+
+    .mini-chart {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(7, 11, 16, 0.35);
+      padding: 8px;
+    }
+
+    .mini-chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .mini-chart-name {
+      color: var(--text);
+      font-weight: 720;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mini-chart-score {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .mini-chart-box {
+      position: relative;
+      height: 118px;
+      overflow: hidden;
+    }
+
+    .mini-chart-box canvas {
+      display: block;
+      max-width: 100%;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -282,7 +362,7 @@
       </div>
       <div class="controls">
         <label for="personSelect">メンバー</label>
-        <select id="personSelect"><option value="YNK(B4)">YNK(B4)</option><option value="IZM(M1)">IZM(M1)</option><option value="INU(B4)">INU(B4)</option><option value="SRI(B4)">SRI(B4)</option><option value="TKD(M2)">TKD(M2)</option><option value="KWS(M1)">KWS(M1)</option><option value="YSI(M1)">YSI(M1)</option><option value="STU(M1)">STU(M1)</option><option value="MTU(B3.5)">MTU(B3.5)</option><option value="KBT(B4)">KBT(B4)</option><option value="TGC(B4)">TGC(B4)</option><option value="KTM(M1)">KTM(M1)</option><option value="WAN(D)">WAN(D)</option><option value="SKY(M2)">SKY(M2)</option><option value="SZK(M2)">SZK(M2)</option><option value="IWS(M2)">IWS(M2)</option><option value="OSG(B4)">OSG(B4)</option><option value="NGM(M2)">NGM(M2)</option><option value="MRI(B4)">MRI(B4)</option><option value="TKH(S)">TKH(S)</option><option value="IKM(D)">IKM(D)</option><option value="UNS(M1)">UNS(M1)</option><option value="HMG(P)">HMG(P)</option><option value="HGW(S)">HGW(S)</option><option value="SKY(M1)">SKY(M1)</option><option value="ADT(D)">ADT(D)</option><option value="IWS(M1)">IWS(M1)</option><option value="IZM(B4)">IZM(B4)</option><option value="KBT(B3)">KBT(B3)</option><option value="KTM(B4)">KTM(B4)</option><option value="MTU(B3)">MTU(B3)</option><option value="NGM(M1)">NGM(M1)</option><option value="OSG(B3)">OSG(B3)</option><option value="SIT(M1)">SIT(M1)</option><option value="SRI(B3)">SRI(B3)</option><option value="SSKY(B4)">SSKY(B4)</option><option value="SZK(M1)">SZK(M1)</option><option value="TKD(M1)">TKD(M1)</option><option value="UNS(B4)">UNS(B4)</option><option value="YNK(B3)">YNK(B3)</option><option value="YSI(B4)">YSI(B4)</option></select>
+        <select id="personSelect"><option value="YNK(B4)">YNK(B4)</option><option value="IZM(M1)">IZM(M1)</option><option value="INU(B4)">INU(B4)</option><option value="SRI(B4)">SRI(B4)</option><option value="TKD(M2)">TKD(M2)</option><option value="KWS(M1)">KWS(M1)</option><option value="YSI(M1)">YSI(M1)</option><option value="STU(M1)">STU(M1)</option><option value="MTU(B3.5)">MTU(B3.5)</option><option value="KBT(B4)">KBT(B4)</option><option value="TGC(B4)">TGC(B4)</option><option value="KTM(M1)">KTM(M1)</option><option value="WAN(D)">WAN(D)</option><option value="SKY(M2)">SKY(M2)</option><option value="SZK(M2)">SZK(M2)</option><option value="IWS(M2)">IWS(M2)</option><option value="OSG(B4)">OSG(B4)</option><option value="NGM(M2)">NGM(M2)</option><option value="MRI(B4)">MRI(B4)</option><option value="TKH(S)">TKH(S)</option><option value="IKM(D)">IKM(D)</option><option value="HMG(P)">HMG(P)</option><option value="UNS(M1)">UNS(M1)</option><option value="HGW(S)">HGW(S)</option><option value="SKY(M1)">SKY(M1)</option><option value="ADT(D)">ADT(D)</option><option value="IWS(M1)">IWS(M1)</option><option value="IZM(B4)">IZM(B4)</option><option value="KBT(B3)">KBT(B3)</option><option value="KTM(B4)">KTM(B4)</option><option value="MTU(B3)">MTU(B3)</option><option value="NGM(M1)">NGM(M1)</option><option value="OSG(B3)">OSG(B3)</option><option value="SIT(M1)">SIT(M1)</option><option value="SRI(B3)">SRI(B3)</option><option value="SSKY(B4)">SSKY(B4)</option><option value="SZK(M1)">SZK(M1)</option><option value="TKD(M1)">TKD(M1)</option><option value="UNS(B4)">UNS(B4)</option><option value="YNK(B3)">YNK(B3)</option><option value="YSI(B4)">YSI(B4)</option></select>
       </div>
     </header>
 
@@ -290,16 +370,22 @@
 
     <section class="status-line" aria-live="polite">
       <span>DATA <strong id="dataState">ready</strong></span>
-      <span>期間 <strong id="rangeText">04/01 00:00 - 05/28 10:00</strong></span>
-      <span>スナップショット <strong id="snapshotText">1440</strong></span>
+      <span>期間 <strong id="rangeText">04/01 00:00 - 05/28 13:00</strong></span>
+      <span>スナップショット <strong id="snapshotText">1443</strong></span>
       <span>閾値 <strong id="thresholdText">8h</strong></span>
     </section>
 
+    <nav class="tabs" aria-label="表示切替">
+      <button class="tab-button active" type="button" data-tab="personal">個人</button>
+      <button class="tab-button" type="button" data-tab="allHours">全員時刻分布</button>
+    </nav>
+
+    <section id="personalView" class="tab-view active">
     <section class="cards">
       <article class="card grade-card grade-a" id="gradeCard">
         <div class="label">評価</div>
         <div class="value" id="gradeValue">A</div>
-        <div class="hint" id="gradeHint">週 34.9h</div>
+        <div class="hint" id="gradeHint">週 34.8h</div>
       </article>
       <article class="card">
         <div class="label">在席 合計</div>
@@ -347,7 +433,7 @@
           <h2>曜日分布</h2>
           <div class="panel-note">weekday / hours</div>
         </div>
-        <div class="chart-box"><canvas id="weekdayChart" width="593" height="300" style="width: 593px; height: 300px;"></canvas></div>
+        <div class="chart-box"><canvas id="weekdayChart" width="594" height="300" style="width: 594px; height: 300px;"></canvas></div>
       </article>
 
       <article class="panel">
@@ -363,7 +449,7 @@
           <h2>研修 継続時間分布</h2>
           <div class="panel-note">duration / count</div>
         </div>
-        <div class="chart-box short"><canvas id="trainingDurationChart" width="593" height="250" style="width: 593px; height: 250px;"></canvas></div>
+        <div class="chart-box short"><canvas id="trainingDurationChart" width="594" height="250" style="width: 594px; height: 250px;"></canvas></div>
       </article>
 
       <article class="panel full">
@@ -391,7 +477,7 @@
           <td><span class="grade-pill grade-a">A</span></td>
           <td>207.87</td>
           <td>78.20</td>
-          <td>34.88</td>
+          <td>34.80</td>
           <td>18.60</td>
           <td>0.00</td>
           <td>164</td>
@@ -402,7 +488,7 @@
           <td><span class="grade-pill grade-b">B</span></td>
           <td>99.38</td>
           <td>120.19</td>
-          <td>22.12</td>
+          <td>22.09</td>
           <td>68.96</td>
           <td>17.82</td>
           <td>112</td>
@@ -413,7 +499,7 @@
           <td><span class="grade-pill grade-a">A</span></td>
           <td>206.96</td>
           <td>0.00</td>
-          <td>25.23</td>
+          <td>25.18</td>
           <td>20.58</td>
           <td>0.00</td>
           <td>143</td>
@@ -422,12 +508,12 @@
         <tr>
           <td><span class="name-link" data-name="SRI(B4)">SRI(B4)</span></td>
           <td><span class="grade-pill grade-b">B</span></td>
-          <td>136.78</td>
+          <td>140.42</td>
           <td>65.11</td>
-          <td>24.61</td>
+          <td>25.00</td>
           <td>0.00</td>
           <td>0.00</td>
-          <td>83</td>
+          <td>84</td>
         </tr>
       
         <tr>
@@ -435,7 +521,7 @@
           <td><span class="grade-pill grade-b">B</span></td>
           <td>134.08</td>
           <td>63.19</td>
-          <td>24.05</td>
+          <td>24.00</td>
           <td>0.00</td>
           <td>16.29</td>
           <td>82</td>
@@ -446,7 +532,7 @@
           <td><span class="grade-pill grade-b">B</span></td>
           <td>120.40</td>
           <td>54.90</td>
-          <td>21.37</td>
+          <td>21.33</td>
           <td>0.00</td>
           <td>8.17</td>
           <td>86</td>
@@ -457,7 +543,7 @@
           <td><span class="grade-pill grade-b">B</span></td>
           <td>120.15</td>
           <td>51.00</td>
-          <td>20.87</td>
+          <td>20.82</td>
           <td>8.15</td>
           <td>40.64</td>
           <td>109</td>
@@ -468,7 +554,7 @@
           <td><span class="grade-pill grade-b">B</span></td>
           <td>94.73</td>
           <td>69.83</td>
-          <td>20.06</td>
+          <td>20.02</td>
           <td>11.40</td>
           <td>9.74</td>
           <td>83</td>
@@ -479,7 +565,7 @@
           <td><span class="grade-pill grade-c">C</span></td>
           <td>95.34</td>
           <td>64.70</td>
-          <td>19.51</td>
+          <td>19.47</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>65</td>
@@ -490,7 +576,7 @@
           <td><span class="grade-pill grade-c">C</span></td>
           <td>135.44</td>
           <td>19.16</td>
-          <td>18.85</td>
+          <td>18.81</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>85</td>
@@ -501,7 +587,7 @@
           <td><span class="grade-pill grade-c">C</span></td>
           <td>117.52</td>
           <td>37.02</td>
-          <td>18.84</td>
+          <td>18.80</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>92</td>
@@ -512,7 +598,7 @@
           <td><span class="grade-pill grade-c">C</span></td>
           <td>117.97</td>
           <td>36.28</td>
-          <td>18.81</td>
+          <td>18.76</td>
           <td>8.01</td>
           <td>0.00</td>
           <td>139</td>
@@ -523,7 +609,7 @@
           <td><span class="grade-pill grade-c">C</span></td>
           <td>92.26</td>
           <td>52.37</td>
-          <td>17.63</td>
+          <td>17.59</td>
           <td>10.40</td>
           <td>10.32</td>
           <td>60</td>
@@ -532,12 +618,12 @@
         <tr>
           <td><span class="name-link" data-name="SKY(M2)">SKY(M2)</span></td>
           <td><span class="grade-pill grade-c">C</span></td>
-          <td>90.78</td>
+          <td>92.40</td>
           <td>50.18</td>
-          <td>17.18</td>
+          <td>17.35</td>
           <td>18.94</td>
           <td>104.90</td>
-          <td>87</td>
+          <td>88</td>
         </tr>
       
         <tr>
@@ -545,7 +631,7 @@
           <td><span class="grade-pill grade-c">C</span></td>
           <td>66.73</td>
           <td>66.43</td>
-          <td>16.23</td>
+          <td>16.20</td>
           <td>27.58</td>
           <td>0.00</td>
           <td>72</td>
@@ -555,33 +641,33 @@
           <td><span class="name-link" data-name="IWS(M2)">IWS(M2)</span></td>
           <td><span class="grade-pill grade-c">C</span></td>
           <td>89.74</td>
-          <td>29.88</td>
-          <td>14.58</td>
+          <td>31.63</td>
+          <td>14.76</td>
           <td>0.00</td>
           <td>34.02</td>
-          <td>63</td>
+          <td>64</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="OSG(B4)">OSG(B4)</span></td>
           <td><span class="grade-pill grade-c">C</span></td>
           <td>73.05</td>
-          <td>40.03</td>
-          <td>13.79</td>
+          <td>43.18</td>
+          <td>14.14</td>
           <td>47.47</td>
           <td>23.49</td>
-          <td>57</td>
+          <td>58</td>
         </tr>
       
         <tr>
           <td><span class="name-link" data-name="NGM(M2)">NGM(M2)</span></td>
           <td><span class="grade-pill grade-c">C</span></td>
           <td>63.47</td>
-          <td>21.34</td>
-          <td>10.34</td>
+          <td>25.21</td>
+          <td>10.79</td>
           <td>0.00</td>
           <td>0.00</td>
-          <td>32</td>
+          <td>33</td>
         </tr>
       
         <tr>
@@ -589,7 +675,7 @@
           <td><span class="grade-pill grade-d">D</span></td>
           <td>43.66</td>
           <td>27.52</td>
-          <td>8.68</td>
+          <td>8.66</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>66</td>
@@ -600,7 +686,7 @@
           <td><span class="grade-pill grade-d">D</span></td>
           <td>66.94</td>
           <td>0.00</td>
-          <td>8.16</td>
+          <td>8.14</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>23</td>
@@ -610,11 +696,22 @@
           <td><span class="name-link" data-name="IKM(D)">IKM(D)</span></td>
           <td><span class="grade-pill grade-d">D</span></td>
           <td>40.01</td>
-          <td>20.26</td>
-          <td>7.35</td>
+          <td>24.24</td>
+          <td>7.82</td>
           <td>0.00</td>
           <td>16.79</td>
-          <td>31</td>
+          <td>32</td>
+        </tr>
+      
+        <tr>
+          <td><span class="name-link" data-name="HMG(P)">HMG(P)</span></td>
+          <td><span class="grade-pill grade-d">D</span></td>
+          <td>49.26</td>
+          <td>0.00</td>
+          <td>5.99</td>
+          <td>16.89</td>
+          <td>0.00</td>
+          <td>42</td>
         </tr>
       
         <tr>
@@ -622,21 +719,10 @@
           <td><span class="grade-pill grade-d">D</span></td>
           <td>42.08</td>
           <td>5.09</td>
-          <td>5.75</td>
+          <td>5.74</td>
           <td>17.17</td>
           <td>0.00</td>
           <td>25</td>
-        </tr>
-      
-        <tr>
-          <td><span class="name-link" data-name="HMG(P)">HMG(P)</span></td>
-          <td><span class="grade-pill grade-d">D</span></td>
-          <td>45.28</td>
-          <td>0.00</td>
-          <td>5.52</td>
-          <td>16.89</td>
-          <td>0.00</td>
-          <td>41</td>
         </tr>
       
         <tr>
@@ -644,7 +730,7 @@
           <td><span class="grade-pill grade-d">D</span></td>
           <td>32.61</td>
           <td>0.00</td>
-          <td>3.98</td>
+          <td>3.97</td>
           <td>0.00</td>
           <td>0.00</td>
           <td>11</td>
@@ -657,7 +743,7 @@
           <td>7.42</td>
           <td>1.72</td>
           <td>27.32</td>
-          <td>1148.08</td>
+          <td>1151.08</td>
           <td>14</td>
         </tr>
       
@@ -841,6 +927,17 @@
         </div>
       </article>
     </section>
+    </section>
+
+    <section id="allHoursView" class="tab-view">
+      <article class="panel full">
+        <div class="panel-head">
+          <h2>全員 時刻分布</h2>
+          <div class="panel-note" id="allHoursScale">全員同一スケール</div>
+        </div>
+        <div class="all-chart-grid" id="allHoursGrid"></div>
+      </article>
+    </section>
   </main>
 
   <script>
@@ -861,6 +958,11 @@
     const els = {
       personSelect: document.getElementById("personSelect"),
       error: document.getElementById("error"),
+      tabButtons: document.querySelectorAll(".tab-button"),
+      personalView: document.getElementById("personalView"),
+      allHoursView: document.getElementById("allHoursView"),
+      allHoursGrid: document.getElementById("allHoursGrid"),
+      allHoursScale: document.getElementById("allHoursScale"),
       dataState: document.getElementById("dataState"),
       rangeText: document.getElementById("rangeText"),
       snapshotText: document.getElementById("snapshotText"),
@@ -983,11 +1085,18 @@
       return dist.reduce((sum, bin) => sum + Number(bin.count || 0), 0);
     }
 
-    function makeBarChart(id, labels, datasets, stacked = false) {
+    function makeBarChart(id, labels, datasets, options = {}) {
+      if (typeof options === "boolean") options = {};
       const canvas = document.getElementById(id);
       const rect = canvas.parentElement.getBoundingClientRect();
-      const width = Math.max(320, Math.floor(rect.width));
-      const height = Math.max(220, Math.floor(rect.height));
+      const parentWidth = Math.floor(canvas.parentElement.clientWidth || rect.width);
+      const parentHeight = Math.floor(canvas.parentElement.clientHeight || rect.height);
+      const width = options.compact
+        ? Math.max(120, parentWidth)
+        : Math.max(options.minWidth || 320, parentWidth);
+      const height = options.compact
+        ? Math.max(90, parentHeight)
+        : Math.max(options.minHeight || 220, parentHeight);
       const ratio = window.devicePixelRatio || 1;
       canvas.width = Math.floor(width * ratio);
       canvas.height = Math.floor(height * ratio);
@@ -997,15 +1106,20 @@
       const ctx = canvas.getContext("2d");
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, width, height);
-      ctx.font = '12px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif';
+      ctx.font = `${options.compact ? 10 : 12}px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif`;
       ctx.textBaseline = "middle";
 
-      const plot = { left: 46, right: 16, top: 20, bottom: labels.length > 12 ? 52 : 34 };
+      const plot = {
+        left: options.compact ? 34 : 46,
+        right: options.compact ? 8 : 16,
+        top: options.compact ? 8 : 20,
+        bottom: options.compact ? 20 : labels.length > 12 ? 52 : 34
+      };
       const plotWidth = width - plot.left - plot.right;
       const plotHeight = height - plot.top - plot.bottom;
       const values = datasets.flatMap((dataset) => dataset.data.map((value) => Number(value || 0)));
-      const maxValue = Math.max(1, ...values) * 1.12;
-      const tickCount = 4;
+      const maxValue = options.maxValue || Math.max(1, ...values) * 1.12;
+      const tickCount = options.compact ? 3 : 4;
 
       ctx.strokeStyle = COLORS.grid;
       ctx.fillStyle = COLORS.ticks;
@@ -1017,7 +1131,7 @@
         ctx.moveTo(plot.left, y);
         ctx.lineTo(width - plot.right, y);
         ctx.stroke();
-        ctx.fillText(value >= 10 ? value.toFixed(0) : value.toFixed(1), 6, y);
+        ctx.fillText(value >= 10 ? value.toFixed(0) : value.toFixed(1), options.compact ? 4 : 6, y);
       }
 
       const groupWidth = plotWidth / labels.length;
@@ -1034,26 +1148,29 @@
           ctx.fillRect(x, y, Math.max(1, barWidth - 1), barHeight);
         });
 
-        if (labels.length <= 8 || index % Math.ceil(labels.length / 12) === 0) {
+        const labelEvery = options.compact ? 12 : Math.ceil(labels.length / 12);
+        if (!options.compact && (labels.length <= 8 || index % labelEvery === 0) || options.compact && (index === 0 || index === 12)) {
           ctx.save();
           ctx.fillStyle = COLORS.ticks;
-          ctx.translate(plot.left + index * groupWidth + groupWidth / 2, height - plot.bottom + 16);
-          if (labels.length > 12) ctx.rotate(-Math.PI / 5);
-          ctx.textAlign = labels.length > 12 ? "right" : "center";
+          ctx.translate(plot.left + index * groupWidth + groupWidth / 2, height - plot.bottom + (options.compact ? 10 : 16));
+          if (labels.length > 12 && !options.compact) ctx.rotate(-Math.PI / 5);
+          ctx.textAlign = labels.length > 12 && !options.compact ? "right" : "center";
           ctx.fillText(label, 0, 0);
           ctx.restore();
         }
       });
 
-      let legendX = plot.left;
-      datasets.forEach((dataset) => {
-        ctx.fillStyle = dataset.backgroundColor || dataset.borderColor || COLORS.cyan;
-        ctx.fillRect(legendX, 6, 10, 10);
-        ctx.fillStyle = COLORS.text;
-        ctx.textAlign = "left";
-        ctx.fillText(dataset.label, legendX + 16, 11);
-        legendX += ctx.measureText(dataset.label).width + 38;
-      });
+      if (!options.hideLegend) {
+        let legendX = plot.left;
+        datasets.forEach((dataset) => {
+          ctx.fillStyle = dataset.backgroundColor || dataset.borderColor || COLORS.cyan;
+          ctx.fillRect(legendX, 6, 10, 10);
+          ctx.fillStyle = COLORS.text;
+          ctx.textAlign = "left";
+          ctx.fillText(dataset.label, legendX + 16, 11);
+          legendX += ctx.measureText(dataset.label).width + 38;
+        });
+      }
 
       charts[id] = { labels, datasets };
     }
@@ -1160,8 +1277,8 @@
       }
     }
 
-    function renderSummary() {
-      const rows = Object.entries(report.people)
+    function getPeopleRows() {
+      return Object.entries(report.people)
         .map(([name, person]) => ({
           name,
           presence: person.presence.total_seconds || 0,
@@ -1171,8 +1288,11 @@
           segments: person.segments_count || 0,
           evaluation: evaluatePerson(person)
         }))
-        .sort((a, b) => (b.presence + b.training) - (a.presence + a.training));
+        .sort((a, b) => (b.presence + b.training) - (a.presence + a.training) || a.name.localeCompare(b.name, "ja"));
+    }
 
+    function renderSummary() {
+      const rows = getPeopleRows();
       els.summaryBody.innerHTML = rows.map((row) => `
         <tr>
           <td><span class="name-link" data-name="${escapeHtml(row.name)}">${escapeHtml(row.name)}</span></td>
@@ -1191,6 +1311,85 @@
       });
     }
 
+    function hourlyDatasetsForPerson(person) {
+      return [
+        {
+          label: "在席",
+          data: person.presence.hour_distribution.map((row) => hours(row.seconds)),
+          backgroundColor: "rgba(47, 140, 255, 0.72)",
+          borderColor: COLORS.presenceBar
+        },
+        {
+          label: "研修",
+          data: person.training.hour_distribution.map((row) => hours(row.seconds)),
+          backgroundColor: "rgba(242, 162, 58, 0.72)",
+          borderColor: COLORS.trainingBar
+        }
+      ];
+    }
+
+    function renderAllHourCharts() {
+      if (!report) return;
+      const rows = getPeopleRows();
+      const labels = Array.from({ length: 24 }, (_, hour) => `${hour}:00`);
+      const maxHourValue = Math.max(
+        1,
+        ...rows.flatMap((row) => {
+          const person = report.people[row.name];
+          return [
+            ...person.presence.hour_distribution.map((item) => hours(item.seconds)),
+            ...person.training.hour_distribution.map((item) => hours(item.seconds))
+          ];
+        })
+      ) * 1.12;
+
+      els.allHoursScale.textContent = `全員同一スケール: 0-${maxHourValue >= 10 ? maxHourValue.toFixed(0) : maxHourValue.toFixed(1)}h`;
+      els.allHoursGrid.replaceChildren();
+      const pendingCharts = [];
+      for (const row of rows) {
+        const person = report.people[row.name];
+        const card = document.createElement("article");
+        card.className = "mini-chart";
+
+        const head = document.createElement("div");
+        head.className = "mini-chart-head";
+        const name = document.createElement("div");
+        name.className = "mini-chart-name";
+        name.textContent = row.name;
+        const score = document.createElement("div");
+        score.className = "mini-chart-score";
+        score.textContent = `${row.evaluation.grade} / ${row.evaluation.effortPerWeek.toFixed(1)}h`;
+        head.append(name, score);
+
+        const box = document.createElement("div");
+        box.className = "mini-chart-box";
+        const canvas = document.createElement("canvas");
+        const canvasId = `allHourChart-${row.name.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+        canvas.id = canvasId;
+        box.appendChild(canvas);
+        card.append(head, box);
+        els.allHoursGrid.appendChild(card);
+
+        pendingCharts.push({
+          canvasId,
+          labels,
+          datasets: hourlyDatasetsForPerson(person),
+          options: {
+          compact: true,
+          hideLegend: true,
+          minWidth: 170,
+          minHeight: 108,
+          maxValue: maxHourValue
+          }
+        });
+      }
+      requestAnimationFrame(() => {
+        pendingCharts.forEach((chart) => {
+          makeBarChart(chart.canvasId, chart.labels, chart.datasets, chart.options);
+        });
+      });
+    }
+
     function escapeHtml(value) {
       return String(value)
         .replaceAll("&", "&amp;")
@@ -1200,13 +1399,7 @@
     }
 
     function populatePeople() {
-      const names = Object.entries(report.people)
-        .map(([name, person]) => ({
-          name,
-          total: (person.presence.total_seconds || 0) + (person.training.total_seconds || 0)
-        }))
-        .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "ja"))
-        .map((row) => row.name);
+      const names = getPeopleRows().map((row) => row.name);
       els.personSelect.replaceChildren();
       for (const name of names) {
         const option = document.createElement("option");
@@ -1217,6 +1410,25 @@
       els.personSelect.disabled = names.length === 0;
       if (names.length > 0) {
         selectPerson(names[0]);
+      }
+    }
+
+    function activeTabName() {
+      const active = document.querySelector(".tab-button.active");
+      return active?.dataset.tab || "personal";
+    }
+
+    function switchTab(tabName) {
+      els.tabButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
+      });
+      els.personalView.classList.toggle("active", tabName === "personal");
+      els.allHoursView.classList.toggle("active", tabName === "allHours");
+
+      if (tabName === "allHours") {
+        renderAllHourCharts();
+      } else if (report && els.personSelect.value) {
+        selectPerson(els.personSelect.value, false);
       }
     }
 
@@ -1250,6 +1462,18 @@
     }
 
     els.personSelect.addEventListener("change", (event) => selectPerson(event.currentTarget.value, false));
+    els.tabButtons.forEach((button) => {
+      button.addEventListener("click", () => switchTab(button.dataset.tab));
+    });
+    let resizeTimer = 0;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (!report) return;
+        if (activeTabName() === "allHours") renderAllHourCharts();
+        else if (els.personSelect.value) selectPerson(els.personSelect.value, false);
+      }, 180);
+    });
 
     loadReport(initialDataUrl());
   </script>
