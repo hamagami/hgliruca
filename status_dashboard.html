@@ -587,7 +587,7 @@
       
         <tr>
           <td><span class="name-link" data-name="MRI(B4)">MRI(B4)</span></td>
-          <td><span class="grade-pill grade-c">C</span></td>
+          <td><span class="grade-pill grade-d">D</span></td>
           <td>43.66</td>
           <td>27.52</td>
           <td>8.68</td>
@@ -598,7 +598,7 @@
       
         <tr>
           <td><span class="name-link" data-name="TKH(S)">TKH(S)</span></td>
-          <td><span class="grade-pill grade-c">C</span></td>
+          <td><span class="grade-pill grade-d">D</span></td>
           <td>66.94</td>
           <td>0.00</td>
           <td>8.16</td>
@@ -609,7 +609,7 @@
       
         <tr>
           <td><span class="name-link" data-name="IKM(D)">IKM(D)</span></td>
-          <td><span class="grade-pill grade-c">C</span></td>
+          <td><span class="grade-pill grade-d">D</span></td>
           <td>40.01</td>
           <td>20.26</td>
           <td>7.35</td>
@@ -620,7 +620,7 @@
       
         <tr>
           <td><span class="name-link" data-name="UNS(M1)">UNS(M1)</span></td>
-          <td><span class="grade-pill grade-c">C</span></td>
+          <td><span class="grade-pill grade-d">D</span></td>
           <td>42.08</td>
           <td>5.09</td>
           <td>5.75</td>
@@ -631,7 +631,7 @@
       
         <tr>
           <td><span class="name-link" data-name="HMG(P)">HMG(P)</span></td>
-          <td><span class="grade-pill grade-c">C</span></td>
+          <td><span class="grade-pill grade-d">D</span></td>
           <td>45.28</td>
           <td>0.00</td>
           <td>5.52</td>
@@ -944,7 +944,7 @@
       const effortPerWeek = presencePerWeek + countedTrainingPerWeek;
 
       let grade = "C";
-      if (effortPerWeek < 5) grade = "D";
+      if (effortPerWeek < 10) grade = "D";
       else if (presencePerWeek >= 20) grade = "A";
       else if (effortPerWeek >= 20) grade = "B";
 
