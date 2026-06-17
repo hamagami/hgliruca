@@ -443,6 +443,26 @@
       background: rgba(65, 199, 232, 0.08);
     }
 
+    .mini-chart.is-presence {
+      border-color: rgba(47, 140, 255, 0.50);
+      background: rgba(47, 140, 255, 0.17);
+    }
+
+    .mini-chart.is-training {
+      border-color: rgba(242, 162, 58, 0.54);
+      background: rgba(242, 162, 58, 0.19);
+    }
+
+    .mini-chart.is-presence:hover {
+      border-color: rgba(47, 140, 255, 0.62);
+      background: rgba(47, 140, 255, 0.24);
+    }
+
+    .mini-chart.is-training:hover {
+      border-color: rgba(242, 162, 58, 0.66);
+      background: rgba(242, 162, 58, 0.26);
+    }
+
     .mini-chart-head {
       display: flex;
       align-items: center;
@@ -698,6 +718,22 @@
     #summaryBody tr.selected-member .name-link {
       color: var(--cyan);
       font-weight: 800;
+    }
+
+    #summaryBody tr.is-presence {
+      background: rgba(47, 140, 255, 0.18);
+    }
+
+    #summaryBody tr.is-training {
+      background: rgba(242, 162, 58, 0.20);
+    }
+
+    #summaryBody tr.is-presence:hover {
+      background: rgba(47, 140, 255, 0.25);
+    }
+
+    #summaryBody tr.is-training:hover {
+      background: rgba(242, 162, 58, 0.28);
     }
 
     .error {
@@ -1288,6 +1324,7 @@
     let timelineRangeMode = "30";
     let timelineHoverItems = [];
     let liveScoreHitItems = [];
+    let liveMembersByName = new Map();
     let charts = {};
     let liveLoaded = false;
     let liveRefreshTimer = 0;
@@ -1747,6 +1784,12 @@
 
       days.forEach((date, index) => {
         const y = plot.top + index * rowHeight + rowHeight / 2;
+        if (date.getDay() === 0 || date.getDay() === 6) {
+          ctx.fillStyle = date.getDay() === 0
+            ? "rgba(255, 107, 107, 0.17)"
+            : "rgba(47, 140, 255, 0.15)";
+          ctx.fillRect(plot.left, y - rowHeight / 2, plotWidth, rowHeight);
+        }
         ctx.fillStyle = COLORS.ticks;
         ctx.textAlign = "right";
         ctx.fillText(`${date.getMonth() + 1}/${date.getDate()}`, plot.left - 10, y);
@@ -2126,6 +2169,11 @@
       return "";
     }
 
+    function currentStatusClassForName(name) {
+      const member = liveMembersByName.get(name);
+      return member ? liveMemberCardClass(liveStatus(member)) : "";
+    }
+
     function formatElapsed(ms) {
       const seconds = Math.max(0, Math.floor(ms / 1000));
       const minutes = Math.floor(seconds / 60);
@@ -2224,6 +2272,7 @@
         ]);
         if (membersResult.status === "fulfilled") {
           const members = Array.isArray(membersResult.value) ? membersResult.value : membersResult.value.members || [];
+          liveMembersByName = new Map(members.filter((member) => member.name).map((member) => [member.name, member]));
           renderLiveMembers(members);
         }
         if (scoreResult.status === "fulfilled") {
@@ -2239,6 +2288,10 @@
         }
         els.liveUpdated.textContent = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
         liveLoaded = true;
+        if (activeTabName() === "allHours") {
+          renderAllHourCharts();
+          renderSummary();
+        }
       } catch (error) {
         showError(`現況ダッシュボードを読み込めませんでした。詳細: ${error.message}`);
       }
@@ -2430,7 +2483,7 @@
     function renderSummary() {
       const rows = getPeopleRows();
       els.summaryBody.innerHTML = rows.map((row) => `
-        <tr>
+        <tr class="${currentStatusClassForName(row.name)}">
           <td><span class="name-link" data-name="${escapeHtml(row.name)}">${escapeHtml(row.name)}</span></td>
           <td><span class="grade-pill ${gradeClass(row.evaluation.grade)}">${row.evaluation.grade}</span> <span class="grade-percent">${fmtPercent3(effortPercent(row.evaluation))}%</span></td>
           <td>${hours(row.presence).toFixed(2)}</td>
@@ -2487,6 +2540,8 @@
         const person = report.people[row.name];
         const card = document.createElement("article");
         card.className = "mini-chart";
+        const statusCardClass = currentStatusClassForName(row.name);
+        if (statusCardClass) card.classList.add(statusCardClass);
         card.tabIndex = 0;
         card.setAttribute("role", "button");
         card.setAttribute("aria-label", `${row.name} の個人データを表示`);
@@ -2581,7 +2636,9 @@
       els.liveView.classList.toggle("active", tabName === "live");
 
       if (tabName === "allHours") {
+        renderSummary();
         renderAllHourCharts();
+        if (!liveLoaded) loadLiveDashboard();
       } else if (tabName === "live") {
         if (!liveLoaded) loadLiveDashboard();
       } else if (report && els.personSelect.value) {
@@ -2701,7 +2758,7 @@
       });
     }, 1000);
     liveRefreshTimer = setInterval(() => {
-      if (activeTabName() === "live") loadLiveDashboard();
+      if (activeTabName() === "live" || activeTabName() === "allHours") loadLiveDashboard();
     }, 5 * 60 * 1000);
 
     loadReport(initialDataUrl());
