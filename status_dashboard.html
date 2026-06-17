@@ -362,7 +362,7 @@
 
     .timeline-box canvas {
       display: block;
-      min-width: 900px;
+      max-width: 100%;
     }
 
     .timeline-tooltip {
@@ -388,6 +388,41 @@
       font-size: 13px;
     }
 
+    .personal-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: rgba(10, 17, 24, 0.94);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+      padding: 10px 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .personal-sticky-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .personal-sticky-name {
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 780;
+    }
+
+    .personal-sticky-meta {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
     .all-chart-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -400,6 +435,12 @@
       border-radius: 8px;
       background: rgba(7, 11, 16, 0.35);
       padding: 8px;
+      cursor: pointer;
+    }
+
+    .mini-chart:hover {
+      border-color: rgba(65, 199, 232, 0.5);
+      background: rgba(65, 199, 232, 0.08);
     }
 
     .mini-chart-head {
@@ -536,6 +577,39 @@
       background: rgba(7, 11, 16, 0.35);
       padding: 8px;
       min-width: 0;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .live-member:hover,
+    .live-member:focus-visible {
+      border-color: rgba(65, 199, 232, 0.55);
+      background: rgba(65, 199, 232, 0.08);
+      outline: none;
+    }
+
+    .live-member.is-presence {
+      border-color: rgba(47, 140, 255, 0.38);
+      background: rgba(47, 140, 255, 0.11);
+      box-shadow: inset 0 0 0 1px rgba(47, 140, 255, 0.08);
+    }
+
+    .live-member.is-training {
+      border-color: rgba(242, 162, 58, 0.42);
+      background: rgba(242, 162, 58, 0.13);
+      box-shadow: inset 0 0 0 1px rgba(242, 162, 58, 0.08);
+    }
+
+    .live-member.is-presence:hover,
+    .live-member.is-presence:focus-visible {
+      background: rgba(47, 140, 255, 0.18);
+      border-color: rgba(47, 140, 255, 0.62);
+    }
+
+    .live-member.is-training:hover,
+    .live-member.is-training:focus-visible {
+      background: rgba(242, 162, 58, 0.20);
+      border-color: rgba(242, 162, 58, 0.66);
     }
 
     .live-member-top {
@@ -687,6 +761,13 @@
     </nav>
 
     <section id="personalView" class="tab-view">
+    <div class="personal-sticky" aria-live="polite">
+      <div>
+        <div class="personal-sticky-label">表示中のメンバー</div>
+        <div class="personal-sticky-name" id="personalCurrentName">メンバー未選択</div>
+      </div>
+      <div class="personal-sticky-meta" id="personalCurrentMeta">全員タブから選択</div>
+    </div>
     <section class="cards">
       <article class="card grade-card grade-a" id="gradeCard">
         <div class="label">評価</div>
@@ -1171,12 +1252,15 @@
       liveTraining: document.getElementById("liveTraining"),
       liveAway: document.getElementById("liveAway"),
       liveUnknown: document.getElementById("liveUnknown"),
+      liveScoreChart: document.getElementById("liveScoreChart"),
       liveMemberBadge: document.getElementById("liveMemberBadge"),
       liveMemberGrid: document.getElementById("liveMemberGrid"),
       dataState: document.getElementById("dataState"),
       rangeText: document.getElementById("rangeText"),
       snapshotText: document.getElementById("snapshotText"),
       thresholdText: document.getElementById("thresholdText"),
+      personalCurrentName: document.getElementById("personalCurrentName"),
+      personalCurrentMeta: document.getElementById("personalCurrentMeta"),
       gradeCard: document.getElementById("gradeCard"),
       gradeValue: document.getElementById("gradeValue"),
       gradeHint: document.getElementById("gradeHint"),
@@ -1203,6 +1287,7 @@
     let ptimeLog = null;
     let timelineRangeMode = "30";
     let timelineHoverItems = [];
+    let liveScoreHitItems = [];
     let charts = {};
     let liveLoaded = false;
     let liveRefreshTimer = 0;
@@ -1459,6 +1544,13 @@
       els.timelineTooltip.textContent = "";
     }
 
+    function scrollPersonalToTop() {
+      requestAnimationFrame(() => {
+        const targetTop = els.personalView.getBoundingClientRect().top + window.scrollY - 8;
+        window.scrollTo({ top: Math.max(0, targetTop), behavior: "auto" });
+      });
+    }
+
     function timelineRangeFromInputs() {
       if (!els.timelineStart.value || !els.timelineEnd.value) return null;
       const start = localDateFromKey(els.timelineStart.value);
@@ -1612,9 +1704,17 @@
 
       const days = buildDayRows(range.start, range.end);
       const canvas = ensureTimelineCanvas();
-      const rowHeight = 22;
-      const plot = { left: 82, right: 18, top: 26, bottom: 24 };
-      const width = Math.max(900, els.timelineBox.clientWidth - 2);
+      const boxRect = els.timelineBox.getBoundingClientRect();
+      const boxWidth = Math.floor(els.timelineBox.clientWidth || boxRect.width || window.innerWidth - 32);
+      const width = Math.max(280, boxWidth - 2);
+      const compactTimeline = width < 560;
+      const rowHeight = compactTimeline ? 20 : 22;
+      const plot = {
+        left: compactTimeline ? 46 : 82,
+        right: compactTimeline ? 8 : 18,
+        top: compactTimeline ? 24 : 26,
+        bottom: compactTimeline ? 20 : 24
+      };
       const height = Math.max(220, plot.top + plot.bottom + days.length * rowHeight);
       const ratio = window.devicePixelRatio || 1;
       canvas.width = Math.floor(width * ratio);
@@ -1625,7 +1725,7 @@
       const ctx = canvas.getContext("2d");
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, width, height);
-      ctx.font = '11px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif';
+      ctx.font = `${compactTimeline ? 10 : 11}px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif`;
       ctx.textBaseline = "middle";
 
       const plotWidth = width - plot.left - plot.right;
@@ -1634,7 +1734,8 @@
 
       ctx.fillStyle = COLORS.ticks;
       ctx.textAlign = "center";
-      for (let hour = 0; hour <= 24; hour += 4) {
+      const hourStep = compactTimeline ? 6 : 4;
+      for (let hour = 0; hour <= 24; hour += hourStep) {
         const x = plot.left + plotWidth * hour / 24;
         ctx.strokeStyle = hour % 12 === 0 ? "rgba(164, 192, 220, 0.18)" : COLORS.grid;
         ctx.beginPath();
@@ -1777,8 +1878,18 @@
       const barWidth = options.stacked
         ? Math.max(2, groupWidth - barGap * 2)
         : Math.max(2, (groupWidth - barGap * 2) / datasets.length);
+      const hitItems = [];
 
       labels.forEach((label, index) => {
+        if (options.hitLabels) {
+          hitItems.push({
+            label: options.hitLabels[index] || labels[index],
+            x: plot.left + index * groupWidth,
+            y: height - plot.bottom,
+            width: groupWidth,
+            height: plot.bottom
+          });
+        }
         let stackTop = plot.top + plotHeight;
         datasets.forEach((dataset, datasetIndex) => {
           const value = Number(dataset.data[index] || 0);
@@ -1790,6 +1901,15 @@
             : dataset.backgroundColor;
           ctx.fillStyle = color || dataset.borderColor || COLORS.cyan;
           ctx.fillRect(x, y, Math.max(1, barWidth - 1), barHeight);
+          if (options.hitLabels && barHeight > 0) {
+            hitItems.push({
+              label: options.hitLabels[index] || labels[index],
+              x,
+              y,
+              width: Math.max(1, barWidth - 1),
+              height: barHeight
+            });
+          }
           const outlineColor = Array.isArray(dataset.outlineColor)
             ? dataset.outlineColor[index]
             : dataset.outlineColor;
@@ -1847,6 +1967,7 @@
         });
       }
 
+      if (id === "liveScoreChart") liveScoreHitItems = hitItems;
       charts[id] = { labels, datasets };
     }
 
@@ -1980,7 +2101,8 @@
           valueLabels: true,
           valueLabelFormatter: (total) => `${Math.round((total / baselineHours) * 100)}%`,
           showAllLabels: true,
-          bottomPadding: 74
+          bottomPadding: 74,
+          hitLabels: labels
         }
       );
     }
@@ -1996,6 +2118,12 @@
       if (status === "研修中") return "status-training";
       if (status === "不明") return "status-unknown";
       return "status-away";
+    }
+
+    function liveMemberCardClass(status) {
+      if (status === "在席中" || status === "在席") return "is-presence";
+      if (status === "研修中") return "is-training";
+      return "";
     }
 
     function formatElapsed(ms) {
@@ -2034,6 +2162,20 @@
         const status = liveStatus(member);
         const card = document.createElement("div");
         card.className = "live-member";
+        const statusCardClass = liveMemberCardClass(status);
+        if (statusCardClass) card.classList.add(statusCardClass);
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `${member.name || "メンバー"} の個人データを表示`);
+        card.addEventListener("click", () => {
+          if (member.name) selectPerson(member.name, true, true);
+        });
+        card.addEventListener("keydown", (event) => {
+          if ((event.key === "Enter" || event.key === " ") && member.name) {
+            event.preventDefault();
+            selectPerson(member.name, true, true);
+          }
+        });
         const top = document.createElement("div");
         top.className = "live-member-top";
         const name = document.createElement("div");
@@ -2219,6 +2361,8 @@
 
     function showPersonalIntro() {
       els.personSelect.value = "";
+      els.personalCurrentName.textContent = "メンバー未選択";
+      els.personalCurrentMeta.textContent = "全員タブから選択";
       els.gradeValue.textContent = "—";
       els.gradeCard.className = "card grade-card";
       els.gradeHint.textContent = "メンバー集計から名前を選択してください";
@@ -2242,11 +2386,15 @@
       if (!report || !report.people[name]) return;
       if (activatePersonalTab) {
         switchTab("personal");
+        scrollPersonalToTop();
       }
       if (syncSelect) {
         els.personSelect.value = name;
       }
       const selectedPerson = report.people[name];
+      const evaluation = evaluatePerson(selectedPerson);
+      els.personalCurrentName.textContent = name;
+      els.personalCurrentMeta.textContent = `評価 ${evaluation.grade} / 週 ${evaluation.effortPerWeek.toFixed(1)}h`;
       updateCards(selectedPerson);
       highlightSummaryRow(name);
       try {
@@ -2339,6 +2487,16 @@
         const person = report.people[row.name];
         const card = document.createElement("article");
         card.className = "mini-chart";
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `${row.name} の個人データを表示`);
+        card.addEventListener("click", () => selectPerson(row.name, true, true));
+        card.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectPerson(row.name, true, true);
+          }
+        });
 
         const head = document.createElement("div");
         head.className = "mini-chart-head";
@@ -2464,10 +2622,33 @@
       }
     }
 
+    function liveScoreHitAt(event) {
+      if (!els.liveScoreChart) return null;
+      const rect = els.liveScoreChart.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      return liveScoreHitItems.find((candidate) => (
+        x >= candidate.x &&
+        x <= candidate.x + candidate.width &&
+        y >= candidate.y &&
+        y <= candidate.y + candidate.height
+      )) || null;
+    }
+
     els.personSelect.addEventListener("change", (event) => {
       const name = event.currentTarget.value;
       if (name) selectPerson(name, false, true);
       else showPersonalIntro();
+    });
+    els.liveScoreChart.addEventListener("click", (event) => {
+      const item = liveScoreHitAt(event);
+      if (item?.label) selectPerson(item.label, true, true);
+    });
+    els.liveScoreChart.addEventListener("mousemove", (event) => {
+      els.liveScoreChart.style.cursor = liveScoreHitAt(event) ? "pointer" : "default";
+    });
+    els.liveScoreChart.addEventListener("mouseleave", () => {
+      els.liveScoreChart.style.cursor = "default";
     });
     els.timelineButtons.forEach((button) => {
       button.addEventListener("click", () => applyTimelineRange(button.dataset.rangeDays));
