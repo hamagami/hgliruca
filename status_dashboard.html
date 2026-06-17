@@ -269,6 +269,125 @@
 
     .chart-box.short { height: 250px; }
 
+    .timeline-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .timeline-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .timeline-controls input {
+      height: 30px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #0a1118;
+      color: var(--text);
+      padding: 0 8px;
+      color-scheme: dark;
+    }
+
+    .timeline-button {
+      height: 30px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--text);
+      padding: 0 10px;
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    .timeline-button:hover,
+    .timeline-button.active {
+      border-color: rgba(65, 199, 232, 0.58);
+      background: rgba(65, 199, 232, 0.13);
+    }
+
+    .timeline-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .timeline-summary span {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(7, 11, 16, 0.35);
+      padding: 5px 8px;
+    }
+
+    .timeline-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .timeline-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .timeline-swatch {
+      width: 12px;
+      height: 8px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .timeline-box {
+      position: relative;
+      min-height: 360px;
+      max-height: 620px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(7, 11, 16, 0.32);
+    }
+
+    .timeline-box canvas {
+      display: block;
+      min-width: 900px;
+    }
+
+    .timeline-tooltip {
+      position: fixed;
+      z-index: 50;
+      display: none;
+      max-width: min(360px, calc(100vw - 24px));
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: rgba(10, 17, 24, 0.96);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
+      padding: 8px 10px;
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.45;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .timeline-empty {
+      color: var(--muted);
+      padding: 18px;
+      font-size: 13px;
+    }
+
     .all-chart-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -548,7 +667,7 @@
       </div>
       <div class="controls">
         <label for="personSelect">メンバー</label>
-        <select id="personSelect"><option value="YNK(B4)">YNK(B4)</option><option value="IZM(M1)">IZM(M1)</option><option value="INU(B4)">INU(B4)</option><option value="SRI(B4)">SRI(B4)</option><option value="TKD(M2)">TKD(M2)</option><option value="YSI(M1)">YSI(M1)</option><option value="KWS(M1)">KWS(M1)</option><option value="STU(M1)">STU(M1)</option><option value="MTU(B3.5)">MTU(B3.5)</option><option value="KBT(B4)">KBT(B4)</option><option value="KTM(M1)">KTM(M1)</option><option value="TGC(B4)">TGC(B4)</option><option value="WAN(D)">WAN(D)</option><option value="SKY(M2)">SKY(M2)</option><option value="SZK(M2)">SZK(M2)</option><option value="IWS(M2)">IWS(M2)</option><option value="OSG(B4)">OSG(B4)</option><option value="NGM(M2)">NGM(M2)</option><option value="MRI(B4)">MRI(B4)</option><option value="IKM(D)">IKM(D)</option><option value="TKH(S)">TKH(S)</option><option value="UNS(M1)">UNS(M1)</option><option value="HMG(P)">HMG(P)</option></select>
+        <select id="personSelect"><option value="">???????</option></select>
       </div>
     </header>
 
@@ -562,47 +681,47 @@
     </section>
 
     <nav class="tabs" aria-label="表示切替">
-      <button class="tab-button active" type="button" data-tab="personal">個人</button>
-      <button class="tab-button" type="button" data-tab="allHours">全員時刻分布</button>
-      <button class="tab-button" type="button" data-tab="live">現況</button>
+      <button class="tab-button active" type="button" data-tab="live">現況</button>
+      <button class="tab-button" type="button" data-tab="allHours">全員</button>
+      <button class="tab-button" type="button" data-tab="personal">個人</button>
     </nav>
 
-    <section id="personalView" class="tab-view active">
+    <section id="personalView" class="tab-view">
     <section class="cards">
       <article class="card grade-card grade-a" id="gradeCard">
         <div class="label">評価</div>
-        <div class="value" id="gradeValue">A</div>
-        <div class="hint" id="gradeHint">週 35.0h / 175%</div>
+        <div class="value" id="gradeValue">—</div>
+        <div class="hint" id="gradeHint">メンバー集計から名前を選択してください</div>
       </article>
       <article class="card">
         <div class="label">在席 合計</div>
-        <div class="value" id="presenceTotal">212h</div>
-        <div class="hint">異常除外後</div>
+        <div class="value" id="presenceTotal">—</div>
+        <div class="hint">選択後に表示</div>
       </article>
       <article class="card">
         <div class="label">研修 合計</div>
-        <div class="value" id="trainingTotal">80.3h</div>
-        <div class="hint">異常除外後</div>
+        <div class="value" id="trainingTotal">—</div>
+        <div class="hint">選択後に表示</div>
       </article>
       <article class="card">
         <div class="label">在席 異常</div>
-        <div class="value" id="presenceAbnormal">18.6h</div>
-        <div class="hint">閾値超過</div>
+        <div class="value" id="presenceAbnormal">—</div>
+        <div class="hint">選択後に表示</div>
       </article>
       <article class="card">
         <div class="label">研修 異常</div>
-        <div class="value" id="trainingAbnormal">0.00h</div>
-        <div class="hint">閾値超過</div>
+        <div class="value" id="trainingAbnormal">—</div>
+        <div class="hint">選択後に表示</div>
       </article>
       <article class="card">
         <div class="label">在席 セッション</div>
-        <div class="value" id="presenceSessions">49</div>
-        <div class="hint">正常区間数</div>
+        <div class="value" id="presenceSessions">—</div>
+        <div class="hint">選択後に表示</div>
       </article>
       <article class="card">
         <div class="label">研修 セッション</div>
-        <div class="value" id="trainingSessions">34</div>
-        <div class="hint">正常区間数</div>
+        <div class="value" id="trainingSessions">—</div>
+        <div class="hint">選択後に表示</div>
       </article>
     </section>
 
@@ -611,7 +730,33 @@
         <h2>コメント</h2>
         <div class="panel-note">llmcomment</div>
       </div>
-      <div class="llm-comment" id="llmComment">学部4年として、在席は週平均25.34時間で20時間基準を超えており、取り組み時間は基準の175%に達しています。 研修は週平均9.61時間で、在席を補う取り組みとして記録されています。 また、8時間を超える長い継続区間が合計18.6時間あり、活動記録を正確につける習慣が必要です。 現在の在席での取り組みを維持し、活動記録を整えながら卒業研究の質につなげてください。よい発進なので、このまま加速しましょう。 継続は力なり、よい発進を卒業研究の成果につなげましょう。</div>
+      <div class="llm-comment empty" id="llmComment">全員タブのメンバー集計で名前をクリックすると、このタブに個人別の集計、時間分布、継続時間、取り組みタイムラインが表示されます。</div>
+    </article>
+
+    <article class="panel timeline-panel">
+      <div class="panel-head">
+        <h2>取り組みタイムライン</h2>
+        <div class="panel-note" id="timelineNote">loading</div>
+      </div>
+      <div class="timeline-controls" aria-label="タイムライン期間">
+        <button class="timeline-button" type="button" data-range-days="7">7日</button>
+        <button class="timeline-button active" type="button" data-range-days="30">30日</button>
+        <button class="timeline-button" type="button" data-range-days="all">全期間</button>
+        <label>開始 <input id="timelineStart" type="date"></label>
+        <label>終了 <input id="timelineEnd" type="date"></label>
+        <button class="timeline-button" type="button" id="timelineApply">適用</button>
+      </div>
+      <div class="timeline-summary" id="timelineSummary"></div>
+      <div class="timeline-legend">
+        <span><i class="timeline-swatch" style="background:#2f8cff"></i>在席</span>
+        <span><i class="timeline-swatch" style="background:#f2a23a"></i>研修</span>
+        <span><i class="timeline-swatch" style="background:#ff6b6b"></i>8h超</span>
+        <span><i class="timeline-swatch" style="background:#4b5868"></i>その他</span>
+      </div>
+      <div class="timeline-box" id="timelineBox">
+        <canvas id="timelineChart"></canvas>
+      </div>
+      <div class="timeline-tooltip" id="timelineTooltip"></div>
     </article>
 
     <section class="grid">
@@ -647,7 +792,19 @@
         <div class="chart-box short"><canvas id="trainingDurationChart" width="594" height="250" style="width: 594px; height: 250px;"></canvas></div>
       </article>
 
+          </section>
+    </section>
+
+    <section id="allHoursView" class="tab-view">
       <article class="panel full">
+        <div class="panel-head">
+          <h2>全員</h2>
+          <div class="panel-note" id="allHoursScale">全員同一スケール</div>
+        </div>
+        <div class="all-chart-grid" id="allHoursGrid"></div>
+      </article>
+
+<article class="panel full">
         <div class="panel-head">
           <h2>メンバー集計</h2>
           <div class="panel-note">クリックで選択</div>
@@ -924,19 +1081,8 @@
         </div>
       </article>
     </section>
-    </section>
 
-    <section id="allHoursView" class="tab-view">
-      <article class="panel full">
-        <div class="panel-head">
-          <h2>全員 時刻分布</h2>
-          <div class="panel-note" id="allHoursScale">全員同一スケール</div>
-        </div>
-        <div class="all-chart-grid" id="allHoursGrid"></div>
-      </article>
-    </section>
-
-    <section id="liveView" class="tab-view">
+    <section id="liveView" class="tab-view active">
       <article class="panel full">
         <div class="panel-head">
           <h2>//濱上研 取り組みダッシュボード</h2>
@@ -995,6 +1141,7 @@
 
   <script>
     const DEFAULT_DATA_URL = "https://dl.dropbox.com/scl/fi/jxly2f6z4pb6nd9dq2s1z/status_stats.json?rlkey=zwvh1tn9l5z0mzy8i8omblfut&raw=1";
+    const PTIMELOG_URL = "https://www.dropbox.com/scl/fi/2f7uqexibzi48biywqgyz/ptimelog.json?rlkey=j3ugfwmcvmowza0r9x1b2jsfs&dl=0";
     const CORS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 
     const COLORS = {
@@ -1040,10 +1187,22 @@
       presenceSessions: document.getElementById("presenceSessions"),
       trainingSessions: document.getElementById("trainingSessions"),
       llmComment: document.getElementById("llmComment"),
+      timelineNote: document.getElementById("timelineNote"),
+      timelineStart: document.getElementById("timelineStart"),
+      timelineEnd: document.getElementById("timelineEnd"),
+      timelineApply: document.getElementById("timelineApply"),
+      timelineButtons: document.querySelectorAll(".timeline-button[data-range-days]"),
+      timelineSummary: document.getElementById("timelineSummary"),
+      timelineBox: document.getElementById("timelineBox"),
+      timelineChart: document.getElementById("timelineChart"),
+      timelineTooltip: document.getElementById("timelineTooltip"),
       summaryBody: document.getElementById("summaryBody")
     };
 
     let report = null;
+    let ptimeLog = null;
+    let timelineRangeMode = "30";
+    let timelineHoverItems = [];
     let charts = {};
     let liveLoaded = false;
     let liveRefreshTimer = 0;
@@ -1058,6 +1217,12 @@
       if (!trimmed) return DEFAULT_DATA_URL;
       try {
         const parsed = new URL(trimmed, location.href);
+        if (parsed.hostname === "www.dropbox.com") {
+          parsed.hostname = "dl.dropboxusercontent.com";
+          parsed.searchParams.set("dl", "1");
+          parsed.searchParams.delete("raw");
+          return parsed.toString();
+        }
         if (parsed.hostname.endsWith("dropbox.com")) {
           parsed.searchParams.set("raw", "1");
           parsed.searchParams.delete("dl");
@@ -1069,22 +1234,74 @@
       }
     }
 
+    function jsonFetchCandidates(dataUrl) {
+      const candidates = [];
+      const add = (value) => {
+        if (value && !candidates.includes(value)) candidates.push(value);
+      };
+      add(dataUrl);
+      try {
+        const parsed = new URL(dataUrl, location.href);
+        if (parsed.hostname === "www.dropbox.com") {
+          const direct = new URL(parsed.toString());
+          direct.hostname = "dl.dropboxusercontent.com";
+          direct.searchParams.set("dl", "1");
+          direct.searchParams.delete("raw");
+          add(direct.toString());
+        }
+        if (parsed.hostname === "dl.dropbox.com") {
+          const direct = new URL(parsed.toString());
+          direct.hostname = "dl.dropboxusercontent.com";
+          direct.searchParams.set("dl", "1");
+          direct.searchParams.delete("raw");
+          add(direct.toString());
+        }
+      } catch {
+        // Keep the original candidate only.
+      }
+      return candidates;
+    }
+
     function initialDataUrl() {
       const params = new URLSearchParams(location.search);
       return normalizeDropboxUrl(params.get("data") || DEFAULT_DATA_URL);
     }
 
     async function fetchJsonWithFallback(dataUrl) {
-      try {
-        const response = await fetch(dataUrl, { cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
-      } catch (directError) {
-        const proxiedUrl = CORS_PROXY_URL + encodeURIComponent(dataUrl);
-        const response = await fetch(proxiedUrl, { cache: "no-store" });
-        if (!response.ok) throw new Error(`direct fetch failed: ${directError.message}; proxy HTTP ${response.status}`);
-        return await response.json();
+      let directError = null;
+      for (const candidate of jsonFetchCandidates(dataUrl)) {
+        try {
+          const response = await fetch(candidate, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          directError = error;
+        }
       }
+
+      try {
+        const parsed = new URL(dataUrl, location.href);
+        if (parsed.protocol === "file:") {
+          throw new Error(`local file fetch failed: ${directError?.message || "unknown"}`);
+        }
+      } catch {
+        if (!/^https?:\/\//i.test(String(dataUrl))) {
+          throw new Error(`local fetch failed: ${directError?.message || "unknown"}`);
+        }
+      }
+
+      const proxyErrors = [];
+      for (const candidate of jsonFetchCandidates(dataUrl)) {
+        try {
+          const proxiedUrl = CORS_PROXY_URL + encodeURIComponent(candidate);
+          const response = await fetch(proxiedUrl, { cache: "no-store" });
+          if (!response.ok) throw new Error(`proxy HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          proxyErrors.push(error.message);
+        }
+      }
+      throw new Error(`direct fetch failed: ${directError?.message || "unknown"}; proxy failed: ${proxyErrors.join("; ")}`);
     }
 
     function hours(seconds) {
@@ -1162,6 +1379,329 @@
 
     function sessionCount(dist) {
       return dist.reduce((sum, bin) => sum + Number(bin.count || 0), 0);
+    }
+
+    function dayKey(date) {
+      return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0")
+      ].join("-");
+    }
+
+    function localDateFromKey(key, endOfDay = false) {
+      const [year, month, day] = String(key).split("-").map(Number);
+      return new Date(year, month - 1, day, endOfDay ? 23 : 0, endOfDay ? 59 : 0, endOfDay ? 59 : 0, endOfDay ? 999 : 0);
+    }
+
+    function addDays(date, days) {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function timelineColor(segment) {
+      if (segment.quality === "abnormal") return COLORS.abnormal;
+      if (segment.category === "presence") return COLORS.presenceBar;
+      if (segment.category === "training") return COLORS.trainingBar;
+      return "#4b5868";
+    }
+
+    function timelineStatusLabel(segment) {
+      const suffix = segment.quality === "abnormal" ? "（8h超）" : "";
+      if (segment.category === "presence") return `在席${suffix}`;
+      if (segment.category === "training") return `研修${suffix}`;
+      if (segment.quality === "abnormal") return "8h超";
+      return segment.status || "その他";
+    }
+
+    function fmtTimelineClock(date) {
+      return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    }
+
+    function fmtTimelineInterval(start, end) {
+      const startDay = dayKey(start);
+      const endDay = dayKey(end);
+      const startLabel = `${start.getMonth() + 1}/${start.getDate()} ${fmtTimelineClock(start)}`;
+      if (startDay === endDay) return `${startLabel} - ${fmtTimelineClock(end)}`;
+      return `${startLabel} - ${end.getMonth() + 1}/${end.getDate()} ${fmtTimelineClock(end)}`;
+    }
+
+    function showTimelineTooltip(event, segment) {
+      const clippedHours = Math.max(0, (segment.clippedEnd - segment.clippedStart) / 3600000);
+      els.timelineTooltip.innerHTML = [
+        `<strong>取り組み</strong> ${escapeHtml(timelineStatusLabel(segment))}`,
+        `<strong>区間</strong> ${escapeHtml(fmtTimelineInterval(segment.clippedStart, segment.clippedEnd))}`,
+        `<strong>合計</strong> ${clippedHours.toFixed(2)}h`
+      ].join("<br>");
+      els.timelineTooltip.style.display = "block";
+
+      const padding = 12;
+      const tooltipRect = els.timelineTooltip.getBoundingClientRect();
+      let left = event.clientX + 14;
+      let top = event.clientY + 14;
+      if (left + tooltipRect.width + padding > window.innerWidth) {
+        left = event.clientX - tooltipRect.width - 14;
+      }
+      if (top + tooltipRect.height + padding > window.innerHeight) {
+        top = event.clientY - tooltipRect.height - 14;
+      }
+      els.timelineTooltip.style.left = `${Math.max(padding, left)}px`;
+      els.timelineTooltip.style.top = `${Math.max(padding, top)}px`;
+    }
+
+    function hideTimelineTooltip() {
+      els.timelineTooltip.style.display = "none";
+      els.timelineTooltip.textContent = "";
+    }
+
+    function timelineRangeFromInputs() {
+      if (!els.timelineStart.value || !els.timelineEnd.value) return null;
+      const start = localDateFromKey(els.timelineStart.value);
+      const end = localDateFromKey(els.timelineEnd.value, true);
+      if (end < start) return null;
+      return { start, end };
+    }
+
+    function applyTimelineRange(mode, render = true) {
+      timelineRangeMode = mode;
+      els.timelineButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.rangeDays === mode);
+      });
+
+      const meta = ptimeLog?.metadata || {};
+      const rangeStart = meta.range_start ? new Date(meta.range_start) : null;
+      const rangeEnd = meta.range_end ? new Date(meta.range_end) : null;
+      if (!rangeStart || !rangeEnd || Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) {
+        if (render) renderTimelineForPerson(els.personSelect.value);
+        return;
+      }
+
+      if (mode === "all") {
+        els.timelineStart.value = dayKey(rangeStart);
+        els.timelineEnd.value = dayKey(rangeEnd);
+      } else {
+        const days = Number(mode || 30);
+        const start = addDays(rangeEnd, -(days - 1));
+        els.timelineStart.value = dayKey(start < rangeStart ? rangeStart : start);
+        els.timelineEnd.value = dayKey(rangeEnd);
+      }
+      if (render) renderTimelineForPerson(els.personSelect.value);
+    }
+
+    function timelineSegmentsForRange(user, start, end) {
+      const segments = Array.isArray(user?.segments) ? user.segments : [];
+      return segments
+        .map((segment) => {
+          const segmentStart = new Date(segment.start);
+          const segmentEnd = new Date(segment.end);
+          if (Number.isNaN(segmentStart.getTime()) || Number.isNaN(segmentEnd.getTime())) return null;
+          const clippedStart = new Date(Math.max(segmentStart.getTime(), start.getTime()));
+          const clippedEnd = new Date(Math.min(segmentEnd.getTime(), end.getTime()));
+          if (clippedEnd <= clippedStart) return null;
+          return { ...segment, clippedStart, clippedEnd };
+        })
+        .filter(Boolean);
+    }
+
+    function buildDayRows(start, end) {
+      const rows = [];
+      let cursor = localDateFromKey(dayKey(start));
+      const last = localDateFromKey(dayKey(end));
+      while (cursor <= last) {
+        rows.push(new Date(cursor));
+        cursor = addDays(cursor, 1);
+      }
+      return rows;
+    }
+
+    function summarizeTimeline(segments) {
+      const summary = {
+        presence: 0,
+        training: 0,
+        presenceAbnormal: 0,
+        trainingAbnormal: 0,
+        abnormalCount: 0
+      };
+      segments.forEach((segment) => {
+        const seconds = Math.max(0, (segment.clippedEnd - segment.clippedStart) / 1000);
+        if (segment.category === "presence" && segment.quality === "normal") summary.presence += seconds;
+        else if (segment.category === "training" && segment.quality === "normal") summary.training += seconds;
+        else if (segment.category === "presence" && segment.quality === "abnormal") {
+          summary.presenceAbnormal += seconds;
+          summary.abnormalCount += 1;
+        } else if (segment.category === "training" && segment.quality === "abnormal") {
+          summary.trainingAbnormal += seconds;
+          summary.abnormalCount += 1;
+        }
+      });
+      return summary;
+    }
+
+    function renderTimelineSummary(segments) {
+      const summary = summarizeTimeline(segments);
+      els.timelineSummary.replaceChildren();
+      [
+        ["在席", summary.presence],
+        ["研修", summary.training],
+        ["在席異常", summary.presenceAbnormal],
+        ["研修異常", summary.trainingAbnormal],
+        ["異常区間", summary.abnormalCount]
+      ].forEach(([label, value]) => {
+        const node = document.createElement("span");
+        node.textContent = typeof value === "number" && label !== "異常区間"
+          ? `${label} ${fmtHours(value)}`
+          : `${label} ${value}`;
+        els.timelineSummary.appendChild(node);
+      });
+    }
+
+    function renderTimelineEmpty(message) {
+      timelineHoverItems = [];
+      const canvas = els.timelineChart;
+      canvas.width = 1;
+      canvas.height = 1;
+      canvas.style.width = "1px";
+      canvas.style.height = "1px";
+      els.timelineSummary.replaceChildren();
+      hideTimelineTooltip();
+      els.timelineBox.replaceChildren();
+      const empty = document.createElement("div");
+      empty.className = "timeline-empty";
+      empty.textContent = message;
+      els.timelineBox.appendChild(empty);
+    }
+
+    function ensureTimelineCanvas() {
+      if (!els.timelineChart.isConnected) {
+        els.timelineBox.replaceChildren(els.timelineChart);
+      }
+      return els.timelineChart;
+    }
+
+    function renderTimelineForPerson(name) {
+      if (!els.timelineChart) return;
+      if (!ptimeLog) {
+        renderTimelineEmpty("取り組みタイムラインを読み込み中です。");
+        els.timelineNote.textContent = "loading";
+        return;
+      }
+      const user = ptimeLog.users?.[name];
+      if (!user) {
+        renderTimelineEmpty("このメンバーのタイムラインデータがありません。");
+        els.timelineNote.textContent = "no data";
+        return;
+      }
+      if (!els.timelineStart.value || !els.timelineEnd.value) {
+        applyTimelineRange(timelineRangeMode, false);
+      }
+      const range = timelineRangeFromInputs();
+      if (!range) {
+        renderTimelineEmpty("開始日と終了日を確認してください。");
+        els.timelineNote.textContent = "range error";
+        return;
+      }
+
+      const segments = timelineSegmentsForRange(user, range.start, range.end);
+      renderTimelineSummary(segments);
+      els.timelineNote.textContent = `${dayKey(range.start)} - ${dayKey(range.end)}`;
+
+      const days = buildDayRows(range.start, range.end);
+      const canvas = ensureTimelineCanvas();
+      const rowHeight = 22;
+      const plot = { left: 82, right: 18, top: 26, bottom: 24 };
+      const width = Math.max(900, els.timelineBox.clientWidth - 2);
+      const height = Math.max(220, plot.top + plot.bottom + days.length * rowHeight);
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = '11px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif';
+      ctx.textBaseline = "middle";
+
+      const plotWidth = width - plot.left - plot.right;
+      const dayIndex = new Map(days.map((date, index) => [dayKey(date), index]));
+      timelineHoverItems = [];
+
+      ctx.fillStyle = COLORS.ticks;
+      ctx.textAlign = "center";
+      for (let hour = 0; hour <= 24; hour += 4) {
+        const x = plot.left + plotWidth * hour / 24;
+        ctx.strokeStyle = hour % 12 === 0 ? "rgba(164, 192, 220, 0.18)" : COLORS.grid;
+        ctx.beginPath();
+        ctx.moveTo(x, plot.top - 8);
+        ctx.lineTo(x, height - plot.bottom + 4);
+        ctx.stroke();
+        ctx.fillText(`${String(hour).padStart(2, "0")}:00`, x, 13);
+      }
+
+      days.forEach((date, index) => {
+        const y = plot.top + index * rowHeight + rowHeight / 2;
+        ctx.fillStyle = COLORS.ticks;
+        ctx.textAlign = "right";
+        ctx.fillText(`${date.getMonth() + 1}/${date.getDate()}`, plot.left - 10, y);
+        ctx.strokeStyle = COLORS.grid;
+        ctx.beginPath();
+        ctx.moveTo(plot.left, y + rowHeight / 2);
+        ctx.lineTo(width - plot.right, y + rowHeight / 2);
+        ctx.stroke();
+      });
+
+      segments.forEach((segment) => {
+        let cursor = new Date(segment.clippedStart);
+        while (cursor < segment.clippedEnd) {
+          const rowEnd = localDateFromKey(dayKey(cursor), true);
+          const partEnd = new Date(Math.min(rowEnd.getTime(), segment.clippedEnd.getTime()));
+          const key = dayKey(cursor);
+          const index = dayIndex.get(key);
+          if (index !== undefined) {
+            const startHour = cursor.getHours() + cursor.getMinutes() / 60 + cursor.getSeconds() / 3600;
+            const endHour = partEnd.getHours() + partEnd.getMinutes() / 60 + partEnd.getSeconds() / 3600 + partEnd.getMilliseconds() / 3600000;
+            const x = plot.left + plotWidth * clamp(startHour, 0, 24) / 24;
+            const x2 = plot.left + plotWidth * clamp(endHour, 0, 24) / 24;
+            const y = plot.top + index * rowHeight + 5;
+            const barWidth = Math.max(2, x2 - x);
+            ctx.fillStyle = timelineColor(segment);
+            ctx.globalAlpha = segment.category === "other" ? 0.52 : 0.92;
+            ctx.fillRect(x, y, barWidth, rowHeight - 9);
+            ctx.globalAlpha = 1;
+            if (segment.quality === "abnormal") {
+              ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+              ctx.lineWidth = 1;
+              ctx.strokeRect(x + 0.5, y + 0.5, Math.max(1, barWidth - 1), rowHeight - 10);
+            }
+            timelineHoverItems.push({ x, y, width: barWidth, height: rowHeight - 9, segment });
+          }
+          cursor = new Date(partEnd.getTime() + 1);
+        }
+      });
+
+      if (!segments.length) {
+        ctx.fillStyle = COLORS.ticks;
+        ctx.textAlign = "center";
+        ctx.fillText("選択期間に取り組み区間がありません", plot.left + plotWidth / 2, plot.top + 40);
+      }
+    }
+
+    async function loadPtimeLog() {
+      try {
+        ptimeLog = await fetchJsonWithFallback(normalizeDropboxUrl(PTIMELOG_URL));
+        els.timelineNote.textContent = "ready";
+        applyTimelineRange(timelineRangeMode, false);
+        if (els.personSelect.value) renderTimelineForPerson(els.personSelect.value);
+      } catch (error) {
+        els.timelineNote.textContent = "error";
+        renderTimelineEmpty(`タイムラインJSONを読み込めませんでした: ${error.message}`);
+      }
     }
 
     function makeBarChart(id, labels, datasets, options = {}) {
@@ -1657,8 +2197,52 @@
       els.llmComment.classList.toggle("empty", !comment);
     }
 
-    function selectPerson(name, syncSelect = true) {
+    function drawEmptyChart(id, message) {
+      const canvas = document.getElementById(id);
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const width = Math.max(260, Math.floor(canvas.parentElement.clientWidth || rect.width));
+      const height = Math.max(160, Math.floor(canvas.parentElement.clientHeight || rect.height));
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = COLORS.ticks;
+      ctx.font = '13px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(message, width / 2, height / 2);
+    }
+
+    function showPersonalIntro() {
+      els.personSelect.value = "";
+      els.gradeValue.textContent = "—";
+      els.gradeCard.className = "card grade-card";
+      els.gradeHint.textContent = "メンバー集計から名前を選択してください";
+      els.presenceTotal.textContent = "—";
+      els.trainingTotal.textContent = "—";
+      els.presenceAbnormal.textContent = "—";
+      els.trainingAbnormal.textContent = "—";
+      els.presenceSessions.textContent = "—";
+      els.trainingSessions.textContent = "—";
+      els.llmComment.textContent = "全員タブのメンバー集計で名前をクリックすると、このタブに個人別の集計、時間分布、継続時間、取り組みタイムラインが表示されます。";
+      els.llmComment.classList.add("empty");
+      drawEmptyChart("hourChart", "選択したメンバーの時刻別取り組みを表示します");
+      drawEmptyChart("weekdayChart", "選択したメンバーの曜日別取り組みを表示します");
+      drawEmptyChart("presenceDurationChart", "在席区間の継続時間分布を表示します");
+      drawEmptyChart("trainingDurationChart", "研修区間の継続時間分布を表示します");
+      renderTimelineEmpty("メンバー集計から名前を選択すると、時系列の取り組み状況を表示します。");
+      highlightSummaryRow("");
+    }
+
+    function selectPerson(name, syncSelect = true, activatePersonalTab = false) {
       if (!report || !report.people[name]) return;
+      if (activatePersonalTab) {
+        switchTab("personal");
+      }
       if (syncSelect) {
         els.personSelect.value = name;
       }
@@ -1667,6 +2251,7 @@
       highlightSummaryRow(name);
       try {
         updateCharts(selectedPerson);
+        renderTimelineForPerson(name);
       } catch (error) {
         showError(`グラフを描画できませんでした。詳細: ${error.message}`);
       }
@@ -1710,7 +2295,7 @@
       `).join("");
 
       els.summaryBody.querySelectorAll(".name-link").forEach((node) => {
-        node.addEventListener("click", () => selectPerson(node.dataset.name));
+        node.addEventListener("click", () => selectPerson(node.dataset.name, true, true));
       });
       highlightSummaryRow(els.personSelect.value);
     }
@@ -1810,6 +2395,10 @@
     function populatePeople() {
       const names = getPeopleRows().map((row) => row.name);
       els.personSelect.replaceChildren();
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "メンバーを選択";
+      els.personSelect.appendChild(placeholder);
       for (const name of names) {
         const option = document.createElement("option");
         option.value = name;
@@ -1817,14 +2406,12 @@
         els.personSelect.appendChild(option);
       }
       els.personSelect.disabled = names.length === 0;
-      if (names.length > 0) {
-        selectPerson(names[0]);
-      }
+      showPersonalIntro();
     }
 
     function activeTabName() {
       const active = document.querySelector(".tab-button.active");
-      return active?.dataset.tab || "personal";
+      return active?.dataset.tab || "live";
     }
 
     function switchTab(tabName) {
@@ -1840,7 +2427,9 @@
       } else if (tabName === "live") {
         if (!liveLoaded) loadLiveDashboard();
       } else if (report && els.personSelect.value) {
-        selectPerson(els.personSelect.value, false);
+        selectPerson(els.personSelect.value, false, false);
+      } else if (report) {
+        showPersonalIntro();
       }
     }
 
@@ -1865,6 +2454,8 @@
         updateMetadata();
         populatePeople();
         renderSummary();
+        if (!ptimeLog) loadPtimeLog();
+        if (activeTabName() === "live" && !liveLoaded) loadLiveDashboard();
       } catch (error) {
         els.dataState.textContent = "error";
         showError(
@@ -1873,7 +2464,39 @@
       }
     }
 
-    els.personSelect.addEventListener("change", (event) => selectPerson(event.currentTarget.value, false));
+    els.personSelect.addEventListener("change", (event) => {
+      const name = event.currentTarget.value;
+      if (name) selectPerson(name, false, true);
+      else showPersonalIntro();
+    });
+    els.timelineButtons.forEach((button) => {
+      button.addEventListener("click", () => applyTimelineRange(button.dataset.rangeDays));
+    });
+    els.timelineApply.addEventListener("click", () => {
+      timelineRangeMode = "custom";
+      els.timelineButtons.forEach((button) => button.classList.remove("active"));
+      if (els.personSelect.value) renderTimelineForPerson(els.personSelect.value);
+      else renderTimelineEmpty("メンバー集計から名前を選択すると、時系列の取り組み状況を表示します。");
+    });
+    els.timelineChart.addEventListener("mousemove", (event) => {
+      const rect = els.timelineChart.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const item = timelineHoverItems.find((candidate) => (
+        x >= candidate.x &&
+        x <= candidate.x + candidate.width &&
+        y >= candidate.y &&
+        y <= candidate.y + candidate.height
+      ));
+      if (!item) {
+        hideTimelineTooltip();
+        return;
+      }
+      showTimelineTooltip(event, item.segment);
+    });
+    els.timelineChart.addEventListener("mouseleave", () => {
+      hideTimelineTooltip();
+    });
     els.tabButtons.forEach((button) => {
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
@@ -1884,7 +2507,8 @@
         if (!report) return;
         if (activeTabName() === "allHours") renderAllHourCharts();
         else if (activeTabName() === "live") loadLiveDashboard();
-        else if (els.personSelect.value) selectPerson(els.personSelect.value, false);
+        else if (els.personSelect.value) selectPerson(els.personSelect.value, false, false);
+        else showPersonalIntro();
       }, 180);
     });
 
