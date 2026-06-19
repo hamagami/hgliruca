@@ -867,7 +867,8 @@
       <div class="timeline-legend">
         <span><i class="timeline-swatch" style="background:#2f8cff"></i>在席</span>
         <span><i class="timeline-swatch" style="background:#f2a23a"></i>研修</span>
-        <span><i class="timeline-swatch" style="background:#ff6b6b"></i>8h超</span>
+        <span><i class="timeline-swatch" style="background:#ff6b6b"></i>在席異常</span>
+        <span><i class="timeline-swatch" style="background:#b86cff"></i>研修異常</span>
         <span><i class="timeline-swatch" style="background:#4b5868"></i>その他</span>
       </div>
       <div class="timeline-box" id="timelineBox">
@@ -1267,6 +1268,8 @@
       presenceBar: "#2f8cff",
       trainingBar: "#f2a23a",
       abnormal: "#ff6b6b",
+      presenceAbnormal: "#ff6b6b",
+      trainingAbnormal: "#b86cff",
       grid: "rgba(164, 192, 220, 0.12)",
       ticks: "#8ea0b4",
       text: "#e7eef6"
@@ -1527,6 +1530,8 @@
     }
 
     function timelineColor(segment) {
+      if (segment.quality === "abnormal" && segment.category === "presence") return COLORS.presenceAbnormal;
+      if (segment.quality === "abnormal" && segment.category === "training") return COLORS.trainingAbnormal;
       if (segment.quality === "abnormal") return COLORS.abnormal;
       if (segment.category === "presence") return COLORS.presenceBar;
       if (segment.category === "training") return COLORS.trainingBar;
@@ -1823,6 +1828,25 @@
               ctx.lineWidth = 1;
               ctx.strokeRect(x + 0.5, y + 0.5, Math.max(1, barWidth - 1), rowHeight - 10);
             }
+            if (barWidth >= 22) {
+              const startText = fmtTimelineClock(cursor);
+              const endText = fmtTimelineClock(partEnd);
+              const label = barWidth >= 66
+                ? `${startText}-${endText}`
+                : barWidth >= 38
+                  ? `${startText.slice(0, 2)}-${endText.slice(0, 2)}`
+                  : startText.slice(0, 2);
+              ctx.save();
+              ctx.beginPath();
+              ctx.rect(x + 1, y, Math.max(1, barWidth - 2), rowHeight - 9);
+              ctx.clip();
+              ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+              ctx.font = `${compactTimeline ? 8 : 9}px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(label, x + barWidth / 2, y + (rowHeight - 9) / 2 + 0.5);
+              ctx.restore();
+            }
             timelineHoverItems.push({ x, y, width: barWidth, height: rowHeight - 9, segment });
           }
           cursor = new Date(partEnd.getTime() + 1);
@@ -1841,7 +1865,10 @@
         ptimeLog = await fetchJsonWithFallback(normalizeDropboxUrl(PTIMELOG_URL));
         els.timelineNote.textContent = "ready";
         applyTimelineRange(timelineRangeMode, false);
-        if (els.personSelect.value) renderTimelineForPerson(els.personSelect.value);
+        if (els.personSelect.value) {
+          updateCardsFromTimelineAllPeriod(els.personSelect.value);
+          renderTimelineForPerson(els.personSelect.value);
+        }
       } catch (error) {
         els.timelineNote.textContent = "error";
         renderTimelineEmpty(`タイムラインJSONを読み込めませんでした: ${error.message}`);
@@ -2386,6 +2413,23 @@
       updateLlmComment(person);
     }
 
+    function updateCardsFromTimelineAllPeriod(name) {
+      const user = ptimeLog?.users?.[name];
+      const summary = user?.summary;
+      if (!summary) return;
+      const segments = Array.isArray(user.segments) ? user.segments : [];
+      els.presenceTotal.textContent = fmtHours(Number(summary.presence_seconds || 0));
+      els.trainingTotal.textContent = fmtHours(Number(summary.training_seconds || 0));
+      els.presenceAbnormal.textContent = fmtHours(Number(summary.presence_abnormal_seconds || 0));
+      els.trainingAbnormal.textContent = fmtHours(Number(summary.training_abnormal_seconds || 0));
+      els.presenceSessions.textContent = String(
+        segments.filter((segment) => segment.category === "presence" && segment.quality === "normal").length
+      );
+      els.trainingSessions.textContent = String(
+        segments.filter((segment) => segment.category === "training" && segment.quality === "normal").length
+      );
+    }
+
     function updateLlmComment(person) {
       const comment = typeof person.llmcomment === "string" ? person.llmcomment.trim() : "";
       els.llmComment.textContent = comment || "コメントなし";
@@ -2449,6 +2493,7 @@
       els.personalCurrentName.textContent = name;
       els.personalCurrentMeta.textContent = `評価 ${evaluation.grade} / 週 ${evaluation.effortPerWeek.toFixed(1)}h`;
       updateCards(selectedPerson);
+      updateCardsFromTimelineAllPeriod(name);
       highlightSummaryRow(name);
       try {
         updateCharts(selectedPerson);
