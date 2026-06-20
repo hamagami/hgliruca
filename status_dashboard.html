@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- saved from url=(0104)file:///C:/Users/hamag/Documents/Codex/2026-05-28/files-mentioned-by-the-user-data/status_dashboard.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
@@ -821,6 +821,16 @@
         <div class="hint">選択後に表示</div>
       </article>
       <article class="card">
+        <div class="label">研修（範囲内）</div>
+        <div class="value" id="trainingCountedTotal">—</div>
+        <div class="hint">週10h上限まで</div>
+      </article>
+      <article class="card">
+        <div class="label">研修（超過分）</div>
+        <div class="value" id="trainingExcessTotal">—</div>
+        <div class="hint">週10h上限超過</div>
+      </article>
+      <article class="card">
         <div class="label">在席 異常</div>
         <div class="value" id="presenceAbnormal">—</div>
         <div class="hint">選択後に表示</div>
@@ -856,8 +866,8 @@
         <div class="panel-note" id="timelineNote">loading</div>
       </div>
       <div class="timeline-controls" aria-label="タイムライン期間">
-        <button class="timeline-button" type="button" data-range-days="7">7日</button>
-        <button class="timeline-button active" type="button" data-range-days="30">30日</button>
+        <button class="timeline-button active" type="button" data-range-days="7">7日</button>
+        <button class="timeline-button" type="button" data-range-days="30">30日</button>
         <button class="timeline-button" type="button" data-range-days="all">全期間</button>
         <label>開始 <input id="timelineStart" type="date"></label>
         <label>終了 <input id="timelineEnd" type="date"></label>
@@ -935,6 +945,8 @@
                 <th>評価</th>
                 <th>在席 h</th>
                 <th>研修 h</th>
+                <th>研修(範囲内) h</th>
+                <th>研修(超過) h</th>
                 <th>週換算 h</th>
                 <th>在席異常 h</th>
                 <th>研修異常 h</th>
@@ -1219,7 +1231,13 @@
             <div class="live-panel">
               <div class="panel-head">
                 <h2>個人別 取り組み充足率</h2>
-                <div class="panel-note">直近1ヶ月 / baseline=1.0</div>
+                <div class="panel-note" id="liveScoreNote">30日 / baseline 週20h</div>
+              </div>
+              <div class="timeline-controls" aria-label="現況充足率期間">
+                <button class="timeline-button" type="button" data-live-score-range="7">7日</button>
+                <button class="timeline-button active" type="button" data-live-score-range="30">30日</button>
+                <button class="timeline-button" type="button" data-live-score-range="all">全期間</button>
+                <label><input id="liveScoreIgnoreTrainingCap" type="checkbox">研修上限を無視</label>
               </div>
               <div class="live-chart-box large"><canvas id="liveScoreChart"></canvas></div>
             </div>
@@ -1292,6 +1310,9 @@
       liveAway: document.getElementById("liveAway"),
       liveUnknown: document.getElementById("liveUnknown"),
       liveScoreChart: document.getElementById("liveScoreChart"),
+      liveScoreNote: document.getElementById("liveScoreNote"),
+      liveScoreRangeButtons: document.querySelectorAll(".timeline-button[data-live-score-range]"),
+      liveScoreIgnoreTrainingCap: document.getElementById("liveScoreIgnoreTrainingCap"),
       liveMemberBadge: document.getElementById("liveMemberBadge"),
       liveMemberGrid: document.getElementById("liveMemberGrid"),
       dataState: document.getElementById("dataState"),
@@ -1305,6 +1326,8 @@
       gradeHint: document.getElementById("gradeHint"),
       presenceTotal: document.getElementById("presenceTotal"),
       trainingTotal: document.getElementById("trainingTotal"),
+      trainingCountedTotal: document.getElementById("trainingCountedTotal"),
+      trainingExcessTotal: document.getElementById("trainingExcessTotal"),
       presenceAbnormal: document.getElementById("presenceAbnormal"),
       trainingAbnormal: document.getElementById("trainingAbnormal"),
       presenceSessions: document.getElementById("presenceSessions"),
@@ -1324,7 +1347,8 @@
 
     let report = null;
     let ptimeLog = null;
-    let timelineRangeMode = "30";
+    let timelineRangeMode = "7";
+    let liveScoreRangeMode = "30";
     let timelineHoverItems = [];
     let liveScoreHitItems = [];
     let liveMembersByName = new Map();
@@ -1333,7 +1357,6 @@
     let liveRefreshTimer = 0;
     const LIVE_MEMBER_URL = "https://iruca.co/api/rooms/fc8c0139-0461-4681-af03-04063968ac05/members";
     const LIVE_TIME_URL = "https://dl.dropbox.com/scl/fi/mc32neviwl1vydbx8c4nd/status_summary_by_time.json?rlkey=31aylckuac30jfws0l1o4y70m&dl=1";
-    const LIVE_SCORE_URL = "https://dl.dropbox.com/scl/fi/u883v40dkpouggoyxqkhp/status_score_summary_debug.json?rlkey=p6jhidej843o2wm5wb1mf9nj1&dl=1";
     const LIVE_UNKNOWN_MS = 8 * 60 * 60 * 1000;
     const LIVE_EXCLUDE_PREFIXES = ["HMG", "TKH", "HGW"];
 
@@ -1676,12 +1699,17 @@
       return summary;
     }
 
-    function renderTimelineSummary(segments) {
+    function renderTimelineSummary(segments, range = null) {
       const summary = summarizeTimeline(segments);
+      const training = range
+        ? trainingBreakdown(summary.training, range.start, range.end)
+        : { countedHours: hours(summary.training), excessHours: 0 };
       els.timelineSummary.replaceChildren();
       [
         ["在席", summary.presence],
         ["研修", summary.training],
+        ["研修（範囲内）", training.countedHours * 3600],
+        ["研修（超過分）", training.excessHours * 3600],
         ["在席異常", summary.presenceAbnormal],
         ["研修異常", summary.trainingAbnormal],
         ["異常区間", summary.abnormalCount]
@@ -1741,7 +1769,7 @@
       }
 
       const segments = timelineSegmentsForRange(user, range.start, range.end);
-      renderTimelineSummary(segments);
+      renderTimelineSummary(segments, range);
       els.timelineNote.textContent = `${dayKey(range.start)} - ${dayKey(range.end)}`;
 
       const days = buildDayRows(range.start, range.end);
@@ -1865,6 +1893,8 @@
         ptimeLog = await fetchJsonWithFallback(normalizeDropboxUrl(PTIMELOG_URL));
         els.timelineNote.textContent = "ready";
         applyTimelineRange(timelineRangeMode, false);
+        drawLiveScoreChartFromTimeline();
+        if (report) renderSummary();
         if (els.personSelect.value) {
           updateCardsFromTimelineAllPeriod(els.personSelect.value);
           renderTimelineForPerson(els.personSelect.value);
@@ -2158,8 +2188,7 @@
             label: "研修h",
             data: entries.map(([, value]) => Math.min(Number(value["研修中"] || 0), trainingCapHours)),
             backgroundColor: trainingColors,
-            borderColor: COLORS.trainingBar,
-            outlineColor: trainingOutlines
+            borderColor: COLORS.trainingBar
           }
         ],
         {
@@ -2167,6 +2196,125 @@
           stacked: true,
           baselineValue: baselineHours,
           baselineLabel: `baseline ${baselineHours.toFixed(0)}h`,
+          baselineColor: "rgba(231, 238, 246, 0.58)",
+          valueLabels: true,
+          valueLabelFormatter: (total) => `${Math.round((total / baselineHours) * 100)}%`,
+          showAllLabels: true,
+          bottomPadding: 74,
+          hitLabels: labels
+        }
+      );
+    }
+
+    function liveScoreRange() {
+      const meta = ptimeLog?.metadata || {};
+      const rangeStart = meta.range_start ? new Date(meta.range_start) : null;
+      const rangeEnd = meta.range_end ? new Date(meta.range_end) : null;
+      if (!rangeStart || !rangeEnd || Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) return null;
+      if (liveScoreRangeMode === "all") return { start: rangeStart, end: rangeEnd, label: "全期間" };
+      const days = Number(liveScoreRangeMode || 30);
+      const start = addDays(rangeEnd, -(days - 1));
+      return { start: start < rangeStart ? rangeStart : start, end: rangeEnd, label: `${days}日` };
+    }
+
+    function weeksBetween(start, end) {
+      const ms = end - start;
+      return Number.isFinite(ms) && ms > 0 ? ms / (7 * 24 * 60 * 60 * 1000) : 1;
+    }
+
+    function trainingBreakdown(trainingSeconds, start, end) {
+      const trainingHours = hours(Number(trainingSeconds || 0));
+      const capHours = 10 * weeksBetween(start, end);
+      return {
+        totalHours: trainingHours,
+        countedHours: Math.min(trainingHours, capHours),
+        excessHours: Math.max(0, trainingHours - capHours),
+        capHours
+      };
+    }
+
+    function timelineAllRange() {
+      const meta = ptimeLog?.metadata || {};
+      const start = meta.range_start ? new Date(meta.range_start) : null;
+      const end = meta.range_end ? new Date(meta.range_end) : null;
+      if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+      return { start, end };
+    }
+
+    function drawLiveScoreChartFromTimeline() {
+      if (!ptimeLog) {
+        liveScoreHitItems = [];
+        if (els.liveScoreNote) els.liveScoreNote.textContent = "timeline loading";
+        drawEmptyChart("liveScoreChart", "タイムラインJSONを読み込み中です。");
+        return;
+      }
+      const range = liveScoreRange();
+      if (!range) {
+        liveScoreHitItems = [];
+        if (els.liveScoreNote) els.liveScoreNote.textContent = "range error";
+        drawEmptyChart("liveScoreChart", "充足率の集計期間を取得できません。");
+        return;
+      }
+      const weeks = weeksBetween(range.start, range.end);
+      const baselineHours = 20 * weeks;
+      const ignoreTrainingCap = Boolean(els.liveScoreIgnoreTrainingCap?.checked);
+      const sourceNames = report ? getPeopleRows().map((row) => row.name) : Object.keys(ptimeLog.users || {});
+      const entries = sourceNames
+        .filter((name) => !LIVE_EXCLUDE_PREFIXES.some((prefix) => name.startsWith(prefix)))
+        .map((name) => {
+          const user = ptimeLog.users?.[name];
+          const segments = timelineSegmentsForRange(user, range.start, range.end);
+          const summary = summarizeTimeline(segments);
+          const presenceHours = hours(summary.presence);
+          const training = trainingBreakdown(summary.training, range.start, range.end);
+          const displayedTrainingHours = ignoreTrainingCap ? training.totalHours : training.countedHours;
+          const totalHours = presenceHours + displayedTrainingHours;
+          return { name, presenceHours, trainingHours: training.totalHours, displayedTrainingHours, trainingExcessHours: training.excessHours, totalHours };
+        })
+        .filter((entry) => entry.totalHours > 0)
+        .sort((a, b) => b.totalHours - a.totalHours || a.name.localeCompare(b.name, "ja"))
+        .slice(0, 28);
+      const labels = entries.map((entry) => entry.name);
+      const presenceColors = labels.map((name) => {
+        const member = liveMembersByName.get(name);
+        const status = member ? liveStatus(member) : "";
+        return status === "在席中" || status === "在席" || status === "蝨ｨ蟶ｭ荳ｭ" || status === "蝨ｨ蟶ｭ"
+          ? "rgba(47, 140, 255, 0.98)"
+          : "rgba(47, 140, 255, 0.38)";
+      });
+      const trainingColors = labels.map((name) => {
+        const member = liveMembersByName.get(name);
+        const status = member ? liveStatus(member) : "";
+        return status === "研修中" || status === "遐比ｿｮ荳ｭ"
+          ? "rgba(242, 162, 58, 0.98)"
+          : "rgba(242, 162, 58, 0.38)";
+      });
+      if (els.liveScoreNote) {
+        els.liveScoreNote.textContent = `${range.label} / baseline ${baselineHours.toFixed(1)}h（週20h換算）`;
+      }
+      makeBarChart(
+        "liveScoreChart",
+        labels,
+        [
+          {
+            label: "在席h",
+            data: entries.map((entry) => entry.presenceHours),
+            backgroundColor: presenceColors,
+            borderColor: COLORS.presenceBar
+          },
+          {
+            label: "研修h",
+            data: entries.map((entry) => entry.displayedTrainingHours),
+            backgroundColor: trainingColors,
+            borderColor: COLORS.trainingBar,
+            outlineColor: entries.map((entry) => entry.trainingExcessHours > 0 ? "rgba(255, 107, 107, 0.95)" : "")
+          }
+        ],
+        {
+          minHeight: 260,
+          stacked: true,
+          baselineValue: baselineHours,
+          baselineLabel: `baseline ${baselineHours.toFixed(1)}h`,
           baselineColor: "rgba(231, 238, 246, 0.58)",
           valueLabels: true,
           valueLabelFormatter: (total) => `${Math.round((total / baselineHours) * 100)}%`,
@@ -2292,23 +2440,16 @@
 
     async function loadLiveDashboard() {
       try {
-        const [membersResult, timeResult, scoreResult] = await Promise.allSettled([
+        const [membersResult, timeResult] = await Promise.allSettled([
           fetchJsonWithFallback(LIVE_MEMBER_URL),
-          fetchJsonWithFallback(LIVE_TIME_URL),
-          fetchJsonWithFallback(LIVE_SCORE_URL)
+          fetchJsonWithFallback(LIVE_TIME_URL)
         ]);
         if (membersResult.status === "fulfilled") {
           const members = Array.isArray(membersResult.value) ? membersResult.value : membersResult.value.members || [];
           liveMembersByName = new Map(members.filter((member) => member.name).map((member) => [member.name, member]));
           renderLiveMembers(members);
         }
-        if (scoreResult.status === "fulfilled") {
-          const members = membersResult.status === "fulfilled"
-            ? Array.isArray(membersResult.value) ? membersResult.value : membersResult.value.members || []
-            : [];
-          const timeData = timeResult.status === "fulfilled" ? timeResult.value : null;
-          drawLiveScoreChart(scoreResult.value, members, timeData);
-        }
+        drawLiveScoreChartFromTimeline();
         if (timeResult.status === "fulfilled") {
           renderLiveTrends(timeResult.value, 30, "liveTrend30Chart");
           renderLiveTrends(timeResult.value, 5, "liveTrend5Chart");
@@ -2406,6 +2547,9 @@
       els.gradeHint.textContent = `週 ${evaluation.effortPerWeek.toFixed(1)}h / ${effortPercent(evaluation)}%`;
       els.presenceTotal.textContent = fmtHours(person.presence.total_seconds);
       els.trainingTotal.textContent = fmtHours(person.training.total_seconds);
+      const fallbackTraining = trainingBreakdownForPerson("", person.training.total_seconds);
+      els.trainingCountedTotal.textContent = `${fallbackTraining.countedHours.toFixed(2)}h`;
+      els.trainingExcessTotal.textContent = `${fallbackTraining.excessHours.toFixed(2)}h`;
       els.presenceAbnormal.textContent = fmtHours(person.presence.abnormal_total_seconds);
       els.trainingAbnormal.textContent = fmtHours(person.training.abnormal_total_seconds);
       els.presenceSessions.textContent = String(sessionCount(person.presence.duration_distribution));
@@ -2418,8 +2562,14 @@
       const summary = user?.summary;
       if (!summary) return;
       const segments = Array.isArray(user.segments) ? user.segments : [];
+      const allRange = timelineAllRange();
+      const training = allRange
+        ? trainingBreakdown(summary.training_seconds || 0, allRange.start, allRange.end)
+        : { countedHours: hours(summary.training_seconds || 0), excessHours: 0 };
       els.presenceTotal.textContent = fmtHours(Number(summary.presence_seconds || 0));
       els.trainingTotal.textContent = fmtHours(Number(summary.training_seconds || 0));
+      els.trainingCountedTotal.textContent = `${training.countedHours.toFixed(2)}h`;
+      els.trainingExcessTotal.textContent = `${training.excessHours.toFixed(2)}h`;
       els.presenceAbnormal.textContent = fmtHours(Number(summary.presence_abnormal_seconds || 0));
       els.trainingAbnormal.textContent = fmtHours(Number(summary.training_abnormal_seconds || 0));
       els.presenceSessions.textContent = String(
@@ -2465,6 +2615,8 @@
       els.gradeHint.textContent = "メンバー集計から名前を選択してください";
       els.presenceTotal.textContent = "—";
       els.trainingTotal.textContent = "—";
+      els.trainingCountedTotal.textContent = "—";
+      els.trainingExcessTotal.textContent = "—";
       els.presenceAbnormal.textContent = "—";
       els.trainingAbnormal.textContent = "—";
       els.presenceSessions.textContent = "—";
@@ -2510,17 +2662,39 @@
       });
     }
 
+    function trainingBreakdownForPerson(name, fallbackTrainingSeconds = 0) {
+      const allRange = timelineAllRange();
+      const summary = ptimeLog?.users?.[name]?.summary;
+      if (allRange && summary) {
+        return trainingBreakdown(summary.training_seconds || 0, allRange.start, allRange.end);
+      }
+      const meta = report?.metadata || {};
+      const start = meta.range_start ? new Date(meta.range_start) : null;
+      const end = meta.range_end ? new Date(meta.range_end) : null;
+      if (start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        return trainingBreakdown(fallbackTrainingSeconds, start, end);
+      }
+      const totalHours = hours(fallbackTrainingSeconds);
+      return { totalHours, countedHours: totalHours, excessHours: 0, capHours: Infinity };
+    }
+
     function getPeopleRows() {
       return Object.entries(report.people)
-        .map(([name, person]) => ({
-          name,
-          presence: person.presence.total_seconds || 0,
-          training: person.training.total_seconds || 0,
-          presenceAbnormal: person.presence.abnormal_total_seconds || 0,
-          trainingAbnormal: person.training.abnormal_total_seconds || 0,
-          segments: person.segments_count || 0,
-          evaluation: evaluatePerson(person)
-        }))
+        .map(([name, person]) => {
+          const training = person.training.total_seconds || 0;
+          const trainingLimit = trainingBreakdownForPerson(name, training);
+          return {
+            name,
+            presence: person.presence.total_seconds || 0,
+            training,
+            trainingCountedHours: trainingLimit.countedHours,
+            trainingExcessHours: trainingLimit.excessHours,
+            presenceAbnormal: person.presence.abnormal_total_seconds || 0,
+            trainingAbnormal: person.training.abnormal_total_seconds || 0,
+            segments: person.segments_count || 0,
+            evaluation: evaluatePerson(person)
+          };
+        })
         .filter((row) => row.evaluation.effortPerWeek > 5)
         .sort((a, b) => (b.presence + b.training) - (a.presence + a.training) || a.name.localeCompare(b.name, "ja"));
     }
@@ -2533,6 +2707,8 @@
           <td><span class="grade-pill ${gradeClass(row.evaluation.grade)}">${row.evaluation.grade}</span> <span class="grade-percent">${fmtPercent3(effortPercent(row.evaluation))}%</span></td>
           <td>${hours(row.presence).toFixed(2)}</td>
           <td>${hours(row.training).toFixed(2)}</td>
+          <td>${row.trainingCountedHours.toFixed(2)}</td>
+          <td>${row.trainingExcessHours.toFixed(2)}</td>
           <td>${row.evaluation.effortPerWeek.toFixed(2)}</td>
           <td>${hours(row.presenceAbnormal).toFixed(2)}</td>
           <td>${hours(row.trainingAbnormal).toFixed(2)}</td>
@@ -2752,6 +2928,18 @@
     els.liveScoreChart.addEventListener("mouseleave", () => {
       els.liveScoreChart.style.cursor = "default";
     });
+    els.liveScoreRangeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        liveScoreRangeMode = button.dataset.liveScoreRange || "30";
+        els.liveScoreRangeButtons.forEach((candidate) => {
+          candidate.classList.toggle("active", candidate === button);
+        });
+        drawLiveScoreChartFromTimeline();
+      });
+    });
+    els.liveScoreIgnoreTrainingCap.addEventListener("change", () => {
+      drawLiveScoreChartFromTimeline();
+    });
     els.timelineButtons.forEach((button) => {
       button.addEventListener("click", () => applyTimelineRange(button.dataset.rangeDays));
     });
@@ -2811,3 +2999,4 @@
 
 
 </body></html>
+
