@@ -328,6 +328,21 @@
       padding: 5px 8px;
     }
 
+    .timeline-grade-box {
+      height: 150px;
+      margin: 8px 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(7, 11, 16, 0.28);
+      overflow: hidden;
+    }
+
+    .timeline-grade-box canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
     .timeline-legend {
       display: flex;
       flex-wrap: wrap;
@@ -865,13 +880,15 @@
         <h2>取り組みタイムライン</h2>
         <div class="panel-note" id="timelineNote">loading</div>
       </div>
+      <div class="timeline-grade-box"><canvas id="timelineGradeChart"></canvas></div>
       <div class="timeline-controls" aria-label="タイムライン期間">
         <button class="timeline-button active" type="button" data-range-days="7">7日</button>
         <button class="timeline-button" type="button" data-range-days="30">30日</button>
         <button class="timeline-button" type="button" data-range-days="all">全期間</button>
         <label>開始 <input id="timelineStart" type="date"></label>
-        <label>終了 <input id="timelineEnd" type="date"></label>
-        <button class="timeline-button" type="button" id="timelineApply">適用</button>
+        <input id="timelineEnd" type="hidden">
+        <button class="timeline-button" type="button" id="timelinePrev">戻る</button>
+        <button class="timeline-button" type="button" id="timelineNext">進む</button>
       </div>
       <div class="timeline-summary" id="timelineSummary"></div>
       <div class="timeline-legend">
@@ -1336,8 +1353,10 @@
       timelineNote: document.getElementById("timelineNote"),
       timelineStart: document.getElementById("timelineStart"),
       timelineEnd: document.getElementById("timelineEnd"),
-      timelineApply: document.getElementById("timelineApply"),
+      timelinePrev: document.getElementById("timelinePrev"),
+      timelineNext: document.getElementById("timelineNext"),
       timelineButtons: document.querySelectorAll(".timeline-button[data-range-days]"),
+      timelineGradeChart: document.getElementById("timelineGradeChart"),
       timelineSummary: document.getElementById("timelineSummary"),
       timelineBox: document.getElementById("timelineBox"),
       timelineChart: document.getElementById("timelineChart"),
@@ -1617,9 +1636,16 @@
     }
 
     function timelineRangeFromInputs() {
-      if (!els.timelineStart.value || !els.timelineEnd.value) return null;
+      if (!els.timelineStart.value) return null;
       const start = localDateFromKey(els.timelineStart.value);
-      const end = localDateFromKey(els.timelineEnd.value, true);
+      let end;
+      if (timelineRangeMode === "all") {
+        if (!els.timelineEnd.value) return null;
+        end = localDateFromKey(els.timelineEnd.value, true);
+      } else {
+        const days = Number(timelineRangeMode || 7);
+        end = localDateFromKey(dayKey(addDays(start, days - 1)), true);
+      }
       if (end < start) return null;
       return { start, end };
     }
@@ -1643,11 +1669,30 @@
         els.timelineEnd.value = dayKey(rangeEnd);
       } else {
         const days = Number(mode || 30);
-        const start = addDays(rangeEnd, -(days - 1));
+        const currentStart = els.timelineStart.value ? localDateFromKey(els.timelineStart.value) : addDays(rangeEnd, -(days - 1));
+        const latestStart = addDays(rangeEnd, -(days - 1));
+        const start = currentStart < rangeStart || currentStart > latestStart ? latestStart : currentStart;
         els.timelineStart.value = dayKey(start < rangeStart ? rangeStart : start);
-        els.timelineEnd.value = dayKey(rangeEnd);
+        els.timelineEnd.value = dayKey(addDays(localDateFromKey(els.timelineStart.value), days - 1));
       }
       if (render) renderTimelineForPerson(els.personSelect.value);
+    }
+
+    function shiftTimelineRange(direction) {
+      if (timelineRangeMode === "all" || !els.timelineStart.value) return;
+      const days = Number(timelineRangeMode || 7);
+      const meta = ptimeLog?.metadata || {};
+      const rangeStart = meta.range_start ? new Date(meta.range_start) : null;
+      const rangeEnd = meta.range_end ? new Date(meta.range_end) : null;
+      let start = addDays(localDateFromKey(els.timelineStart.value), direction * days);
+      if (rangeStart && start < rangeStart) start = localDateFromKey(dayKey(rangeStart));
+      if (rangeEnd) {
+        const latestStart = addDays(rangeEnd, -(days - 1));
+        if (start > latestStart) start = localDateFromKey(dayKey(latestStart));
+      }
+      els.timelineStart.value = dayKey(start);
+      els.timelineEnd.value = dayKey(addDays(start, days - 1));
+      if (els.personSelect.value) renderTimelineForPerson(els.personSelect.value);
     }
 
     function timelineSegmentsForRange(user, start, end) {
@@ -1699,13 +1744,131 @@
       return summary;
     }
 
+    function timelineEvaluation(summary, start, end) {
+      const weeks = weeksBetween(start, end);
+      const presencePerWeek = hours(summary.presence) / weeks;
+      const training = trainingBreakdown(summary.training, start, end);
+      const effortPerWeek = presencePerWeek + training.countedHours / weeks;
+      let grade = "C";
+      if (effortPerWeek < 10) grade = "D";
+      else if (presencePerWeek >= 20) grade = "A";
+      else if (effortPerWeek >= 20) grade = "B";
+      return { grade, effortPerWeek, presencePerWeek, trainingCountedHours: training.countedHours };
+    }
+
+    function gradeValue(grade) {
+      return { D: 1, C: 2, B: 3, A: 4 }[grade] || 0;
+    }
+
+    function gradeFromValue(value) {
+      if (value >= 3.5) return "A";
+      if (value >= 2.5) return "B";
+      if (value >= 1.5) return "C";
+      return "D";
+    }
+
+    function gradeColor(grade) {
+      if (grade === "A") return "#43d17a";
+      if (grade === "B") return "#41c7e8";
+      if (grade === "C") return "#f2b84b";
+      return "#ff6b6b";
+    }
+
+    function renderGradeTrendChart(user) {
+      const canvas = els.timelineGradeChart;
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const width = Math.max(280, Math.floor(canvas.parentElement.clientWidth || rect.width));
+      const height = Math.max(130, Math.floor(canvas.parentElement.clientHeight || rect.height));
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = '11px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif';
+      ctx.textBaseline = "middle";
+      if (!user) return;
+      const metaRange = timelineAllRange();
+      if (!metaRange) return;
+
+      const stepDays = timelineRangeMode === "30" ? 30 : 7;
+      const firstStart = localDateFromKey(dayKey(metaRange.start));
+      if (stepDays === 7) firstStart.setDate(firstStart.getDate() - firstStart.getDay());
+      const points = [];
+      for (let start = firstStart; start <= metaRange.end; start = addDays(start, stepDays)) {
+        const end = localDateFromKey(dayKey(addDays(start, stepDays - 1)), true);
+        const clippedStart = start < metaRange.start ? metaRange.start : start;
+        const clippedEnd = end > metaRange.end ? metaRange.end : end;
+        if (clippedEnd <= clippedStart) continue;
+        const summary = summarizeTimeline(timelineSegmentsForRange(user, clippedStart, clippedEnd));
+        const evaluation = timelineEvaluation(summary, clippedStart, clippedEnd);
+        points.push({ label: dayKey(start).slice(5), grade: evaluation.grade, value: gradeValue(evaluation.grade) });
+      }
+      const plot = { left: 34, right: 14, top: 22, bottom: 28 };
+      const plotWidth = width - plot.left - plot.right;
+      const plotHeight = height - plot.top - plot.bottom;
+      ctx.fillStyle = COLORS.text;
+      ctx.textAlign = "left";
+      ctx.fillText(`評価履歴 (${stepDays === 7 ? "週単位・日曜始まり" : "30日単位"})`, plot.left, 12);
+      ["D", "C", "B", "A"].forEach((grade, index) => {
+        const value = index + 1;
+        const y = plot.top + plotHeight - (plotHeight * (value - 1) / 3);
+        ctx.strokeStyle = COLORS.grid;
+        ctx.beginPath();
+        ctx.moveTo(plot.left, y);
+        ctx.lineTo(width - plot.right, y);
+        ctx.stroke();
+        ctx.fillStyle = gradeColor(grade);
+        ctx.textAlign = "right";
+        ctx.fillText(grade, plot.left - 8, y);
+      });
+      if (!points.length) {
+        ctx.fillStyle = COLORS.ticks;
+        ctx.textAlign = "center";
+        ctx.fillText("評価履歴がありません", plot.left + plotWidth / 2, plot.top + plotHeight / 2);
+        return;
+      }
+      const xFor = (index) => plot.left + (points.length === 1 ? plotWidth / 2 : plotWidth * index / (points.length - 1));
+      const yFor = (value) => plot.top + plotHeight - (plotHeight * (value - 1) / 3);
+      ctx.strokeStyle = COLORS.cyan;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        const x = xFor(index);
+        const y = yFor(point.value);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      points.forEach((point, index) => {
+        const x = xFor(index);
+        const y = yFor(point.value);
+        ctx.fillStyle = gradeColor(point.grade);
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        if (points.length <= 16 || index % Math.ceil(points.length / 12) === 0 || index === points.length - 1) {
+          ctx.fillStyle = gradeColor(point.grade);
+          ctx.textAlign = "center";
+          ctx.fillText(point.grade, x, Math.max(plot.top + 8, y - 12));
+          ctx.fillStyle = COLORS.ticks;
+          ctx.fillText(point.label, x, height - 12);
+        }
+      });
+    }
+
     function renderTimelineSummary(segments, range = null) {
       const summary = summarizeTimeline(segments);
       const training = range
         ? trainingBreakdown(summary.training, range.start, range.end)
         : { countedHours: hours(summary.training), excessHours: 0 };
+      const evaluation = range ? timelineEvaluation(summary, range.start, range.end) : null;
       els.timelineSummary.replaceChildren();
       [
+        ["表示期間評価", evaluation ? evaluation.grade : "—"],
         ["在席", summary.presence],
         ["研修", summary.training],
         ["研修（範囲内）", training.countedHours * 3600],
@@ -1729,6 +1892,10 @@
       canvas.height = 1;
       canvas.style.width = "1px";
       canvas.style.height = "1px";
+      if (els.timelineGradeChart) {
+        els.timelineGradeChart.width = 1;
+        els.timelineGradeChart.height = 1;
+      }
       els.timelineSummary.replaceChildren();
       hideTimelineTooltip();
       els.timelineBox.replaceChildren();
@@ -1769,6 +1936,7 @@
       }
 
       const segments = timelineSegmentsForRange(user, range.start, range.end);
+      renderGradeTrendChart(user);
       renderTimelineSummary(segments, range);
       els.timelineNote.textContent = `${dayKey(range.start)} - ${dayKey(range.end)}`;
 
@@ -1940,7 +2108,10 @@
       const values = options.stacked
         ? labels.map((_, index) => datasets.reduce((sum, dataset) => sum + Number(dataset.data[index] || 0), 0))
         : datasets.flatMap((dataset) => dataset.data.map((value) => Number(value || 0)));
-      const maxValue = options.maxValue || Math.max(1, options.baselineValue || 0, ...values) * 1.12;
+      const overlayValues = Array.isArray(options.overlays)
+        ? options.overlays.flatMap((overlay) => Array.isArray(overlay.data) ? overlay.data.map((value) => Number(value || 0)) : [])
+        : [];
+      const maxValue = options.maxValue || Math.max(1, options.baselineValue || 0, ...values, ...overlayValues) * 1.12;
       const tickCount = options.compact ? 3 : 4;
 
       ctx.strokeStyle = COLORS.grid;
@@ -2014,10 +2185,17 @@
             ? dataset.outlineColor[index]
             : dataset.outlineColor;
           if (outlineColor && barHeight > 0) {
+            const outlineValue = Array.isArray(dataset.outlineValueData)
+              ? Number(dataset.outlineValueData[index] || 0)
+              : null;
+            const outlineHeight = outlineValue !== null
+              ? Math.min(barHeight, Math.max(0, plotHeight * outlineValue / maxValue))
+              : barHeight;
+            const outlineY = options.stacked ? stackTop - outlineHeight : y + barHeight - outlineHeight;
             ctx.save();
             ctx.strokeStyle = outlineColor;
             ctx.lineWidth = 2;
-            ctx.strokeRect(x + 1, y + 1, Math.max(1, barWidth - 1) - 2, Math.max(1, barHeight - 2));
+            ctx.strokeRect(x + 1, outlineY + 1, Math.max(1, barWidth - 1) - 2, Math.max(1, outlineHeight - 2));
             ctx.restore();
           }
           if (options.stacked) stackTop = y;
@@ -2052,6 +2230,67 @@
           ctx.restore();
         }
       });
+
+      if (Array.isArray(options.overlays)) {
+        options.overlays.forEach((overlay) => {
+          const data = Array.isArray(overlay.data) ? overlay.data.map((value) => Number(value || 0)) : [];
+          if (!data.length) return;
+          const points = data.map((value, index) => ({
+            x: plot.left + index * groupWidth + groupWidth / 2,
+            y: plot.top + plotHeight - plotHeight * value / maxValue,
+            value
+          }));
+          ctx.save();
+          ctx.strokeStyle = overlay.color || "rgba(231, 238, 246, 0.8)";
+          ctx.fillStyle = overlay.fillColor || "rgba(231, 238, 246, 0.10)";
+          ctx.lineWidth = overlay.lineWidth || 2;
+          if (overlay.smooth !== false && points.length > 1) {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 0; i < points.length - 1; i += 1) {
+              const current = points[i];
+              const next = points[i + 1];
+              const midX = (current.x + next.x) / 2;
+              ctx.quadraticCurveTo(current.x, current.y, midX, (current.y + next.y) / 2);
+              ctx.quadraticCurveTo(next.x, next.y, next.x, next.y);
+            }
+            ctx.stroke();
+            if (overlay.fill !== false) {
+              ctx.lineTo(points[points.length - 1].x, plot.top + plotHeight);
+              ctx.lineTo(points[0].x, plot.top + plotHeight);
+              ctx.closePath();
+              ctx.fill();
+            }
+          } else {
+            ctx.beginPath();
+            points.forEach((point, index) => {
+              if (index === 0) ctx.moveTo(point.x, point.y);
+              else ctx.lineTo(point.x, point.y);
+            });
+            ctx.stroke();
+          }
+          if (overlay.points || overlay.valueLabels) {
+            points.forEach((point, index) => {
+              ctx.fillStyle = overlay.color || "rgba(231, 238, 246, 0.8)";
+              ctx.beginPath();
+              ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+              ctx.fill();
+              if (overlay.valueLabels) {
+                ctx.fillStyle = overlay.labelColor || COLORS.text;
+                ctx.font = '10px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif';
+                ctx.textAlign = "center";
+                ctx.fillText(point.value.toFixed(1), point.x, Math.max(plot.top + 8, point.y - 10));
+              }
+            });
+          }
+          if (overlay.label) {
+            ctx.fillStyle = overlay.color || COLORS.text;
+            ctx.textAlign = "right";
+            ctx.fillText(overlay.label, width - plot.right - 2, plot.top + 10 + (overlay.labelOffset || 0));
+          }
+          ctx.restore();
+        });
+      }
 
       if (!options.hideLegend) {
         let legendX = plot.left;
@@ -2269,7 +2508,7 @@
           const training = trainingBreakdown(summary.training, range.start, range.end);
           const displayedTrainingHours = ignoreTrainingCap ? training.totalHours : training.countedHours;
           const totalHours = presenceHours + displayedTrainingHours;
-          return { name, presenceHours, trainingHours: training.totalHours, displayedTrainingHours, trainingExcessHours: training.excessHours, totalHours };
+          return { name, presenceHours, trainingHours: training.totalHours, displayedTrainingHours, trainingCountedHours: training.countedHours, trainingExcessHours: training.excessHours, totalHours };
         })
         .filter((entry) => entry.totalHours > 0)
         .sort((a, b) => b.totalHours - a.totalHours || a.name.localeCompare(b.name, "ja"))
@@ -2307,7 +2546,8 @@
             data: entries.map((entry) => entry.displayedTrainingHours),
             backgroundColor: trainingColors,
             borderColor: COLORS.trainingBar,
-            outlineColor: entries.map((entry) => entry.trainingExcessHours > 0 ? "rgba(255, 107, 107, 0.95)" : "")
+            outlineColor: entries.map((entry) => entry.trainingExcessHours > 0 ? "rgba(255, 107, 107, 0.95)" : ""),
+            outlineValueData: entries.map((entry) => entry.trainingCountedHours)
           }
         ],
         {
@@ -2438,6 +2678,43 @@
       ]);
     }
 
+    function averageDistribution(category, field, valueMapper) {
+      if (!report) return [];
+      const rows = getPeopleRows();
+      if (!rows.length) return [];
+      const first = report.people[rows[0].name]?.[category]?.[field] || [];
+      const totals = Array.from({ length: first.length }, () => 0);
+      rows.forEach((row) => {
+        const distribution = report.people[row.name]?.[category]?.[field] || [];
+        distribution.forEach((item, index) => {
+          totals[index] += valueMapper(item);
+        });
+      });
+      return totals.map((total) => total / rows.length);
+    }
+
+    function averageHourOverlay(category, color, fillColor, label) {
+      return {
+        label,
+        data: averageDistribution(category, "hour_distribution", (item) => hours(item.seconds)),
+        color,
+        fillColor,
+        fill: true,
+        smooth: true
+      };
+    }
+
+    function averageCountOverlay(category, color, fillColor, label) {
+      return {
+        label,
+        data: averageDistribution(category, "duration_distribution", (item) => Number(item.count || 0)),
+        color,
+        fillColor,
+        fill: true,
+        smooth: true
+      };
+    }
+
     async function loadLiveDashboard() {
       try {
         const [membersResult, timeResult] = await Promise.allSettled([
@@ -2488,7 +2765,12 @@
             borderWidth: 1
           }
         ],
-        false
+        {
+          overlays: [
+            averageHourOverlay("presence", "rgba(47, 140, 255, 0.95)", "rgba(47, 140, 255, 0.10)", "全員平均 在席"),
+            averageHourOverlay("training", "rgba(242, 162, 58, 0.95)", "rgba(242, 162, 58, 0.10)", "全員平均 研修")
+          ]
+        }
       );
 
       makeBarChart(
@@ -2510,7 +2792,32 @@
             borderWidth: 1
           }
         ],
-        false
+        {
+          overlays: [
+            {
+              label: "全員平均 在席",
+              data: averageDistribution("presence", "weekday_distribution", (item) => hours(item.seconds)),
+              color: "rgba(47, 140, 255, 0.95)",
+              fillColor: "rgba(47, 140, 255, 0.08)",
+              fill: false,
+              smooth: false,
+              points: true,
+              valueLabels: true,
+              labelOffset: 0
+            },
+            {
+              label: "全員平均 研修",
+              data: averageDistribution("training", "weekday_distribution", (item) => hours(item.seconds)),
+              color: "rgba(242, 162, 58, 0.95)",
+              fillColor: "rgba(242, 162, 58, 0.08)",
+              fill: false,
+              smooth: false,
+              points: true,
+              valueLabels: true,
+              labelOffset: 14
+            }
+          ]
+        }
       );
 
       makeBarChart(
@@ -2523,7 +2830,11 @@
           borderColor: COLORS.presenceBar,
           borderWidth: 1
         }],
-        false
+        {
+          overlays: [
+            averageCountOverlay("presence", "rgba(47, 140, 255, 0.95)", "rgba(47, 140, 255, 0.10)", "全員平均")
+          ]
+        }
       );
 
       makeBarChart(
@@ -2536,7 +2847,11 @@
           borderColor: COLORS.trainingBar,
           borderWidth: 1
         }],
-        false
+        {
+          overlays: [
+            averageCountOverlay("training", "rgba(242, 162, 58, 0.95)", "rgba(242, 162, 58, 0.10)", "全員平均")
+          ]
+        }
       );
     }
 
@@ -2943,12 +3258,13 @@
     els.timelineButtons.forEach((button) => {
       button.addEventListener("click", () => applyTimelineRange(button.dataset.rangeDays));
     });
-    els.timelineApply.addEventListener("click", () => {
-      timelineRangeMode = "custom";
-      els.timelineButtons.forEach((button) => button.classList.remove("active"));
+    els.timelineStart.addEventListener("change", () => {
+      const range = timelineRangeFromInputs();
+      if (range) els.timelineEnd.value = dayKey(range.end);
       if (els.personSelect.value) renderTimelineForPerson(els.personSelect.value);
-      else renderTimelineEmpty("メンバー集計から名前を選択すると、時系列の取り組み状況を表示します。");
     });
+    els.timelinePrev.addEventListener("click", () => shiftTimelineRange(-1));
+    els.timelineNext.addEventListener("click", () => shiftTimelineRange(1));
     els.timelineChart.addEventListener("mousemove", (event) => {
       const rect = els.timelineChart.getBoundingClientRect();
       const x = event.clientX - rect.left;
