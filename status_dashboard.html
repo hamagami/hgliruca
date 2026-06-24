@@ -269,6 +269,57 @@
 
     .chart-box.short { height: 250px; }
 
+    .network-chart-box {
+      position: relative;
+      height: min(68vh, 720px);
+      min-height: 520px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(65, 199, 232, 0.12), transparent 32%),
+        radial-gradient(circle at 84% 74%, rgba(242, 162, 58, 0.10), transparent 30%),
+        rgba(0, 0, 0, 0.12);
+    }
+
+    .network-chart-box canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .network-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .network-stats span {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .network-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .network-links span {
+      border: 1px solid rgba(65, 199, 232, 0.18);
+      border-radius: 999px;
+      padding: 5px 8px;
+      background: rgba(65, 199, 232, 0.06);
+    }
+
     .timeline-controls {
       display: flex;
       flex-wrap: wrap;
@@ -809,6 +860,7 @@
       <button class="tab-button active" type="button" data-tab="live">現況</button>
       <button class="tab-button" type="button" data-tab="allHours">全員</button>
       <button class="tab-button" type="button" data-tab="personal">個人</button>
+      <button class="tab-button" type="button" data-tab="network">ネットワーク</button>
     </nav>
 
     <section id="personalView" class="tab-view">
@@ -1229,6 +1281,20 @@
       </article>
     </section>
 
+    <section id="networkView" class="tab-view">
+      <article class="panel full">
+        <div class="panel-head">
+          <h2>在席重なりネットワーク</h2>
+          <div class="panel-note" id="networkNote">timeline loading</div>
+        </div>
+        <div class="network-chart-box">
+          <canvas id="networkChart"></canvas>
+        </div>
+        <div class="network-stats" id="networkStats"></div>
+        <div class="network-links" id="networkTopLinks"></div>
+      </article>
+    </section>
+
     <section id="liveView" class="tab-view active">
       <article class="panel full">
         <div class="panel-head">
@@ -1318,6 +1384,11 @@
       allHoursView: document.getElementById("allHoursView"),
       allHoursGrid: document.getElementById("allHoursGrid"),
       allHoursScale: document.getElementById("allHoursScale"),
+      networkView: document.getElementById("networkView"),
+      networkChart: document.getElementById("networkChart"),
+      networkNote: document.getElementById("networkNote"),
+      networkStats: document.getElementById("networkStats"),
+      networkTopLinks: document.getElementById("networkTopLinks"),
       liveView: document.getElementById("liveView"),
       liveClock: document.getElementById("liveClock"),
       liveUpdated: document.getElementById("liveUpdated"),
@@ -1371,6 +1442,9 @@
     let timelineHoverItems = [];
     let timelineGradeHitItems = [];
     let liveScoreHitItems = [];
+    let networkState = { nodes: [], edges: [], hitItems: [], animationId: 0, prepared: false, frame: 0 };
+    let networkDrag = null;
+    let networkSuppressClick = false;
     let liveMembersByName = new Map();
     let charts = {};
     let liveLoaded = false;
@@ -2192,6 +2266,8 @@
         els.timelineNote.textContent = "ready";
         applyTimelineRange(timelineRangeMode, false);
         drawLiveScoreChartFromTimeline();
+        networkState.prepared = false;
+        if (activeTabName() === "network") renderPresenceNetwork(true);
         if (report) renderSummary();
         if (els.personSelect.value) {
           updateCardsFromTimelineAllPeriod(els.personSelect.value);
@@ -2201,6 +2277,301 @@
         els.timelineNote.textContent = "error";
         renderTimelineEmpty(`タイムラインJSONを読み込めませんでした: ${error.message}`);
       }
+    }
+
+    function presenceIntervalsForNetwork(user) {
+      return (Array.isArray(user?.segments) ? user.segments : [])
+        .filter((segment) => segment.category === "presence" && segment.quality === "normal")
+        .map((segment) => {
+          const start = new Date(segment.start);
+          const end = new Date(segment.end);
+          if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return null;
+          return { start: start.getTime(), end: end.getTime() };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.start - b.start);
+    }
+
+    function intervalOverlapSeconds(left, right) {
+      let i = 0;
+      let j = 0;
+      let overlap = 0;
+      while (i < left.length && j < right.length) {
+        const start = Math.max(left[i].start, right[j].start);
+        const end = Math.min(left[i].end, right[j].end);
+        if (end > start) overlap += (end - start) / 1000;
+        if (left[i].end < right[j].end) i += 1;
+        else j += 1;
+      }
+      return overlap;
+    }
+
+    function buildPresenceNetworkData() {
+      const users = ptimeLog?.users || {};
+      const entries = Object.entries(users)
+        .map(([name, user]) => {
+          const intervals = presenceIntervalsForNetwork(user);
+          const totalSeconds = intervals.reduce((sum, item) => sum + (item.end - item.start) / 1000, 0);
+          return { name, intervals, totalSeconds };
+        })
+        .filter((item) => item.totalSeconds > 0);
+
+      const rawEdges = [];
+      for (let i = 0; i < entries.length; i += 1) {
+        for (let j = i + 1; j < entries.length; j += 1) {
+          const seconds = intervalOverlapSeconds(entries[i].intervals, entries[j].intervals);
+          if (seconds > 0) rawEdges.push({ source: entries[i].name, target: entries[j].name, seconds });
+        }
+      }
+      rawEdges.sort((a, b) => b.seconds - a.seconds);
+      const maxOverlap = rawEdges[0]?.seconds || 1;
+      const selectedKeys = new Set();
+      rawEdges.filter((edge) => edge.seconds >= maxOverlap * 0.08).slice(0, 120).forEach((edge) => {
+        selectedKeys.add(`${edge.source}\u0000${edge.target}`);
+      });
+      entries.forEach((entry) => {
+        rawEdges
+          .filter((edge) => edge.source === entry.name || edge.target === entry.name)
+          .slice(0, 3)
+          .forEach((edge) => selectedKeys.add(`${edge.source}\u0000${edge.target}`));
+      });
+
+      const edges = rawEdges.filter((edge) => selectedKeys.has(`${edge.source}\u0000${edge.target}`));
+      const degree = new Map(entries.map((entry) => [entry.name, 0]));
+      edges.forEach((edge) => {
+        degree.set(edge.source, (degree.get(edge.source) || 0) + edge.seconds);
+        degree.set(edge.target, (degree.get(edge.target) || 0) + edge.seconds);
+      });
+
+      const maxDegree = Math.max(1, ...entries.map((entry) => degree.get(entry.name) || 0));
+      const nodes = entries.map((entry, index) => {
+        const person = report?.people?.[entry.name];
+        const evaluation = person ? evaluatePerson(person) : null;
+        const angle = (Math.PI * 2 * index) / Math.max(entries.length, 1);
+        const degreeSeconds = degree.get(entry.name) || 0;
+        const networkStrength = Math.sqrt(degreeSeconds / maxDegree);
+        return {
+          id: entry.name,
+          name: entry.name,
+          totalSeconds: entry.totalSeconds,
+          degreeSeconds,
+          networkStrength,
+          grade: evaluation?.grade || "C",
+          radius: 6 + networkStrength * 19,
+          x: 0.5 + Math.cos(angle) * 0.28,
+          y: 0.5 + Math.sin(angle) * 0.28,
+          vx: 0,
+          vy: 0
+        };
+      });
+
+      return { nodes, edges, maxOverlap, maxDegree, rawEdges };
+    }
+
+    function networkNodeColor(strength) {
+      const t = clamp(strength || 0, 0, 1);
+      const stops = [
+        { t: 0, r: 87, g: 103, b: 120 },
+        { t: 0.38, r: 65, g: 199, b: 232 },
+        { t: 0.72, r: 67, g: 209, b: 122 },
+        { t: 1, r: 242, g: 184, b: 75 }
+      ];
+      let left = stops[0];
+      let right = stops[stops.length - 1];
+      for (let i = 1; i < stops.length; i += 1) {
+        if (t <= stops[i].t) {
+          left = stops[i - 1];
+          right = stops[i];
+          break;
+        }
+      }
+      const span = Math.max(0.001, right.t - left.t);
+      const p = (t - left.t) / span;
+      const mix = (a, b) => Math.round(a + (b - a) * p);
+      return `rgb(${mix(left.r, right.r)}, ${mix(left.g, right.g)}, ${mix(left.b, right.b)})`;
+    }
+
+    function preparePresenceNetwork(reset = false) {
+      if (!ptimeLog) {
+        els.networkNote.textContent = "timeline loading";
+        return false;
+      }
+      if (networkState.prepared && !reset) return true;
+      const data = buildPresenceNetworkData();
+      networkState = { ...networkState, ...data, hitItems: [], prepared: true, frame: 0 };
+      els.networkNote.textContent = `${data.nodes.length}名 / ${data.edges.length} links`;
+      els.networkStats.replaceChildren();
+      [
+        `メンバー ${data.nodes.length}`,
+        `リンク ${data.edges.length}`,
+        `最大重なり ${fmtHours(data.maxOverlap)}`
+      ].forEach((text) => {
+        const item = document.createElement("span");
+        item.textContent = text;
+        els.networkStats.appendChild(item);
+      });
+      els.networkTopLinks.replaceChildren();
+      data.rawEdges.slice(0, 10).forEach((edge) => {
+        const item = document.createElement("span");
+        item.textContent = `${edge.source} - ${edge.target}: ${fmtHours(edge.seconds)}`;
+        els.networkTopLinks.appendChild(item);
+      });
+      return true;
+    }
+
+    function setupNetworkCanvas() {
+      const canvas = els.networkChart;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const width = Math.max(320, Math.floor(canvas.parentElement.clientWidth || rect.width));
+      const height = Math.max(360, Math.floor(canvas.parentElement.clientHeight || rect.height));
+      const ratio = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.floor(width * ratio) || canvas.height !== Math.floor(height * ratio)) {
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      }
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { canvas, ctx, width, height };
+    }
+
+    function simulatePresenceNetwork(width, height) {
+      const nodes = networkState.nodes;
+      const edges = networkState.edges;
+      if (!nodes.length) return;
+      const byName = new Map(nodes.map((node) => [node.id, node]));
+      nodes.forEach((node) => {
+        node.fx = node.x * width;
+        node.fy = node.y * height;
+      });
+      for (let i = 0; i < nodes.length; i += 1) {
+        for (let j = i + 1; j < nodes.length; j += 1) {
+          const a = nodes[i];
+          const b = nodes[j];
+          let dx = a.fx - b.fx;
+          let dy = a.fy - b.fy;
+          let dist = Math.max(18, Math.hypot(dx, dy));
+          const force = 780 / (dist * dist);
+          dx /= dist;
+          dy /= dist;
+          a.vx += dx * force;
+          a.vy += dy * force;
+          b.vx -= dx * force;
+          b.vy -= dy * force;
+        }
+      }
+      edges.forEach((edge) => {
+        const a = byName.get(edge.source);
+        const b = byName.get(edge.target);
+        if (!a || !b) return;
+        const strength = Math.sqrt(edge.seconds / networkState.maxOverlap);
+        let dx = b.fx - a.fx;
+        let dy = b.fy - a.fy;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        const target = 210 - strength * 95;
+        const force = (dist - target) * (0.0009 + strength * 0.0018);
+        dx /= dist;
+        dy /= dist;
+        a.vx += dx * force;
+        a.vy += dy * force;
+        b.vx -= dx * force;
+        b.vy -= dy * force;
+      });
+      nodes.forEach((node) => {
+        const centerPull = 0.0009;
+        if (networkDrag?.node === node) {
+          node.fx = networkDrag.x;
+          node.fy = networkDrag.y;
+          node.vx = 0;
+          node.vy = 0;
+          node.x = node.fx / width;
+          node.y = node.fy / height;
+          return;
+        }
+        node.vx += (width / 2 - node.fx) * centerPull;
+        node.vy += (height / 2 - node.fy) * centerPull;
+        node.vx *= 0.88;
+        node.vy *= 0.88;
+        node.fx = clamp(node.fx + node.vx, node.radius + 18, width - node.radius - 18);
+        node.fy = clamp(node.fy + node.vy, node.radius + 18, height - node.radius - 18);
+        node.x = node.fx / width;
+        node.y = node.fy / height;
+      });
+    }
+
+    function drawPresenceNetworkFrame() {
+      if (activeTabName() !== "network" || !networkState.prepared) return;
+      const { ctx, width, height } = setupNetworkCanvas();
+      networkState.frame += 1;
+      simulatePresenceNetwork(width, height);
+      const nodes = networkState.nodes;
+      const byName = new Map(nodes.map((node) => [node.id, node]));
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.globalAlpha = 0.22;
+      for (let x = 40; x < width; x += 40) {
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 40; y < height; y += 40) {
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      networkState.edges.forEach((edge) => {
+        const a = byName.get(edge.source);
+        const b = byName.get(edge.target);
+        if (!a || !b) return;
+        const strength = Math.sqrt(edge.seconds / networkState.maxOverlap);
+        const pulse = 0.5 + 0.5 * Math.sin(networkState.frame * 0.035 + strength * 7);
+        ctx.strokeStyle = `rgba(65, 199, 232, ${0.16 + strength * 0.46 + pulse * 0.08})`;
+        ctx.lineWidth = 0.8 + strength * 5.2;
+        ctx.beginPath();
+        ctx.moveTo(a.fx, a.fy);
+        ctx.lineTo(b.fx, b.fy);
+        ctx.stroke();
+      });
+
+      networkState.hitItems = [];
+      nodes.forEach((node) => {
+        const color = networkNodeColor(node.networkStrength);
+        const pulse = 0.5 + 0.5 * Math.sin(networkState.frame * 0.04 + node.radius);
+        ctx.save();
+        ctx.globalAlpha = 0.12 + node.networkStrength * 0.22 + pulse * 0.08;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(node.fx, node.fy, node.radius + 7 + node.networkStrength * 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = color;
+        ctx.strokeStyle = node.networkStrength > 0.72 ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.62)";
+        ctx.lineWidth = 1.1 + node.networkStrength * 1.6;
+        ctx.beginPath();
+        ctx.arc(node.fx, node.fy, node.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '11px "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(node.name, node.fx, node.fy + node.radius + 5);
+        networkState.hitItems.push({ x: node.fx, y: node.fy, radius: node.radius + 12, name: node.name });
+      });
+      networkState.animationId = requestAnimationFrame(drawPresenceNetworkFrame);
+    }
+
+    function renderPresenceNetwork(reset = false) {
+      if (!preparePresenceNetwork(reset)) return;
+      cancelAnimationFrame(networkState.animationId);
+      networkState.animationId = requestAnimationFrame(drawPresenceNetworkFrame);
     }
 
     function makeBarChart(id, labels, datasets, options = {}) {
@@ -3299,6 +3670,7 @@
       });
       els.personalView.classList.toggle("active", tabName === "personal");
       els.allHoursView.classList.toggle("active", tabName === "allHours");
+      els.networkView.classList.toggle("active", tabName === "network");
       els.liveView.classList.toggle("active", tabName === "live");
 
       if (tabName === "allHours") {
@@ -3307,6 +3679,9 @@
         if (!liveLoaded) loadLiveDashboard();
       } else if (tabName === "live") {
         if (!liveLoaded) loadLiveDashboard();
+      } else if (tabName === "network") {
+        if (!ptimeLog) loadPtimeLog();
+        else renderPresenceNetwork(false);
       } else if (report && els.personSelect.value) {
         selectPerson(els.personSelect.value, false, false);
       } else if (report) {
@@ -3335,8 +3710,10 @@
         updateMetadata();
         populatePeople();
         renderSummary();
+        networkState.prepared = false;
         if (!ptimeLog) loadPtimeLog();
         if (activeTabName() === "live" && !liveLoaded) loadLiveDashboard();
+        if (activeTabName() === "network" && ptimeLog) renderPresenceNetwork(true);
       } catch (error) {
         els.dataState.textContent = "error";
         showError(
@@ -3442,6 +3819,105 @@
     els.timelineChart.addEventListener("mouseleave", () => {
       hideTimelineTooltip();
     });
+    function networkHitAt(event) {
+      if (!els.networkChart) return null;
+      const rect = els.networkChart.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      return networkState.hitItems.find((candidate) => {
+        const dx = x - candidate.x;
+        const dy = y - candidate.y;
+        return Math.hypot(dx, dy) <= candidate.radius;
+      }) || null;
+    }
+    function networkPointerPosition(event) {
+      const rect = els.networkChart.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+    els.networkChart.addEventListener("mousedown", (event) => {
+      const item = networkHitAt(event);
+      if (!item) return;
+      const node = networkState.nodes.find((candidate) => candidate.name === item.name);
+      if (!node) return;
+      const position = networkPointerPosition(event);
+      networkDrag = {
+        node,
+        startX: position.x,
+        startY: position.y,
+        x: position.x,
+        y: position.y,
+        moved: false
+      };
+      node.vx = 0;
+      node.vy = 0;
+      els.networkChart.style.cursor = "grabbing";
+      hideTimelineTooltip();
+      event.preventDefault();
+    });
+    window.addEventListener("mousemove", (event) => {
+      if (!networkDrag) return;
+      const position = networkPointerPosition(event);
+      const { width, height } = setupNetworkCanvas();
+      networkDrag.x = clamp(position.x, networkDrag.node.radius + 18, width - networkDrag.node.radius - 18);
+      networkDrag.y = clamp(position.y, networkDrag.node.radius + 18, height - networkDrag.node.radius - 18);
+      networkDrag.moved = networkDrag.moved || Math.hypot(networkDrag.x - networkDrag.startX, networkDrag.y - networkDrag.startY) > 4;
+      els.networkChart.style.cursor = "grabbing";
+    });
+    window.addEventListener("mouseup", () => {
+      if (!networkDrag) return;
+      networkSuppressClick = networkDrag.moved;
+      networkDrag.node.vx = 0;
+      networkDrag.node.vy = 0;
+      networkDrag = null;
+      els.networkChart.style.cursor = "default";
+      if (networkSuppressClick) {
+        setTimeout(() => {
+          networkSuppressClick = false;
+        }, 0);
+      }
+    });
+    els.networkChart.addEventListener("click", (event) => {
+      if (networkSuppressClick) {
+        networkSuppressClick = false;
+        return;
+      }
+      const item = networkHitAt(event);
+      if (item?.name && report?.people?.[item.name]) selectPerson(item.name, true, true);
+    });
+    els.networkChart.addEventListener("mousemove", (event) => {
+      if (networkDrag) {
+        els.networkChart.style.cursor = "grabbing";
+        return;
+      }
+      const item = networkHitAt(event);
+      els.networkChart.style.cursor = item?.name && report?.people?.[item.name] ? "pointer" : "default";
+      if (item) {
+        const node = networkState.nodes.find((candidate) => candidate.name === item.name);
+        els.timelineTooltip.innerHTML = [
+          `<strong>${escapeHtml(item.name)}</strong>`,
+          `<strong>在席</strong> ${escapeHtml(fmtHours(node?.totalSeconds || 0))}`,
+          `<strong>重なり</strong> ${escapeHtml(fmtHours(node?.degreeSeconds || 0))}`,
+          `<strong>連携強度</strong> ${Math.round((node?.networkStrength || 0) * 100)}%`
+        ].join("<br>");
+        els.timelineTooltip.style.display = "block";
+        const tooltipRect = els.timelineTooltip.getBoundingClientRect();
+        let left = event.clientX + 14;
+        let top = event.clientY + 14;
+        if (left + tooltipRect.width + 12 > window.innerWidth) left = event.clientX - tooltipRect.width - 14;
+        if (top + tooltipRect.height + 12 > window.innerHeight) top = event.clientY - tooltipRect.height - 14;
+        els.timelineTooltip.style.left = `${Math.max(12, left)}px`;
+        els.timelineTooltip.style.top = `${Math.max(12, top)}px`;
+      } else {
+        hideTimelineTooltip();
+      }
+    });
+    els.networkChart.addEventListener("mouseleave", () => {
+      els.networkChart.style.cursor = "default";
+      hideTimelineTooltip();
+    });
     els.tabButtons.forEach((button) => {
       button.addEventListener("click", () => switchTab(button.dataset.tab));
     });
@@ -3452,6 +3928,7 @@
         if (!report) return;
         if (activeTabName() === "allHours") renderAllHourCharts();
         else if (activeTabName() === "live") loadLiveDashboard();
+        else if (activeTabName() === "network") renderPresenceNetwork(true);
         else if (els.personSelect.value) selectPerson(els.personSelect.value, false, false);
         else showPersonalIntro();
       }, 180);
