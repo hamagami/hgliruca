@@ -1445,6 +1445,7 @@
     let networkState = { nodes: [], edges: [], hitItems: [], animationId: 0, prepared: false, frame: 0 };
     let networkDrag = null;
     let networkSuppressClick = false;
+    let networkActiveName = "";
     let liveMembersByName = new Map();
     let charts = {};
     let liveLoaded = false;
@@ -2507,6 +2508,14 @@
       simulatePresenceNetwork(width, height);
       const nodes = networkState.nodes;
       const byName = new Map(nodes.map((node) => [node.id, node]));
+      const activeNeighbors = new Set();
+      if (networkActiveName) {
+        activeNeighbors.add(networkActiveName);
+        networkState.edges.forEach((edge) => {
+          if (edge.source === networkActiveName) activeNeighbors.add(edge.target);
+          if (edge.target === networkActiveName) activeNeighbors.add(edge.source);
+        });
+      }
       ctx.clearRect(0, 0, width, height);
       ctx.save();
       ctx.globalAlpha = 0.22;
@@ -2530,30 +2539,47 @@
         const a = byName.get(edge.source);
         const b = byName.get(edge.target);
         if (!a || !b) return;
+        const activeEdge = networkActiveName && (edge.source === networkActiveName || edge.target === networkActiveName);
         const strength = Math.sqrt(edge.seconds / networkState.maxOverlap);
         const pulse = 0.5 + 0.5 * Math.sin(networkState.frame * 0.035 + strength * 7);
-        ctx.strokeStyle = `rgba(65, 199, 232, ${0.16 + strength * 0.46 + pulse * 0.08})`;
-        ctx.lineWidth = 0.8 + strength * 5.2;
+        ctx.save();
+        if (networkActiveName && !activeEdge) ctx.globalAlpha = 0.16;
+        if (activeEdge) {
+          ctx.shadowColor = "rgba(255, 232, 128, 0.85)";
+          ctx.shadowBlur = 18 + pulse * 10;
+        }
+        ctx.strokeStyle = activeEdge
+          ? `rgba(255, 232, 128, ${0.62 + pulse * 0.26})`
+          : `rgba(65, 199, 232, ${0.16 + strength * 0.46 + pulse * 0.08})`;
+        ctx.lineWidth = (0.8 + strength * 5.2) * (activeEdge ? 1.65 : 1);
         ctx.beginPath();
         ctx.moveTo(a.fx, a.fy);
         ctx.lineTo(b.fx, b.fy);
         ctx.stroke();
+        ctx.restore();
       });
 
       networkState.hitItems = [];
       nodes.forEach((node) => {
         const color = networkNodeColor(node.networkStrength);
+        const activeNode = networkActiveName === node.name;
+        const relatedNode = activeNeighbors.has(node.name);
         const pulse = 0.5 + 0.5 * Math.sin(networkState.frame * 0.04 + node.radius);
         ctx.save();
-        ctx.globalAlpha = 0.12 + node.networkStrength * 0.22 + pulse * 0.08;
+        if (networkActiveName && !relatedNode) ctx.globalAlpha = 0.20;
+        else ctx.globalAlpha = 0.12 + node.networkStrength * 0.22 + pulse * 0.08;
+        if (relatedNode) {
+          ctx.shadowColor = activeNode ? "rgba(255, 232, 128, 0.95)" : "rgba(65, 199, 232, 0.85)";
+          ctx.shadowBlur = activeNode ? 24 + pulse * 12 : 16 + pulse * 8;
+        }
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(node.fx, node.fy, node.radius + 7 + node.networkStrength * 9, 0, Math.PI * 2);
+        ctx.arc(node.fx, node.fy, node.radius + 7 + node.networkStrength * 9 + (relatedNode ? 6 : 0), 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
         ctx.fillStyle = color;
-        ctx.strokeStyle = node.networkStrength > 0.72 ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.62)";
-        ctx.lineWidth = 1.1 + node.networkStrength * 1.6;
+        ctx.strokeStyle = relatedNode ? "rgba(255, 245, 190, 0.96)" : (node.networkStrength > 0.72 ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.62)");
+        ctx.lineWidth = (1.1 + node.networkStrength * 1.6) + (relatedNode ? 1.5 : 0);
         ctx.beginPath();
         ctx.arc(node.fx, node.fy, node.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -3851,6 +3877,7 @@
         y: position.y,
         moved: false
       };
+      networkActiveName = item.name;
       node.vx = 0;
       node.vy = 0;
       els.networkChart.style.cursor = "grabbing";
@@ -3872,6 +3899,7 @@
       networkDrag.node.vx = 0;
       networkDrag.node.vy = 0;
       networkDrag = null;
+      networkActiveName = "";
       els.networkChart.style.cursor = "default";
       if (networkSuppressClick) {
         setTimeout(() => {
@@ -3916,6 +3944,7 @@
     });
     els.networkChart.addEventListener("mouseleave", () => {
       els.networkChart.style.cursor = "default";
+      if (!networkDrag) networkActiveName = "";
       hideTimelineTooltip();
     });
     els.tabButtons.forEach((button) => {
